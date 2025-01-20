@@ -1,0 +1,20 @@
+.program simplestepper
+.side_set 1
+
+.wrap_target
+start:
+    pull block side 0          ; Pull the high delay value from TX FIFO
+    mov y, osr side 0          ; Move to y register
+do_pulse:
+    set pins, 1 side 1         ; Set step pin high
+    ;nop side 1                 ; Short delay to avoid spikes
+delay_high:
+    jmp y--, delay_high side 1 ; Delay while step pin is high
+    pull block side 0          ; Pull the low delay value from TX FIFO
+    mov y, osr side 0          ; Move to y register
+    set pins, 0 side 1         ; Set step pin low
+    ;nop side 0                 ; Short delay to avoid spikes
+delay_low:
+    jmp y--, delay_low side 0  ; Delay while step pin is low
+    jmp start side 0           ; Loop back to the start
+.wrap

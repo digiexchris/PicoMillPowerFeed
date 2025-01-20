@@ -32,7 +32,7 @@
                 "panel": "dedicated"
             },
             "args": [
-                "${workspaceFolder}/build/src/StepperPowerFeed.elf"
+                "${workspaceFolder}/build/src/PicoApp.elf"
             ],
             "hide": true,
             "problemMatcher": []

@@ -78,7 +78,7 @@
       "description": "Build using the default configuration",
       "configurePreset": "default",
       "targets": [
-        "StepperPowerFeed.elf",
+        "PicoApp.elf",
         "copy_compile_commands"
       ],
       "hidden": true
@@ -88,7 +88,7 @@
       "configurePreset": "native-linux-debug",
       "description": "Build using the linux-debug configuration",
       "targets": [
-        "StepperPowerFeed.elf",
+        "PicoApp.elf",
         "copy_compile_commands"
       ]
     },
@@ -105,7 +105,7 @@
       "configurePreset": "devcontainer-linux-debug",
       "description": "Build using the linux-debug configuration",
       "targets": [
-        "StepperPowerFeed.elf",
+        "PicoApp.elf",
         "copy_compile_commands"
       ]
     },
@@ -122,7 +122,7 @@
       "configurePreset": "x64-debug",
       "description": "Build using the linux-debug configuration",
       "targets": [
-        "StepperPowerFeed.elf",
+        "PicoApp.elf",
         "copy_compile_commands"
       ]
     },

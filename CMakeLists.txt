@@ -11,7 +11,17 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
 )
 
-add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner)
+# include(FetchContent)
+
+# FetchContent_Declare(
+#   Simple3dStepperMovementPlanner
+#   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
+#   GIT_TAG main
+# )
+
+# FetchContent_MakeAvailable(Simple3dStepperMovementPlanner)
+
+
 
 # Create an interface target to set system include directories for Pico SDK libraries
 add_library(pico_system_include_dirs INTERFACE)
@@ -39,8 +49,8 @@ add_custom_command(
   COMMENT "Copying compile_commands.json to project root"
 )
 
-# Create a custom target that always runs the above command
-add_custom_target(copy_compile_commands ALL
-  DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
-)
+# # Create a custom target that always runs the above command
+# add_custom_target(copy_compile_commands ALL
+#   DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
+# )
 

@@ -8,7 +8,7 @@
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh"
     },
-    "workspaceMount": "source=${localWorkspaceFolder}/sub-folder,target=/workspace,type=bind",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",
     "runArgs": [
         "--cap-add=SYS_PTRACE",
