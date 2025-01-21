@@ -94,6 +94,22 @@ pico_add_extra_outputs(PicoApp)
 
 # add_dependencies(PicoApp copy_compile_commands)
 
+add_custom_command(
+  OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${CMAKE_BINARY_DIR}/compile_commands.json
+  ${CMAKE_SOURCE_DIR}/compile_commands.json
+  DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+  COMMENT "Copying compile_commands.json to project root"
+)
+
+# # Create a custom target that always runs the above command
+add_custom_target(copy_compile_commands ALL
+  DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
+)
+
+add_dependencies(PicoApp copy_compile_commands)
+
 # Use USB uart
 pico_enable_stdio_usb(PicoApp 1)
 # pico_enable_stdio_uart(StepperPowerFeed 0)

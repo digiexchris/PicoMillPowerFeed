@@ -1,15 +1,12 @@
 #include "State.hpp"
 #include "config.hpp"
+#include <cstdlib>
 #include <memory>
 #include <sys/stat.h>
 
 State::State(std::shared_ptr<IStepper> aStepper)
 {
 	myState = States::STOPPED;
-	mySpeed = 0;
-	myDirection = false;
-	myTargetSpeed = 0;
-	myTargetDirection = false;
 	myStepper = aStepper; // std::make_shared<Stepper>(Stepper(stepPinStepper, dirPinStepper, enablePinStepper, 0, ACCELERATION, DECELERATION, pio0, 0));
 }
 
@@ -57,78 +54,142 @@ void State::ProcessCommand(Command aCommand)
 
 void State::ProcessStart(bool direction, uint32_t speed)
 {
+	auto mySpeed = myStepper->GetCurrentSpeed();
+	auto myDirection = myStepper->GetDirection();
+	auto myTargetSpeed = myStepper->GetTargetSpeed();
+	auto myTargetDirection = myStepper->GetTargetDirection();
 
+	// if (myTargetDirection != direction)
+	// {
+	// 	if(mySpeed != 0)
+	// 	{
+	// 		if (myState != States::CHANGING_DIRECTION)
+	// 		{
+	// 			myState = States::CHANGING_DIRECTION;
+	// 		}
+	// 	}
+
+	// 	myStepper->SetDirection(direction);
+
+	// 	if(mySpeed != speed)
+	// 	{
+	// 		myStepper->SetSpeed(speed);
+	// 	}
+
+	// }
+	// else
+	// {
 	switch (myState)
 	{
 	case States::ACCELERATING:
-	case States::COASTING:
-	case States::DECELERATING:
+
 		if (myDirection != direction)
 		{
-			myTargetSpeed = speed;
-			myTargetDirection = direction;
+			myState = States::CHANGING_DIRECTION;
+			myStepper->SetDirection(direction);
+		}
+		else if (speed > mySpeed)
+		{
+			myState = States::ACCELERATING;
+		}
+		else if (speed < mySpeed)
+		{
+			myState = States::DECELERATING;
+		}
+		else if (speed == mySpeed)
+		{
+			myState = States::COASTING;
+		}
+
+		if (mySpeed != speed)
+		{
+			myStepper->SetSpeed(speed);
+		}
+		break;
+	case States::COASTING:
+		if (myDirection != direction)
+		{
+			myState = States::CHANGING_DIRECTION;
+			myStepper->SetDirection(direction);
+		}
+		else if (speed > mySpeed)
+		{
+			myStepper->SetSpeed(speed);
+			myState = States::ACCELERATING;
+		}
+		else if (speed < mySpeed)
+		{
+			myStepper->SetSpeed(speed);
 			myState = States::DECELERATING;
 		}
 		else
 		{
-			switch (myState)
-			{
-			case States::ACCELERATING:
-				if (speed > mySpeed)
-				{
-					myTargetSpeed = speed;
-				}
-				else if (speed < mySpeed)
-				{
-					myTargetSpeed = mySpeed;
-					myState = States::DECELERATING;
-				}
-				else
-				{
-					myTargetSpeed = mySpeed;
-					myState = States::COASTING;
-				}
-				break;
-			case States::COASTING:
-				if (speed > mySpeed)
-				{
-					myTargetSpeed = speed;
-					myState = States::ACCELERATING;
-				}
-				else if (speed < mySpeed)
-				{
-					myTargetSpeed = speed;
-					myState = States::DECELERATING;
-				}
-				else
-				{
-					return;
-				}
-				break;
-			case States::DECELERATING:
-				if (speed > mySpeed)
-				{
-					myTargetSpeed = speed;
-					myState = States::ACCELERATING;
-				}
-				else if (speed < mySpeed)
-				{
-					myTargetSpeed = speed;
-				}
-				else
-				{
-					myTargetSpeed = speed;
-					myState = States::COASTING;
-				}
-				break;
-			case States::STOPPED:
-				break;
-			}
+			return;
 		}
-		return;
+
+		break;
+	case States::DECELERATING:
+		if (myDirection != direction)
+		{
+			myState = States::CHANGING_DIRECTION;
+			myStepper->SetDirection(direction);
+		}
+		else if (speed > mySpeed)
+		{
+			myState = States::ACCELERATING;
+		}
+		else if (speed < mySpeed)
+		{
+			// NOOP, already decelerating
+		}
+		else
+		{
+			myState = States::COASTING;
+		}
+
+		if (mySpeed != speed)
+		{
+			myStepper->SetSpeed(speed);
+		}
 		break;
 	case States::STOPPED:
+		if (myDirection != direction)
+		{
+			myStepper->SetDirection(direction);
+		}
+
 		myState = States::ACCELERATING;
+		myStepper->SetSpeed(speed);
+
+		break;
+	case States::CHANGING_DIRECTION:
+		bool willChangeDirection = false;
+		if (myDirection != direction)
+		{
+			myStepper->SetDirection(direction);
+			willChangeDirection = true;
+		}
+
+		if (!willChangeDirection)
+		{
+			if (speed > mySpeed)
+			{
+				myState = States::ACCELERATING;
+			}
+			else if (speed < mySpeed)
+			{
+				// NOOP, already decelerating
+			}
+			else
+			{
+				myState = States::COASTING;
+			}
+		}
+
+		if (mySpeed != speed)
+		{
+			myStepper->SetSpeed(speed);
+		}
 		break;
 	}
 }
@@ -138,21 +199,25 @@ void State::ProcessNewSpeed(uint32_t speed)
 	switch (myState)
 	{
 	case States::ACCELERATING:
-		if (speed < mySpeed)
+		if (speed < myStepper->GetCurrentSpeed())
 		{
 			myState = States::DECELERATING;
 		}
-		myTargetSpeed = speed;
+
+		if (myStepper->GetCurrentSpeed() != speed)
+		{
+			myStepper->SetSpeed(speed);
+		}
 		break;
 	case States::COASTING:
 		if (speed < mySpeed)
 		{
-			myTargetSpeed = speed;
+			myStepper->SetSpeed(speed);
 			myState = States::DECELERATING;
 		}
 		else if (speed > mySpeed)
 		{
-			myTargetSpeed = speed;
+			myStepper->SetSpeed(speed);
 			myState = States::ACCELERATING;
 		}
 		else
@@ -163,22 +228,22 @@ void State::ProcessNewSpeed(uint32_t speed)
 	case States::DECELERATING:
 		if (speed > mySpeed)
 		{
-			myTargetSpeed = speed;
+			myStepper->SetSpeed(speed);
 			myState = States::ACCELERATING;
 		}
 		else if (speed == mySpeed)
 		{
-			myTargetSpeed = speed;
+			myStepper->SetSpeed(speed);
 			myState = States::COASTING;
 		}
 		else
 		{
-			myTargetSpeed = speed;
+			myStepper->SetSpeed(speed);
 		}
 		break;
 	case States::STOPPED:
 		myState = States::ACCELERATING;
-		myTargetSpeed = speed;
+		myStepper->SetSpeed(speed);
 		break;
 	}
 }

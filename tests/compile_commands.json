@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_basicStateTest.cpp.o -c /workspace/tests/test_basicStateTest.cpp",
+  "file": "/workspace/tests/test_basicStateTest.cpp"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/State.cpp.o -c /workspace/src/State.cpp",
+  "file": "/workspace/src/State.cpp"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -I/workspace/build/_deps/googletest-src/googlemock/include -I/workspace/build/_deps/googletest-src/googlemock -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -std=c++20 -o _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /workspace/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/workspace/build/_deps/googletest-src/googlemock/src/gmock-all.cc"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -std=c++20 -o _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /workspace/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/workspace/build/_deps/googletest-src/googlemock/src/gmock_main.cc"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -I/workspace/build/_deps/googletest-src/googletest/include -I/workspace/build/_deps/googletest-src/googletest  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -std=c++20 -o _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /workspace/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/workspace/build/_deps/googletest-src/googletest/src/gtest-all.cc"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -Wall -Wshadow -Wconversion -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Wchar-subscripts -Winline -Wredundant-decls -std=c++20 -o _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /workspace/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/workspace/build/_deps/googletest-src/googletest/src/gtest_main.cc"
+}
+]

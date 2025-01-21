@@ -2,14 +2,16 @@
 
 #include "Stepper.hpp"
 #include <memory>
+
 #include <stdint.h>
 
 enum class States
 {
+	STOPPED,
 	ACCELERATING,
 	COASTING,
 	DECELERATING,
-	STOPPED
+	CHANGING_DIRECTION
 };
 
 struct Command
@@ -57,10 +59,6 @@ private:
 	void Run();
 
 	States myState;
-	uint32_t mySpeed;
-	uint32_t myTargetSpeed;
-	bool myDirection;
-	bool myTargetDirection;
 
 	std::shared_ptr<IStepper> myStepper;
 };

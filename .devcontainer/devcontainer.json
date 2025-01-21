@@ -42,7 +42,9 @@
                 "actboy168.tasks",
                 "SanaAjani.taskrunnercode",
                 "ms-vscode-remote.remote-containers",
-                "llvm-vs-code-extensions.vscode-clangd"
+                "llvm-vs-code-extensions.vscode-clangd",
+                "vadimcn.vscode-lldb",
+                "matepek.vscode-catch2-test-adapter"
             ],
         }
     },

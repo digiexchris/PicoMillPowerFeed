@@ -15,6 +15,7 @@ TEST(State, Start_with_Zero_Speed_While_Stopped_Remains_Stopped)
 	std::shared_ptr<IStepper> stepper = std::make_shared<TestStepper>();
 	State state(stepper);
 	state.ProcessCommand(Start(true, 0));
+	
 	EXPECT_EQ(state.GetState(), States::STOPPED);
 }
 
@@ -22,6 +23,7 @@ TEST(State, Start_While_Moving_With_Greater_Speed_Than_Current_Accelerates)
 {
 	std::shared_ptr<IStepper> stepper = std::make_shared<TestStepper>();
 	State state(stepper);
+	state.ProcessCommand(Start(true, 100));
 	// state.ProcessCommand(Start(true, 100));
 	// state.ProcessCommand(Start(true, 200));
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);

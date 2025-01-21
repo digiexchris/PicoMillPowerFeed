@@ -45,24 +45,27 @@ add_compile_options(
 # Link against GoogleTest and GoogleMock
 target_link_libraries(PicoApp_Tests
 GTest::gtest_main
+GTest::gmock_main
 # StepTimingPlanner
 # tcmalloc
 # profiler
 )
 
-# add_custom_command(
-#   OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json
-#   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#   ${CMAKE_BINARY_DIR}/compile_commands.json
-#   ${CMAKE_SOURCE_DIR}/compile_commands.json
-#   DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-#   COMMENT "Copying compile_commands.json to project root"
-# )
+add_custom_command(
+  OUTPUT ${CMAKE_SOURCE_DIR}/tests/compile_commands.json
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${CMAKE_BINARY_DIR}/compile_commands.json
+  ${CMAKE_SOURCE_DIR}/tests/compile_commands.json
+  DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+  COMMENT "Copying compile_commands.json to project root"
+)
 
-# # Create a custom target that always runs the above command
-# add_custom_target(copy_compile_commands ALL
-#   DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
-# )
+# Create a custom target that always runs the above command
+add_custom_target(copy_compile_commands_tests ALL
+  DEPENDS ${CMAKE_SOURCE_DIR}/tests/compile_commands.json
+)
+
+add_dependencies(PicoApp_Tests copy_compile_commands_tests)
 
 include(GoogleTest)
 gtest_discover_tests(PicoApp_Tests)
