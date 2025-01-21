@@ -1,38 +1,53 @@
 cmake_minimum_required(VERSION 3.13)
-include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
 
-set(PICO_BOARD pico CACHE STRING "Board type")
-project(PicoProject C CXX ASM)
-pico_sdk_init()
+message(STATUS "BUILD_PICO_APP is ${BUILD_PICO_APP}")
 
-add_compile_options(
-    ### Gnu/Clang C Options
-    $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
-)
+option(BUILD_PICO_APP "Build the Pico application" ON)
+option(BUILD_TESTS "Build the tests" OFF)
 
-# include(FetchContent)
+if(BUILD_PICO_APP)
 
-# FetchContent_Declare(
-#   Simple3dStepperMovementPlanner
-#   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
-#   GIT_TAG main
-# )
+  include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
 
-# FetchContent_MakeAvailable(Simple3dStepperMovementPlanner)
+  
+
+  project(PicoProject C CXX ASM)
+
+  set(PICO_BOARD pico CACHE STRING "Board type")
+  
+  pico_sdk_init()
+
+  add_compile_options(
+      ### Gnu/Clang C Options
+      $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
+      $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+  )
+
+  # include(FetchContent)
+
+  # FetchContent_Declare(
+  #   Simple3dStepperMovementPlanner
+  #   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
+  #   GIT_TAG main
+  # )
+
+  # FetchContent_MakeAvailable(Simple3dStepperMovementPlanner)
 
 
 
-# Create an interface target to set system include directories for Pico SDK libraries
-add_library(pico_system_include_dirs INTERFACE)
-target_include_directories(pico_system_include_dirs SYSTEM INTERFACE ${PICO_INCLUDE_DIRS})
+  # Create an interface target to set system include directories for Pico SDK libraries
+  add_library(pico_system_include_dirs INTERFACE)
+  target_include_directories(pico_system_include_dirs SYSTEM INTERFACE ${PICO_INCLUDE_DIRS})
 
-# Include directories for other Pico SDK libraries
-target_link_libraries(pico_system_include_dirs INTERFACE pico_stdlib hardware_pio hardware_gpio pico_multicore pico_stdio_usb pico_printf pico_async_context_threadsafe_background
-)
+  # Include directories for other Pico SDK libraries
+  target_link_libraries(pico_system_include_dirs INTERFACE pico_stdlib hardware_pio hardware_gpio pico_multicore pico_stdio_usb pico_printf pico_async_context_threadsafe_background
+  )
 
-# Add subdirectories
-add_subdirectory(src)
+  # Add subdirectories
+  add_subdirectory(src)
+else()
+  project(PicoProject C CXX ASM)
+endif()
 
 # Optionally add tests
 option(BUILD_TESTS "Build tests" OFF)
@@ -50,7 +65,7 @@ add_custom_command(
 )
 
 # # Create a custom target that always runs the above command
-# add_custom_target(copy_compile_commands ALL
-#   DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
-# )
+add_custom_target(copy_compile_commands ALL
+  DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
+)
 

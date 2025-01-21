@@ -52,10 +52,22 @@
       "description": "Debug Linux",
       "inherits": "default-debug",
       "cacheVariables": {
-        // "CMAKE_C_COMPILER": "/opt/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
-        // "CMAKE_CXX_COMPILER": "/opt/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-g++",
+        
         "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
         "PICO_SDK_PATH": "../pico/pico-sdk"
+      }
+    },
+
+    {
+      "name": "devcontainer-linux-debug-tests-only",
+      "generator": "Ninja",
+      "description": "Debug Linux",
+      "inherits": "devcontainer-linux-debug",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/usr/bin/clang",
+        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "BUILD_PICO_APP": "OFF",
+        "BUILD_TESTS": "ON"
       }
     },
     {
@@ -97,7 +109,7 @@
       "configurePreset": "native-linux-debug",
       "description": "Build Tests",
       "targets": [
-        "all"
+        "PicoApp_Tests"
       ]
     },
     {
@@ -111,10 +123,10 @@
     },
     {
       "name": "Debug with Tests",
-      "configurePreset": "devcontainer-linux-debug",
+      "configurePreset": "devcontainer-linux-debug-tests-only",
       "description": "Build Tests",
       "targets": [
-        "all"
+        "PicoApp_Tests"
       ]
     },
     {

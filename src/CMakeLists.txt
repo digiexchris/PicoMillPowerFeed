@@ -3,21 +3,20 @@ FILE(GLOB_RECURSE app_sources
     ./src/*.c*
     )
 
-  set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
-  set(FAMILY "rp2040")
+set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
+set(FAMILY "rp2040")
+set(FREERTOS_PORT "GCC_RP2040" CACHE STRING "" FORCE)
+add_library(freertos_config INTERFACE)
+target_include_directories(freertos_config SYSTEM
+INTERFACE
+${CMAKE_CURRENT_LIST_DIR}
+)
 
-# set(FREERTOS_PORT "GCC_RP2040" CACHE STRING "" FORCE)
-# add_library(freertos_config INTERFACE)
-# target_include_directories(freertos_config SYSTEM
-# INTERFACE
-#   ${CMAKE_CURRENT_LIST_DIR}
-# )
-
-# target_compile_definitions(freertos_config
-#   INTERFACE
-#     projCOVERAGE_TEST=0
-# )
-# set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
+target_compile_definitions(freertos_config
+INTERFACE
+    projCOVERAGE_TEST=0
+)
+set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
 
 # message( STATUS "FREERTOS_KERNEL_PATH: ${FREERTOS_KERNEL_PATH}" )
 
@@ -27,7 +26,7 @@ FILE(GLOB_RECURSE app_sources
     )
 
 # Pull in FreeRTOS
-# include(${CMAKE_HOME_DIRECTORY}/FreeRTOS_Kernel_import.cmake)
+include(${CMAKE_HOME_DIRECTORY}/FreeRTOS_Kernel_import.cmake)
 
 add_executable(PicoApp
 ${app_sources}
@@ -80,20 +79,20 @@ endif()
 # ENDMACRO()
 
 # pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/blink.pio)
-# pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
+pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 
 target_include_directories(PicoApp PRIVATE
         ${CMAKE_HOME_DIRECTORY}
         ${header_dir_list}
         ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingGenerator)
+# add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 
-# target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
-target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb StepTimingGenerator )
+target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
+# target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb )
 pico_add_extra_outputs(PicoApp)
 
-add_dependencies(PicoApp copy_compile_commands)
+# add_dependencies(PicoApp copy_compile_commands)
 
 # Use USB uart
 pico_enable_stdio_usb(PicoApp 1)
