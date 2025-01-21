@@ -1,4 +1,5 @@
 #include "State.hpp"
+#include "Common.hpp"
 #include "config.hpp"
 #include <cstdlib>
 #include <memory>
@@ -8,15 +9,17 @@ State::State(std::shared_ptr<IStepper> aStepper)
 {
 	myState = States::STOPPED;
 	myStepper = aStepper; // std::make_shared<Stepper>(Stepper(stepPinStepper, dirPinStepper, enablePinStepper, 0, ACCELERATION, DECELERATION, pio0, 0));
+	myRequestedSpeed = 0;
 }
 
 void State::ProcessStop()
 {
+	myStepper->SetSpeed(0);
+
 	switch (myState)
 	{
+	case States::CHANGING_DIRECTION:
 	case States::ACCELERATING:
-		myState = States::DECELERATING;
-		break;
 	case States::COASTING:
 
 		myState = States::DECELERATING;
@@ -29,7 +32,7 @@ void State::ProcessStop()
 	}
 }
 
-void State::ProcessCommand(Command aCommand)
+void State::ProcessCommand(Command &aCommand)
 {
 	switch (aCommand.type)
 	{
@@ -59,26 +62,6 @@ void State::ProcessStart(bool direction, uint32_t speed)
 	auto myTargetSpeed = myStepper->GetTargetSpeed();
 	auto myTargetDirection = myStepper->GetTargetDirection();
 
-	// if (myTargetDirection != direction)
-	// {
-	// 	if(mySpeed != 0)
-	// 	{
-	// 		if (myState != States::CHANGING_DIRECTION)
-	// 		{
-	// 			myState = States::CHANGING_DIRECTION;
-	// 		}
-	// 	}
-
-	// 	myStepper->SetDirection(direction);
-
-	// 	if(mySpeed != speed)
-	// 	{
-	// 		myStepper->SetSpeed(speed);
-	// 	}
-
-	// }
-	// else
-	// {
 	switch (myState)
 	{
 	case States::ACCELERATING:
@@ -158,8 +141,12 @@ void State::ProcessStart(bool direction, uint32_t speed)
 			myStepper->SetDirection(direction);
 		}
 
-		myState = States::ACCELERATING;
-		myStepper->SetSpeed(speed);
+		if (speed != 0)
+		{
+
+			myState = States::ACCELERATING;
+			myStepper->SetSpeed(speed);
+		}
 
 		break;
 	case States::CHANGING_DIRECTION:
@@ -196,15 +183,25 @@ void State::ProcessStart(bool direction, uint32_t speed)
 
 void State::ProcessNewSpeed(uint32_t speed)
 {
+	auto mySpeed = myStepper->GetCurrentSpeed();
+	auto myDirection = myStepper->GetDirection();
+	auto myTargetSpeed = myStepper->GetTargetSpeed();
+	auto myTargetDirection = myStepper->GetTargetDirection();
+
 	switch (myState)
 	{
+	case States::CHANGING_DIRECTION:
+		if (speed != mySpeed)
+		{
+			myStepper->SetSpeed(speed);
+		}
 	case States::ACCELERATING:
-		if (speed < myStepper->GetCurrentSpeed())
+		if (speed < mySpeed)
 		{
 			myState = States::DECELERATING;
 		}
 
-		if (myStepper->GetCurrentSpeed() != speed)
+		if (mySpeed != speed)
 		{
 			myStepper->SetSpeed(speed);
 		}
@@ -250,35 +247,70 @@ void State::ProcessNewSpeed(uint32_t speed)
 
 void State::Run()
 {
+
+	// due to precaching this, it will only be accurate to speeds within 4 steps
+	auto mySpeed = myStepper->GetCurrentSpeed();
+	auto myDirection = myStepper->GetDirection();
+	auto mySetSpeed = myStepper->GetSetSpeed();
+	auto myTargetSpeed = myStepper->GetTargetSpeed();
+	auto myTargetDirection = myStepper->GetTargetDirection();
+
 	switch (myState)
 	{
+	case States::CHANGING_DIRECTION:
+		if (myDirection == myTargetDirection && mySpeed > 0)
+		{
+			myState = States::ACCELERATING;
+		}
+		break;
 	case States::ACCELERATING:
 		if (mySpeed == myTargetSpeed)
 		{
 			myState = States::COASTING;
 		}
-		else
-		{
-		}
 		break;
 	case States::COASTING:
 		if (mySpeed < myTargetSpeed)
 		{
-			mySpeed++;
 		}
 		else if (mySpeed > myTargetSpeed)
 		{
-			mySpeed--;
 		}
 		break;
 	case States::DECELERATING:
-		mySpeed--;
 		if (mySpeed == myTargetSpeed)
 		{
-			myState = States::COASTING;
+			if (mySpeed == 0)
+			{
+				myState = States::STOPPED;
+			}
+			else
+			{
+				myState = States::COASTING;
+			}
 		}
 		break;
 	case States::STOPPED:
+
+		if (disableIdleTimeout >= 0)
+		{
+
+			if (myStepper->IsEnabled())
+			{
+				if (disableIdleTimeout > 0 && myStoppedAt + disableIdleTimeout < getCurrentTimeInMilliseconds())
+				{
+					myStepper->Disable();
+					myStoppedAt = 0;
+				}
+				else
+				{
+					myStoppedAt = getCurrentTimeInMilliseconds();
+				}
+			}
+		}
+
 		return;
 	}
+
+	myStepper->Update();
 }

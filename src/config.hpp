@@ -24,6 +24,7 @@ const uint16_t DECELERATION = 60000;
 
 const uint8_t enableValue = 0;
 const uint8_t disableValue = 1;
+const int16_t disableIdleTimeout = 1000; // 1 second in moilliseconds. set to -1 to disable
 
 #define I2C_MASTER_SCL_IO 13	 /*!< gpio number for I2C master clock */
 #define I2C_MASTER_SDA_IO 14	 /*!< gpio number for I2C master data  */

@@ -2,7 +2,11 @@
 
 #include <stdint.h>
 
-struct Step
+#include <chrono>
+
+inline uint64_t getCurrentTimeInMilliseconds()
 {
-	uint32_t delayMicroSeconds;
-};
+	return std::chrono::duration_cast<std::chrono::milliseconds>(
+			   std::chrono::high_resolution_clock::now().time_since_epoch())
+		.count();
+}

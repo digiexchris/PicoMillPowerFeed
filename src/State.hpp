@@ -49,16 +49,20 @@ class State
 public:
 	State(std::shared_ptr<IStepper> aStepper);
 
-	void ProcessCommand(Command command);
+	void ProcessCommand(Command &command);
 	States GetState() { return myState; }
+	void Run();
 
 private:
 	void ProcessStop();
 	void ProcessNewSpeed(uint32_t speed);
 	void ProcessStart(bool direction, uint32_t speed);
-	void Run();
 
 	States myState;
+
+	uint32_t myRequestedSpeed;
+
+	uint64_t myStoppedAt;
 
 	std::shared_ptr<IStepper> myStepper;
 };
