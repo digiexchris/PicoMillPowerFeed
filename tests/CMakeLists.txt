@@ -32,7 +32,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp)
+add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/MachineState.cpp)
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 

@@ -6,71 +6,75 @@
 
 #include <stdint.h>
 
-enum class States
+namespace Stepper
 {
-	STOPPED,
-	ACCELERATING,
-	COASTING,
-	DECELERATING,
-	CHANGING_DIRECTION
-};
 
-struct Command
-{
-	enum class Type
+	enum class States
 	{
-		START,
-		STOP,
-		CHANGE_SPEED
+		STOPPED,
+		ACCELERATING,
+		COASTING,
+		DECELERATING,
+		CHANGING_DIRECTION
 	};
 
-	Type type;
-};
-
-struct ChangeSpeed : Command
-{
-	ChangeSpeed(uint32_t speed) : speed(speed) { type = Type::CHANGE_SPEED; }
-	uint32_t speed;
-};
-
-struct Stop : Command
-{
-	Stop() { type = Type::STOP; }
-};
-
-struct Start : Command
-{
-	Start(bool aDirection, uint32_t aSpeed) : direction(aDirection), speed(aSpeed) { type = Type::START; }
-	bool direction;
-	uint32_t speed;
-};
-
-class StepperState
-{
-public:
-	StepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : myStepper(aStepper), myTime(aTime)
+	struct Command
 	{
-		myState = States::STOPPED;
-		myRequestedSpeed = 0;
-		myStoppedAt = 0;
-	}
+		enum class Type
+		{
+			START,
+			STOP,
+			CHANGE_SPEED
+		};
 
-	void ProcessCommand(std::shared_ptr<Command> command);
-	States GetState() { return myState; }
-	void Run();
+		Type type;
+	};
 
-private:
-	void ProcessStop();
-	void ProcessNewSpeed(uint32_t speed);
-	void ProcessStart(bool direction, uint32_t speed);
+	struct ChangeSpeed : Command
+	{
+		ChangeSpeed(uint32_t speed) : speed(speed) { type = Type::CHANGE_SPEED; }
+		uint32_t speed;
+	};
 
-	States myState;
+	struct Stop : Command
+	{
+		Stop() { type = Type::STOP; }
+	};
 
-	uint32_t myRequestedSpeed;
+	struct Start : Command
+	{
+		Start(bool aDirection, uint32_t aSpeed) : direction(aDirection), speed(aSpeed) { type = Type::START; }
+		bool direction;
+		uint32_t speed;
+	};
 
-	uint64_t myStoppedAt;
+	class StepperState
+	{
+	public:
+		StepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : myStepper(aStepper), myTime(aTime)
+		{
+			myState = States::STOPPED;
+			myStoppedAt = 0;
+		}
 
-	std::shared_ptr<IStepper> myStepper;
+		virtual void ProcessCommand(std::shared_ptr<Command> command);
+		virtual States GetState() { return myState; }
+		virtual void Run();
 
-	std::shared_ptr<ITime> myTime;
-};
+	private:
+		void ProcessStop();
+		void ProcessNewSpeed(uint32_t speed);
+		void ProcessStart(bool direction, uint32_t speed);
+
+		States myState;
+
+		uint32_t myRequestedSpeed;
+
+		uint64_t myStoppedAt;
+
+		std::shared_ptr<IStepper> myStepper;
+
+		std::shared_ptr<ITime> myTime;
+	};
+
+} // namespace Stepper

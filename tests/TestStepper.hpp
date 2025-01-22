@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../src/Stepper.hpp"
+#include "../src/StepperState.hpp"
 
 #include <gmock/gmock.h>
 
@@ -22,3 +23,16 @@ public:
 	MOCK_METHOD(void, Disable, (), (override));
 	MOCK_METHOD(bool, IsEnabled, (), (override));
 };
+
+namespace Stepper
+{
+	class TestStepperState : public StepperState
+	{
+	public:
+		TestStepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : StepperState(aStepper, aTime){};
+
+		MOCK_METHOD(void, ProcessCommand, (std::shared_ptr<Command> command), (override));
+		MOCK_METHOD(States, GetState, (), (override));
+		MOCK_METHOD(void, Run, (), (override));
+	};
+}

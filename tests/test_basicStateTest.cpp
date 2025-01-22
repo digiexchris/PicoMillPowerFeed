@@ -5,6 +5,7 @@
 #include <memory>
 
 using ::testing::Return;
+using namespace Stepper;
 
 TEST(State, Start)
 {
