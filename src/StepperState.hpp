@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common.hpp"
 #include "Stepper.hpp"
 #include <memory>
 
@@ -44,12 +45,17 @@ struct Start : Command
 	uint32_t speed;
 };
 
-class State
+class StepperState
 {
 public:
-	State(std::shared_ptr<IStepper> aStepper);
+	StepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : myStepper(aStepper), myTime(aTime)
+	{
+		myState = States::STOPPED;
+		myRequestedSpeed = 0;
+		myStoppedAt = 0;
+	}
 
-	void ProcessCommand(Command &command);
+	void ProcessCommand(std::shared_ptr<Command> command);
 	States GetState() { return myState; }
 	void Run();
 
@@ -65,4 +71,6 @@ private:
 	uint64_t myStoppedAt;
 
 	std::shared_ptr<IStepper> myStepper;
+
+	std::shared_ptr<ITime> myTime;
 };

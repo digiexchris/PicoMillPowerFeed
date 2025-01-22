@@ -1,18 +1,11 @@
-#include "State.hpp"
+#include "StepperState.hpp"
 #include "Common.hpp"
 #include "config.hpp"
 #include <cstdlib>
 #include <memory>
 #include <sys/stat.h>
 
-State::State(std::shared_ptr<IStepper> aStepper)
-{
-	myState = States::STOPPED;
-	myStepper = aStepper; // std::make_shared<Stepper>(Stepper(stepPinStepper, dirPinStepper, enablePinStepper, 0, ACCELERATION, DECELERATION, pio0, 0));
-	myRequestedSpeed = 0;
-}
-
-void State::ProcessStop()
+void StepperState::ProcessStop()
 {
 	myStepper->SetSpeed(0);
 
@@ -32,30 +25,32 @@ void State::ProcessStop()
 	}
 }
 
-void State::ProcessCommand(Command &aCommand)
+void StepperState::ProcessCommand(std::shared_ptr<Command> aCommand)
 {
-	switch (aCommand.type)
+	switch (aCommand->type)
 	{
 	case Command::Type::STOP:
 
 		ProcessStop();
 		break;
 	case Command::Type::CHANGE_SPEED:
-
-		ProcessNewSpeed(static_cast<ChangeSpeed &>(aCommand).speed);
-		break;
+	{
+		std::shared_ptr<ChangeSpeed> changeSpeed = std::static_pointer_cast<ChangeSpeed>(aCommand);
+		ProcessNewSpeed(changeSpeed->speed);
+	}
+	break;
 
 	case Command::Type::START:
 	{
-		auto start = static_cast<Start &>(aCommand);
-		ProcessStart(start.direction, start.speed);
+		std::shared_ptr<Start> start = std::static_pointer_cast<Start>(aCommand);
+		ProcessStart(start->direction, start->speed);
 	}
 
 	break;
 	}
 }
 
-void State::ProcessStart(bool direction, uint32_t speed)
+void StepperState::ProcessStart(bool direction, uint32_t speed)
 {
 	auto mySpeed = myStepper->GetCurrentSpeed();
 	auto myDirection = myStepper->GetDirection();
@@ -181,7 +176,7 @@ void State::ProcessStart(bool direction, uint32_t speed)
 	}
 }
 
-void State::ProcessNewSpeed(uint32_t speed)
+void StepperState::ProcessNewSpeed(uint32_t speed)
 {
 	auto mySpeed = myStepper->GetCurrentSpeed();
 	auto myDirection = myStepper->GetDirection();
@@ -245,13 +240,13 @@ void State::ProcessNewSpeed(uint32_t speed)
 	}
 }
 
-void State::Run()
+void StepperState::Run()
 {
 
-	// due to precaching this, it will only be accurate to speeds within 4 steps
+	// due to precaching this, it will only be accurate to speeds within 4 steps or whatever the stepper's steps per update is
 	auto mySpeed = myStepper->GetCurrentSpeed();
 	auto myDirection = myStepper->GetDirection();
-	auto mySetSpeed = myStepper->GetSetSpeed();
+	// auto mySetSpeed = myStepper->GetSetSpeed();
 	auto myTargetSpeed = myStepper->GetTargetSpeed();
 	auto myTargetDirection = myStepper->GetTargetDirection();
 
@@ -260,7 +255,14 @@ void State::Run()
 	case States::CHANGING_DIRECTION:
 		if (myDirection == myTargetDirection && mySpeed > 0)
 		{
-			myState = States::ACCELERATING;
+			if (mySpeed < myTargetSpeed)
+			{
+				myState = States::ACCELERATING;
+			}
+			else if (mySpeed == myTargetSpeed)
+			{
+				myState = States::COASTING;
+			}
 		}
 		break;
 	case States::ACCELERATING:
@@ -270,12 +272,7 @@ void State::Run()
 		}
 		break;
 	case States::COASTING:
-		if (mySpeed < myTargetSpeed)
-		{
-		}
-		else if (mySpeed > myTargetSpeed)
-		{
-		}
+		// I think this is a NOOP since you should not see a target speed change without a command
 		break;
 	case States::DECELERATING:
 		if (mySpeed == myTargetSpeed)
@@ -297,14 +294,15 @@ void State::Run()
 
 			if (myStepper->IsEnabled())
 			{
-				if (disableIdleTimeout > 0 && myStoppedAt + disableIdleTimeout < getCurrentTimeInMilliseconds())
+				const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
+				if (disableIdleTimeout > 0 && myStoppedAt + disableIdleTimeout < currentTime)
 				{
 					myStepper->Disable();
 					myStoppedAt = 0;
 				}
 				else
 				{
-					myStoppedAt = getCurrentTimeInMilliseconds();
+					myStoppedAt = currentTime;
 				}
 			}
 		}

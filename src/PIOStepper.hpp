@@ -1,4 +1,5 @@
 #include "Stepper.hpp"
+#include "hardware/pio.h" // Include the header file that defines PIO
 
 class PIOStepper : public IStepper
 {

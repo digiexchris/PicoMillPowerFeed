@@ -4,9 +4,14 @@
 
 #include <chrono>
 
-inline uint64_t getCurrentTimeInMilliseconds()
+class ITime
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(
-			   std::chrono::high_resolution_clock::now().time_since_epoch())
-		.count();
-}
+public:
+	virtual uint64_t GetCurrentTimeInMilliseconds() const = 0;
+};
+
+class Time : public ITime
+{
+public:
+	virtual uint64_t GetCurrentTimeInMilliseconds() const override;
+};

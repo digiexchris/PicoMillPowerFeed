@@ -1,18 +1,39 @@
-#include "../src/State.hpp"
+#include "../src/StepperState.hpp"
+#include "TestCommon.hpp"
 #include "TestStepper.hpp"
 #include <gtest/gtest.h>
+#include <memory>
 
 using ::testing::Return;
 
 TEST(State, Start)
 {
 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-	State state(stepper);
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
 	EXPECT_CALL(*stepper, GetDirection()).WillOnce(Return(false));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillOnce(Return(false));
 	EXPECT_CALL(*stepper, SetDirection(true));
 	EXPECT_CALL(*stepper, SetSpeed(100));
-	auto command = Start(true, 100);
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 100);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+}
+
+TEST(State, Start_With_Same_Direction_Does_Not_Change_Direction)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillOnce(Return(false));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillOnce(Return(false));
+	EXPECT_CALL(*stepper, SetDirection(true)).Times(0);
+	EXPECT_CALL(*stepper, SetSpeed(100));
+	std::shared_ptr<Command> command = std::make_shared<Start>(false, 100);
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 }
@@ -20,28 +41,36 @@ TEST(State, Start)
 TEST(State, Start_with_Zero_Speed_While_Stopped_Remains_Stopped)
 {
 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-	State state(stepper);
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
-	auto command = Start(true, 0);
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillOnce(Return(false));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillOnce(Return(false));
+	EXPECT_CALL(*stepper, SetDirection(true));
+	EXPECT_CALL(*stepper, Update()).Times(0);
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 0);
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::STOPPED);
 }
 
-TEST(State, Start_While_Moving_With_Greater_Speed_Than_Current_Accelerates)
+TEST(State, Start_While_Accelerating_With_Greater_Speed_Than_Current_Accelerates_And_Coasts)
 {
 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-	State state(stepper);
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
 	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
 	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
 	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
 	EXPECT_CALL(*stepper, SetSpeed(50));
-	auto command = Start(true, 50);
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 50);
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
 	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 
 	state.Run();
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
@@ -53,116 +82,485 @@ TEST(State, Start_While_Moving_With_Greater_Speed_Than_Current_Accelerates)
 	EXPECT_CALL(*stepper, SetSpeed(1000));
 	// partially up to speed, so it shouldn't be coasting
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(20));
-	command = Start(true, 1000);
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	command = std::make_shared<Start>(true, 1000);
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(30));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
 	state.Run();
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
 }
 
-TEST(State, Start_While_Accelerating_With_Less_Speed_Than_Current_Decelerates)
+TEST(State, Start_While_Stopping_Accelerates_And_Coasts)
 {
 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-	State state(stepper);
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
-	EXPECT_CALL(*stepper, GetDirection()).WillOnce(Return(true));
-	EXPECT_CALL(*stepper, SetSpeed(500));
-	auto command = Start(true, 500);
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(50));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 50);
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 	state.Run();
 	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 
-	// partially up to speed, so it shouldn't be coasting
-	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
-	EXPECT_CALL(*stepper, SetSpeed(100));
-	command = Start(true, 100);
+	// Should now be in the ACCELERATING STATE
+
+	EXPECT_CALL(*stepper, SetSpeed(0));
+	command = std::make_shared<Stop>();
 	state.ProcessCommand(command);
 	EXPECT_EQ(state.GetState(), States::DECELERATING);
 
-	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(10));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 	state.Run();
 	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(5));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(150));
+	command = std::make_shared<Start>(true, 150);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(150));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(150));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
 }
 
-// TEST(State, Stop_While_Moving_Decelerates)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Stop());
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+TEST(State, Start_While_Accelerating_With_Less_Speed_Than_Current_Decelerates_And_Coasts)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(500));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 500);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 
-// TEST(State, Stop_While_Stopped_Does_Nothing)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	state.ProcessCommand(Stop());
-// 	EXPECT_EQ(state.GetState(), States::STOPPED);
-// }
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(400));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 
-// TEST(State, Stop_While_Accelerating_Decelerates)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(50));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Stop());
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
 
-// TEST(State, Stop_While_Coasting_Decelerates)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Stop());
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+	EXPECT_CALL(*stepper, SetSpeed(100));
+	// partially up to speed, so it shouldn't be coasting
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(450));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(100));
+	command = std::make_shared<Start>(true, 100);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
 
-// TEST(State, Stop_While_Decelerating_Sets_Target_Speed_To_Zero)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Stop());
-// 	state.ProcessCommand(Stop());
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 
-// TEST(State, Decelerate_While_Decelerating_Changes_Target_Speed)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Stop());
-// 	state.ProcessCommand(Start(true, 50));
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
 
-// TEST(State, Setting_Lower_speed_while_Coasting_Decelerates_and_Changes_Target_Speed)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	state.ProcessCommand(Start(true, 100));
-// 	state.ProcessCommand(Start(true, 50));
-// 	EXPECT_EQ(state.GetState(), States::DECELERATING);
-// }
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, Update()).Times(1);
 
-// TEST(State, Start_While_Changing_Direction_Changes_Direction)
-// {
-// 	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
-// 	State state(stepper);
-// 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
-// 	EXPECT_CALL(*stepper, GetDirection()).WillOnce(Return(true));
-// 	EXPECT_CALL(*stepper, SetDirection(false));
-// 	state.ProcessCommand(Start(false, 100));
-// 	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
-// }
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+}
+
+TEST(State, Stop_While_Accelerating_Decelerates_And_Stops)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(500));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 500);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, SetSpeed(0));
+	command.reset();
+	command = std::make_shared<Stop>();
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+}
+
+TEST(State, Stop_While_Coasting_Decelerates_And_Stops)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(500));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 500);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+
+	EXPECT_CALL(*stepper, SetSpeed(0));
+	// partially up to speed, so it shouldn't be coasting
+	command = std::make_shared<Stop>();
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+}
+
+TEST(State, Stop_While_Decelerating_Decelerates_And_Stops)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(500));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 500);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+
+	EXPECT_CALL(*stepper, SetSpeed(100));
+	command = std::make_shared<ChangeSpeed>(100);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(500));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, SetSpeed(0));
+	// partially up to speed, so it shouldn't be coasting
+	command = std::make_shared<Stop>();
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+}
+
+TEST(State, Stop_While_Stopped_Remains_Stopped_And_Disable_After_Timeout)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+
+	EXPECT_CALL(*stepper, SetSpeed(0)).Times(1);
+	std::shared_ptr<Command> command = std::make_shared<Stop>();
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, Update()).Times(0);
+	EXPECT_CALL(*stepper, IsEnabled()).WillOnce(Return(true));
+	EXPECT_CALL(*time, GetCurrentTimeInMilliseconds()).WillOnce(Return(3));
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, Update()).Times(0);
+	EXPECT_CALL(*time, GetCurrentTimeInMilliseconds()).WillOnce(Return(1010));
+	EXPECT_CALL(*stepper, IsEnabled()).WillOnce(Return(true));
+	EXPECT_CALL(*stepper, Disable()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::STOPPED);
+}
+
+TEST(State, Decelerate_While_Decelerating_Changes_Target_Speed_And_Coasts)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(100));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 100);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+
+	EXPECT_CALL(*stepper, SetSpeed(500));
+	command = std::make_shared<ChangeSpeed>(500);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, SetSpeed(200));
+	command = std::make_shared<ChangeSpeed>(200);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(600));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(500));
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(400));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(200));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, SetSpeed(100));
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(300));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(200));
+	// partially up to speed, so it shouldn't be coasting
+	command = std::make_shared<ChangeSpeed>(100);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(250));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(100));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+}
+
+TEST(State, Start_While_Accelerating_with_a_different_direction_changes_direction_accelerates_and_coasts)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(50));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 50);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	// Should now be in the ACCELERATING STATE
+
+	// Send another start command with a higher speed
+
+	EXPECT_CALL(*stepper, SetSpeed(1000));
+	// partially up to speed, so it shouldn't be coasting
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(20));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetDirection(false)).Times(1);
+	command = std::make_shared<Start>(false, 1000);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(30));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(false));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+}
+
+TEST(State, Start_With_Different_Direction_While_Stopping_Changes_Direciton_Accelerates_And_Coasts)
+{
+	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
+	StepperState state(stepper, time);
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(50));
+	std::shared_ptr<Command> command = std::make_shared<Start>(true, 50);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(50));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	// Should now be in the ACCELERATING STATE
+
+	EXPECT_CALL(*stepper, SetSpeed(0));
+	command = std::make_shared<Stop>();
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(10));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::DECELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(5));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, SetSpeed(1000));
+	EXPECT_CALL(*stepper, SetDirection(false));
+	command = std::make_shared<Start>(false, 1000);
+	state.ProcessCommand(command);
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(2));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(false));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(true));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(false));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::CHANGING_DIRECTION);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetDirection()).WillRepeatedly(Return(false));
+	EXPECT_CALL(*stepper, GetTargetDirection()).WillRepeatedly(Return(false));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::ACCELERATING);
+
+	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, GetTargetSpeed()).WillOnce(Return(1000));
+	EXPECT_CALL(*stepper, Update()).Times(1);
+
+	state.Run();
+	EXPECT_EQ(state.GetState(), States::COASTING);
+}
