@@ -52,12 +52,10 @@
       "description": "Debug Linux",
       "inherits": "default-debug",
       "cacheVariables": {
-        
         "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
         "PICO_SDK_PATH": "../pico/pico-sdk"
       }
     },
-
     {
       "name": "devcontainer-linux-debug-tests-only",
       "generator": "Ninja",
@@ -91,7 +89,7 @@
       "configurePreset": "default",
       "targets": [
         "PicoApp.elf",
-        "copy_compile_commands"
+        "copy_compile_commands_src"
       ],
       "hidden": true
     },
@@ -101,7 +99,7 @@
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp.elf",
-        "copy_compile_commands"
+        "copy_compile_commands_src"
       ]
     },
     {
@@ -109,7 +107,8 @@
       "configurePreset": "native-linux-debug",
       "description": "Build Tests",
       "targets": [
-        "PicoApp_Tests"
+        "PicoApp_Tests",
+        "copy_compile_commands_tests"
       ]
     },
     {
@@ -118,7 +117,7 @@
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp.elf",
-        "copy_compile_commands"
+        "copy_compile_commands_src"
       ]
     },
     {
@@ -126,7 +125,8 @@
       "configurePreset": "devcontainer-linux-debug-tests-only",
       "description": "Build Tests",
       "targets": [
-        "PicoApp_Tests"
+        "PicoApp_Tests",
+        "copy_compile_commands_tests"
       ]
     },
     {
@@ -135,7 +135,7 @@
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp.elf",
-        "copy_compile_commands"
+        "copy_compile_commands_src"
       ]
     },
     {

@@ -6,7 +6,7 @@
 
 #include <stdint.h>
 
-namespace Stepper
+namespace PicoMill
 {
 
 	enum class States
@@ -74,7 +74,7 @@ namespace Stepper
 
 		std::shared_ptr<IStepper> myStepper;
 
-		std::shared_ptr<ITime> myTime;
+		std::shared_ptr<PicoMill::ITime> myTime;
 	};
 
 } // namespace Stepper

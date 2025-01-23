@@ -57,7 +57,7 @@ add_custom_command(
   ${CMAKE_BINARY_DIR}/compile_commands.json
   ${CMAKE_SOURCE_DIR}/tests/compile_commands.json
   DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-  COMMENT "Copying compile_commands.json to project root"
+  COMMENT "Copying compile_commands.json to tests root"
 )
 
 # Create a custom target that always runs the above command

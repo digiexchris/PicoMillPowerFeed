@@ -92,23 +92,21 @@ target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb  FreeRTOS-
 # target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb )
 pico_add_extra_outputs(PicoApp)
 
-# add_dependencies(PicoApp copy_compile_commands)
-
 add_custom_command(
-  OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json
+  OUTPUT ${CMAKE_SOURCE_DIR}/src/compile_commands.json
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   ${CMAKE_BINARY_DIR}/compile_commands.json
-  ${CMAKE_SOURCE_DIR}/compile_commands.json
+  ${CMAKE_SOURCE_DIR}/src/compile_commands.json
   DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-  COMMENT "Copying compile_commands.json to project root"
+  COMMENT "Copying compile_commands.json to src root"
 )
 
-# # Create a custom target that always runs the above command
-add_custom_target(copy_compile_commands ALL
-  DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
+# Create a custom target that always runs the above command
+add_custom_target(copy_compile_commands_src ALL
+  DEPENDS ${CMAKE_SOURCE_DIR}/src/compile_commands.json
 )
 
-add_dependencies(PicoApp copy_compile_commands)
+add_dependencies(PicoApp copy_compile_commands_src)
 
 # Use USB uart
 pico_enable_stdio_usb(PicoApp 1)

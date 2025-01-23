@@ -5,7 +5,7 @@
 #include <memory>
 #include <sys/stat.h>
 
-namespace Stepper
+namespace PicoMill
 {
 
 	void StepperState::ProcessStop()
