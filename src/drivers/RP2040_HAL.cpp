@@ -44,7 +44,7 @@ void RP2040_HAL::InterruptHandler(void *aArg)
 
 	if (status & (1 << YOUR_INTERRUPT_BIT))
 	{
-		myMachineState->OnInterrupt(aType);
+		myMachineState->OnValueChanged(aType);
 	}
 
 	// Clear the interrupt

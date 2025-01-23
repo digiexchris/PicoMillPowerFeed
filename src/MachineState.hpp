@@ -47,6 +47,11 @@ public:
 
 	void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 
+	bool IsStateSet(MachineState state) const
+	{
+		return (myState & static_cast<uint8_t>(state)) != 0;
+	}
+
 private:
 	std::shared_ptr<Stepper::StepperState> myStepperState;
 	uint32_t myNormalSpeed;
@@ -61,10 +66,5 @@ private:
 	void ClearState(MachineState state)
 	{
 		myState &= ~static_cast<uint8_t>(state);
-	}
-
-	bool IsStateSet(MachineState state) const
-	{
-		return (myState & static_cast<uint8_t>(state)) != 0;
 	}
 };

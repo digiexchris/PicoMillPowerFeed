@@ -104,15 +104,33 @@ void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
 			myNormalSpeed = state->value;
 			if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
 			{
-				std::shared_ptr<Stepper::Command> command = std::make_shared<Stepper::ChangeSpeed>(myNormalSpeed);
-				myStepperState->ProcessCommand(command);
+				if (!IsStateSet(MachineState::RAPID))
+				{
+					std::shared_ptr<Stepper::Command> command = std::make_shared<Stepper::ChangeSpeed>(myNormalSpeed);
+					myStepperState->ProcessCommand(command);
+				}
 			}
 		}
 	}
 
 	break;
 	case DeviceState::RAPID_SPEED_CHANGE:
-		myNormalSpeed = std::static_pointer_cast<UInt32StateChange>(aStateChange)->value;
-		break;
+	{
+		auto state = std::static_pointer_cast<UInt32StateChange>(aStateChange);
+
+		if (myRapidSpeed != state->value)
+		{
+			myRapidSpeed = state->value;
+			if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
+			{
+				if (IsStateSet(MachineState::RAPID))
+				{
+					std::shared_ptr<Stepper::Command> command = std::make_shared<Stepper::ChangeSpeed>(myRapidSpeed);
+					myStepperState->ProcessCommand(command);
+				}
+			}
+		}
+	}
+	break;
 	}
 }
