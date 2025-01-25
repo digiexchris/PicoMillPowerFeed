@@ -112,11 +112,11 @@
 #define configTICK_CORE 1
 #define configRUN_MULTIPLE_PRIORITIES 1
 
-extern void TaskStatsTaskSwitchedIn(void);
-extern void TaskStatsTaskSwitchedOut(void);
+// extern void TaskStatsTaskSwitchedIn(void);
+// extern void TaskStatsTaskSwitchedOut(void);
 
-#define traceTASK_SWITCHED_IN() TaskStatsTaskSwitchedIn()
-#define traceTASK_SWITCHED_OUT() TaskStatsTaskSwitchedOut()
+// #define traceTASK_SWITCHED_IN() TaskStatsTaskSwitchedIn()
+// #define traceTASK_SWITCHED_OUT() TaskStatsTaskSwitchedOut()
 
 /* RP2040 specific */
 #define configSUPPORT_PICO_SYNC_INTEROP 1

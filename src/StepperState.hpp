@@ -74,7 +74,7 @@ namespace PicoMill
 
 		std::shared_ptr<IStepper> myStepper;
 
-		std::shared_ptr<PicoMill::ITime> myTime;
+		std::shared_ptr<ITime> myTime;
 	};
 
 } // namespace Stepper

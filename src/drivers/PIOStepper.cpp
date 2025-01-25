@@ -2,10 +2,13 @@
 
 #include "Delay.hpp"
 #include "Helpers.hpp"
+#include "build/src/stepper.pio.h"
 #include "config.hpp"
 #include "pico/time.h"
 #include "stepper.pio.h"
 #include <FreeRTOS.h>
+#include <cmath>
+#include <cstdint>
 #include <exception>
 #include <pico/printf.h>
 #include <stdexcept>
@@ -22,12 +25,6 @@ namespace PicoMill::Drivers
 		gpio_set_dir(dirPin, GPIO_OUT);
 		gpio_init(enPin);
 		gpio_set_dir(enPin, GPIO_OUT);
-	}
-
-	void PIOStepper::Init()
-	{
-		gpio_set_dir(dirPin, GPIO_OUT);
-
 		uint offset = pio_add_program(pio, (const pio_program_t *)&simplestepper_program);
 		pio_sm_config c = simplestepper_program_get_default_config(offset);
 		sm_config_set_sideset_pins(&c, stepPin);				   // Configure the step pin for side-set operations
@@ -41,25 +38,23 @@ namespace PicoMill::Drivers
 
 		pio_sm_init(pio, sm, offset, &c);  // Initialize the state machine
 		pio_sm_set_enabled(pio, sm, true); // Enable the state machine
+	}
 
+	void PIOStepper::Start()
+	{
 		Disable();
+
+		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 1, NULL);
 	}
 
 	void PIOStepper::SetDirection(bool direction)
 	{
-		if (this->myDirection == direction)
+		if (this->myTargetDirection == direction)
 		{
 			return;
 		}
 
-		if (myCurrentSpeed != 0)
-		{
-			throw std::runtime_error("Cannot change direction while moving");
-		}
-
-		this->myDirection = direction;
-		gpio_put(dirPin, direction);
-		DirectionChangedWait();
+		this->myTargetDirection = direction;
 	}
 
 	void PIOStepper::DirectionChangedWait()
@@ -85,6 +80,36 @@ namespace PicoMill::Drivers
 		return myCurrentSpeed;
 	}
 
+	void PIOStepper::SetSpeed(uint32_t speed)
+	{
+		myTargetSpeed = speed;
+	}
+
+	uint32_t PIOStepper::GetSetSpeed()
+	{
+		return myTargetSpeed;
+	}
+
+	bool PIOStepper::GetDirection()
+	{
+		return myDirection;
+	}
+
+	bool PIOStepper::GetTargetDirection()
+	{
+		return myTargetDirection;
+	}
+
+	uint32_t PIOStepper::GetTargetSpeed()
+	{
+		return myTargetSpeed;
+	}
+
+	bool PIOStepper::IsEnabled()
+	{
+		return enabled;
+	}
+
 	void PIOStepper::Enable()
 	{
 		gpio_put(enPin, enableValue);
@@ -95,43 +120,52 @@ namespace PicoMill::Drivers
 	void PIOStepper::Disable()
 	{
 		gpio_put(enPin, disableValue);
-		enabled = true;
+		enabled = false;
 		DirectionChangedWait();
 	}
 
 	void PIOStepper::Update()
 	{
 
-		if (myCurrentSpeed == 0 && myTargetSpeed == 0)
+		if (!IsEnabled())
 		{
-			if (enabled)
-			{
-				Disable();
-			}
+			vTaskDelay(MS_TO_TICKS(STEPPER_DIRECTION_CHANGE_DELAY_MS));
 			return;
 		}
 
-		uint32_t delay = myCurrentSpeed ? 1 / (myCurrentSpeed / 1000000) : 1 / (1 / 1000000);
+		uint32_t delay = std::floor(1.0 / ((myCurrentSpeed ? myCurrentSpeed : ACCELERATION_JERK) / 1000000.0));
 
-		if (myCurrentSpeed < myTargetSpeed)
+		if (myDirection != myTargetDirection)
 		{
-			delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myAcceleration);
+			if (myCurrentSpeed > 0)
+			{
+				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDeceleration);
+			}
+			else
+			{
+				gpio_put(dirPin, myTargetDirection);
+				myDirection = myTargetDirection;
+				DirectionChangedWait();
+				return;
+			}
 		}
-
-		if (myCurrentSpeed > myTargetSpeed)
+		else
 		{
-			delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDeceleration);
-		}
+			if (myCurrentSpeed < myTargetSpeed)
+			{
+				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myAcceleration);
+			}
 
-		if (!enabled)
-		{
-			Enable();
+			if (myCurrentSpeed > myTargetSpeed)
+			{
+				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDeceleration);
+			}
 		}
 
 		WriteToStepper(delay);
 	}
 
-	void PIOStepperUpdateStepperTask(void *pvParameters)
+	void PIOStepper::PIOStepperUpdateStepperTask(void *pvParameters)
 	{
 		PIOStepper *stepper = (PIOStepper *)pvParameters;
 		while (true)

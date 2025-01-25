@@ -46,7 +46,7 @@ namespace PicoMill
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+		Machine(std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 0, uint32_t aRapidSpeed = 0) : myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 

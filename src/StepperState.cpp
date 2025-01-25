@@ -315,8 +315,6 @@ namespace PicoMill
 
 			return;
 		}
-
-		myStepper->Update();
 	}
 
 } // namespace Stepper

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <FreeRTOS.h>
+
 inline double ScaleValue(double value, double minOld, double maxOld, double minNew, double maxNew)
 {
 	return (value - minOld) / (maxOld - minOld) * (maxNew - minNew) + minNew;
@@ -18,3 +20,9 @@ T min(T a, T2 b)
 }
 
 #define MS_TO_TICKS(ms) (ms * configTICK_RATE_HZ / 1000)
+
+template <typename T>
+bool IsWithinRange(T value, T compareTo, T deadzone)
+{
+	return abs(value - compareTo) <= deadzone;
+}

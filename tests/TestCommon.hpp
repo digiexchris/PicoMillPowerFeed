@@ -2,6 +2,8 @@
 #include <chrono>
 #include <gmock/gmock.h>
 
+using namespace PicoMill;
+
 class TestTime : public ITime
 {
 public:

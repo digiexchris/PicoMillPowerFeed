@@ -5,11 +5,11 @@
 #include <memory>
 
 using ::testing::Return;
-using namespace Stepper;
+using namespace PicoMill;
 
 TEST(State, Start)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -25,7 +25,7 @@ TEST(State, Start)
 
 TEST(State, Start_With_Same_Direction_Does_Not_Change_Direction)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -41,7 +41,7 @@ TEST(State, Start_With_Same_Direction_Does_Not_Change_Direction)
 
 TEST(State, Start_with_Zero_Speed_While_Stopped_Remains_Stopped)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -57,7 +57,7 @@ TEST(State, Start_with_Zero_Speed_While_Stopped_Remains_Stopped)
 
 TEST(State, Start_While_Accelerating_With_Greater_Speed_Than_Current_Accelerates_And_Coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -105,7 +105,7 @@ TEST(State, Start_While_Accelerating_With_Greater_Speed_Than_Current_Accelerates
 
 TEST(State, Start_While_Stopping_Accelerates_And_Coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -154,7 +154,7 @@ TEST(State, Start_While_Stopping_Accelerates_And_Coasts)
 
 TEST(State, Start_While_Accelerating_With_Less_Speed_Than_Current_Decelerates_And_Coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -198,7 +198,7 @@ TEST(State, Start_While_Accelerating_With_Less_Speed_Than_Current_Decelerates_An
 
 TEST(State, Stop_While_Accelerating_Decelerates_And_Stops)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -240,7 +240,7 @@ TEST(State, Stop_While_Accelerating_Decelerates_And_Stops)
 
 TEST(State, Stop_While_Coasting_Decelerates_And_Stops)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -282,7 +282,7 @@ TEST(State, Stop_While_Coasting_Decelerates_And_Stops)
 
 TEST(State, Stop_While_Decelerating_Decelerates_And_Stops)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -331,7 +331,7 @@ TEST(State, Stop_While_Decelerating_Decelerates_And_Stops)
 
 TEST(State, Stop_While_Stopped_Remains_Stopped_And_Disable_After_Timeout)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 
@@ -364,7 +364,7 @@ TEST(State, Stop_While_Stopped_Remains_Stopped_And_Disable_After_Timeout)
 
 TEST(State, Decelerate_While_Decelerating_Changes_Target_Speed_And_Coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -425,7 +425,7 @@ TEST(State, Decelerate_While_Decelerating_Changes_Target_Speed_And_Coasts)
 
 TEST(State, Start_While_Accelerating_with_a_different_direction_changes_direction_accelerates_and_coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));
@@ -493,7 +493,7 @@ TEST(State, Start_While_Accelerating_with_a_different_direction_changes_directio
 
 TEST(State, Start_With_Different_Direction_While_Stopping_Changes_Direciton_Accelerates_And_Coasts)
 {
-	std::shared_ptr<TestStepper> stepper = std::make_shared<TestStepper>();
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
 	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
 	StepperState state(stepper, time);
 	EXPECT_CALL(*stepper, GetCurrentSpeed()).WillOnce(Return(0));

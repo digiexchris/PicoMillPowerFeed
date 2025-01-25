@@ -18,6 +18,15 @@
 #define ENCODER_A_PIN 10
 #define ENCODER_B_PIN 11
 #define ENCODER_BUTTON_PIN 12
+
+#define ACCELERATION_PIN 13
+#define RAPID_SPEED_PIN 14
+
+const uint16_t ACCELERATION_JERK = 10; // The number of steps per second that the stepper can accelerate from zero to without acceleration being taken into account. See PIOStepper::Update
+
+const uint16_t ACCELERATION_PIN_DEADZONE = 10;
+const uint16_t RAPID_SPEED_PIN_DEADZONE = 10;
+
 // #define PIEZO_PIN GPIO_NUM_2
 const uint16_t ACCELERATION = 20000; // steps/s/s
 const uint16_t DECELERATION = 60000;
