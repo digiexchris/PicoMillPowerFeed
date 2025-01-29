@@ -98,43 +98,80 @@ namespace PicoMill
 				}
 			}
 			break;
-		case DeviceState::NORMAL_SPEED_CHANGE:
+		case DeviceState::ENCODER_CHANGED:
 		{
-			auto state = std::static_pointer_cast<UInt32StateChange>(aStateChange);
+			auto state = std::static_pointer_cast<Int8StateChange>(aStateChange);
+			bool moving = IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT);
+			int8_t increment = state->value;
 
-			if (myNormalSpeed != state->value)
+			if (IsStateSet(MachineState::RAPID))
 			{
-				myNormalSpeed = state->value;
-				if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
+				myRapidSpeed += increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND;
+				if (moving)
 				{
-					if (!IsStateSet(MachineState::RAPID))
-					{
-						std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
-						myStepperState->ProcessCommand(command);
-					}
+					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
+					myStepperState->ProcessCommand(command);
+				}
+			}
+			else if (IsStateSet(MachineState::ACCELERATION_HIGH))
+			{
+				myAcceleration += ENCODER_COUNTS_TO_ACCELERATION;
+				std::shared_ptr<Command> command = std::make_shared<ChangeAcceleration>(myAcceleration, myAcceleration);
+				myStepperState->ProcessCommand(command);
+			}
+			else
+			{
+				myNormalSpeed += increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND;
+				if (moving)
+				{
+					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
+					myStepperState->ProcessCommand(command);
 				}
 			}
 		}
 
 		break;
-		case DeviceState::RAPID_SPEED_CHANGE:
-		{
-			auto state = std::static_pointer_cast<UInt32StateChange>(aStateChange);
 
-			if (myRapidSpeed != state->value)
-			{
-				myRapidSpeed = state->value;
-				if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
-				{
-					if (IsStateSet(MachineState::RAPID))
-					{
-						std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
-						myStepperState->ProcessCommand(command);
-					}
-				}
-			}
+		case DeviceState::UNITS_TOGGLE:
+			myDisplay->ToggleUnits();
+			break;
+
+		case DeviceState::ACCELERATION_HIGH:
+			SetState(MachineState::ACCELERATION_HIGH);
+			break;
+
+		case DeviceState::ACCELERATION_LOW:
+			ClearState(MachineState::ACCELERATION_HIGH);
+			break;
 		}
-		break;
+
+		UpdateDisplay();
+	}
+
+	void Machine::UpdateDisplay()
+	{
+		myDisplay->Clear();
+		myDisplay->DrawSpeed(IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed);
+
+		if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RAPID))
+		{
+			myDisplay->DrawRapidLeft();
+		}
+		else if (IsStateSet(MachineState::RIGHT) && IsStateSet(MachineState::RAPID))
+		{
+			myDisplay->DrawRapidRight();
+		}
+		else if (IsStateSet(MachineState::LEFT))
+		{
+			myDisplay->DrawMovingLeft();
+		}
+		else if (IsStateSet(MachineState::RIGHT))
+		{
+			myDisplay->DrawMovingRight();
+		}
+		else
+		{
+			myDisplay->DrawStopped();
 		}
 	}
 

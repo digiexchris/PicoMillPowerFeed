@@ -9,6 +9,7 @@ namespace PicoMill
 	class IStepper
 	{
 	public:
+		virtual void SetAcceleration(uint32_t acceleration) = 0;
 		virtual void SetDirection(bool direction) = 0;
 		virtual bool GetDirection() = 0;
 		virtual bool GetTargetDirection() = 0;

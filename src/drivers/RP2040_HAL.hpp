@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../MachineState.hpp"
+#include "config.hpp"
 #include <cstdint>
 #include <hardware/gpio.h>
 #include <memory>
@@ -8,30 +9,40 @@
 namespace PicoMill::Drivers
 {
 
-	// helper to boot up the RP2040 interrupts, poll the ADC values, etc...
+	struct PinStateMapping
+	{
+		uint pin;
+		DeviceState highState;
+		DeviceState lowState;
+	};
+
 	class RP2040_HAL
 	{
 	public:
 		RP2040_HAL(std::shared_ptr<Machine> aMachineState);
 
 		// start the task that polls the ADC values
-		void Start();
+		static std::shared_ptr<RP2040_HAL> GetInstance();
 
 	private:
-		static void InterruptHandler(uint gpio, uint32_t events);
+		static std::shared_ptr<RP2040_HAL> myInstance;
 		std::shared_ptr<Machine> myMachine;
+		static void SwitchInterruptHandler(uint gpio, uint32_t events);
+		static void EncInterruptHandler(uint gpio, uint32_t events);
+		uint32_t myLastEncA = 0;
+		uint32_t myLastEncB = 0;
+		uint8_t myLastEncState = 0;
 
-		static void Poll(void *pvParameters);
+		static constexpr PinStateMapping PIN_STATES[] = {
+			{LEFTPIN, DeviceState::LEFT_HIGH, DeviceState::LEFT_LOW},
+			{RIGHTPIN, DeviceState::RIGHT_HIGH, DeviceState::RIGHT_LOW},
+			{RAPID_PIN, DeviceState::RAPID_HIGH, DeviceState::RAPID_LOW},
+			{ACCELERATION_PIN, DeviceState::ACCELERATION_HIGH, DeviceState::ACCELERATION_LOW}};
 
-		bool GetLeftSwitch();
-		bool GetRightSwitch();
-		bool GetRapidSwitch();
-		uint32_t GetNormalSpeedEncoderValue();
-		uint32_t myNormalSpeedEncoderValue = 0;
-		uint32_t GetRapidValue();
-		uint32_t myRapidValue = 0;
-		uint32_t GetAccelerationValue();
-		uint32_t myAccelerationValue = 0;
+		std::array<uint32_t, sizeof(PIN_STATES) / sizeof(PIN_STATES[0])> myLastPinTimes = {0};
+
+		uint32_t myEncoderButtonLastTime = 0;
+		bool myEncoderButtonLastState = false;
 	};
 
 } // namespace PicoMill::Drivers

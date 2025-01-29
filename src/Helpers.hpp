@@ -21,6 +21,8 @@ T min(T a, T2 b)
 
 #define MS_TO_TICKS(ms) (ms * configTICK_RATE_HZ / 1000)
 
+#define MS_TO_US(ms) (ms * 1000)
+
 template <typename T>
 bool IsWithinRange(T value, T compareTo, T deadzone)
 {

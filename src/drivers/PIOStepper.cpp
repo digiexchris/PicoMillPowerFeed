@@ -18,8 +18,8 @@
 namespace PicoMill::Drivers
 {
 
-	PIOStepper::PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t deceleration, PIO pio, uint sm, uint16_t stepsPerRev)
-		: stepPin(stepPin), dirPin(dirPin), enPin(enPin), myAcceleration(acceleration), myDeceleration(deceleration), pio(pio), sm(sm), myStepsPerRev(stepsPerRev) //, IStepper(maxSpeed, acceleration)
+	PIOStepper::PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, PIO pio, uint sm, uint16_t stepsPerRev)
+		: stepPin(stepPin), dirPin(dirPin), enPin(enPin), myAcceleration(acceleration), myDecelerationMultiplier(decelerationMultiplier), pio(pio), sm(sm), myStepsPerRev(stepsPerRev) //, IStepper(maxSpeed, acceleration)
 	{
 		gpio_init(dirPin);
 		gpio_set_dir(dirPin, GPIO_OUT);
@@ -45,6 +45,11 @@ namespace PicoMill::Drivers
 		Disable();
 
 		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 1, NULL);
+	}
+
+	void PIOStepper::SetAcceleration(uint32_t acceleration)
+	{
+		myAcceleration = acceleration;
 	}
 
 	void PIOStepper::SetDirection(bool direction)
@@ -139,7 +144,7 @@ namespace PicoMill::Drivers
 		{
 			if (myCurrentSpeed > 0)
 			{
-				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDeceleration);
+				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDecelerationMultiplier * myAcceleration);
 			}
 			else
 			{
@@ -158,7 +163,7 @@ namespace PicoMill::Drivers
 
 			if (myCurrentSpeed > myTargetSpeed)
 			{
-				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDeceleration);
+				delay = CalculateNextInterval(myStepsPerRev, myCurrentSpeed, myDecelerationMultiplier * myAcceleration);
 			}
 		}
 

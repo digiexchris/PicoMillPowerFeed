@@ -24,7 +24,8 @@ namespace PicoMill
 		{
 			START,
 			STOP,
-			CHANGE_SPEED
+			CHANGE_SPEED,
+			CHANGE_ACCELERATION
 		};
 
 		Type type;
@@ -34,6 +35,12 @@ namespace PicoMill
 	{
 		ChangeSpeed(uint32_t speed) : speed(speed) { type = Type::CHANGE_SPEED; }
 		uint32_t speed;
+	};
+
+	struct ChangeAcceleration : Command
+	{
+		ChangeAcceleration(uint32_t acceleration, uint32_t deceleration) : acceleration(acceleration) { type = Type::CHANGE_ACCELERATION; }
+		uint32_t acceleration;
 	};
 
 	struct Stop : Command

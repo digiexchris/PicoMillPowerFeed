@@ -10,10 +10,12 @@ extern "C"
 }
 
 #include "Common.hpp"
+#include "Display.hpp"
 #include "Stepper.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
 #include "drivers/PIOStepper.hpp"
+#include "drivers/PicoSSD1306Display.hpp"
 
 std::shared_ptr<PicoMill::IStepper> stepper;
 std::shared_ptr<PicoMill::Time> iTime;
@@ -23,6 +25,8 @@ std::shared_ptr<PicoMill::StepperState> stepperState;
 std::shared_ptr<PicoMill::Machine> machineState;
 
 std::unique_ptr<PicoMill::Drivers::RP2040_HAL> hal;
+
+std::shared_ptr<PicoMill::Display> display;
 
 void stepperUpdateTask(void *pvParameters)
 {
@@ -40,18 +44,20 @@ void createStepperTask()
 
 int main()
 {
-	stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION, pio0, 0, stepsPerMotorRev));
+	display = std::make_shared<PicoMill::Drivers::PicoSSD1306Display>();
+	stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
 	iTime = std::make_shared<PicoMill::Time>();
 	stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
+	machineState = std::make_shared<PicoMill::Machine>(display, stepperState);
 
-	createStepperTask();
-
-	machineState = std::make_shared<PicoMill::Machine>(stepperState);
+	// todo: load saved units and speed from eeprom
 
 	hal = std::make_unique<PicoMill::Drivers::RP2040_HAL>(machineState);
 
-	hal->Start(); // start the task to poll the ADC
+	display->Clear();
+	display->DrawSpeed(0);
 
+	createStepperTask();
 	vTaskStartScheduler();
 	return 0;
 }

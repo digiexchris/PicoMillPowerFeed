@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Display.hpp"
 #include "Event.hpp"
 #include "StepperState.hpp"
+#include "config.hpp"
 #include <cstdint>
 #include <memory>
 
@@ -12,7 +14,8 @@ namespace PicoMill
 	{
 		LEFT = 1,
 		RIGHT = 2,
-		RAPID = 4
+		RAPID = 4,
+		ACCELERATION_HIGH = 8,
 	};
 
 	enum class DeviceState : uint8_t
@@ -23,8 +26,10 @@ namespace PicoMill
 		RIGHT_LOW,
 		RAPID_HIGH,
 		RAPID_LOW,
-		NORMAL_SPEED_CHANGE,
-		RAPID_SPEED_CHANGE
+		ACCELERATION_HIGH,
+		ACCELERATION_LOW,
+		ENCODER_CHANGED,
+		UNITS_TOGGLE
 	};
 
 	struct StateChange
@@ -43,10 +48,16 @@ namespace PicoMill
 		uint32_t value;
 	};
 
+	struct Int8StateChange : StateChange
+	{
+		Int8StateChange(DeviceState aDeviceState, int8_t aValue) : StateChange{aDeviceState}, value(aValue) {}
+		int8_t value;
+	};
+
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 0, uint32_t aRapidSpeed = 0) : myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+		Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 0, uint32_t aRapidSpeed = 0) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 
@@ -56,10 +67,15 @@ namespace PicoMill
 		}
 
 	private:
+		std::shared_ptr<Display> myDisplay;
 		std::shared_ptr<StepperState> myStepperState;
 		uint32_t myNormalSpeed;
 		uint32_t myRapidSpeed;
+		uint32_t myAcceleration;
 		uint8_t myState = 0;
+		Units myUnits = Units::Millimeter;
+
+		void UpdateDisplay();
 
 		void SetState(MachineState state)
 		{

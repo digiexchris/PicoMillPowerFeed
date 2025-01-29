@@ -42,7 +42,6 @@ add_compile_options(
     ### Gnu/Clang C Options
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
-
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wall>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
@@ -50,6 +49,7 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-variable>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-parameter>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-type-limits>
+    $<$<COMPILE_LANG_AND_ID:CXX,Clang,GNU>:-Wno-volatile>
 )
 
 if (WIN32)
@@ -67,19 +67,13 @@ COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:Pic
 endif()
 endif()
 
-# MACRO(HEADER_DIRECTORIES return_list)
-#     FILE(GLOB_RECURSE new_list *.h*)
-#     SET(dir_list "")
-#     FOREACH(file_path ${new_list})
-#         GET_FILENAME_COMPONENT(dir_path ${file_path} PATH)
-#         SET(dir_list ${dir_list} ${dir_path})
-#     ENDFOREACH()
-#     LIST(REMOVE_DUPLICATES dir_list)
-#     SET(${return_list} ${dir_list})
-# ENDMACRO()
-
-# pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/blink.pio)
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
+
+add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
+target_link_libraries(PicoApp
+pico_ssd1306
+# you will also need hardware i2c library for communication with the display
+hardware_i2c)
 
 target_include_directories(PicoApp PRIVATE
         ${CMAKE_HOME_DIRECTORY}

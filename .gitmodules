@@ -16,3 +16,6 @@
 [submodule "lib/Simple3dStepperMovementPlanner"]
 	path = lib/Simple3dStepperMovementPlanner
 	url = https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
+[submodule "lib/pico-ssd1306"]
+	path = lib/pico-ssd1306
+	url = https://github.com/digiexchris/pico-ssd1306.git

@@ -6,7 +6,8 @@
 // #define DEBUG_ABORTS 1
 // #define ENABLE_SSD1306 1
 
-#define ENCODER_COUNTS_FULL_SCALE 1000 * 4 // 10 turns on a 20 turn encoder, 4 counts per detent
+#define ENCODER_COUNTS_TO_STEPS_PER_SECOND 1000 / 4 // 10 turns on a 20 turn encoder, 4 counts per detent
+#define ENCODER_COUNTS_TO_ACCELERATION 100 / 4
 #define STEPPER_DIRECTION_CHANGE_DELAY_MS 5
 
 #define dirPinStepper 4
@@ -20,7 +21,11 @@
 #define ENCODER_BUTTON_PIN 12
 
 #define ACCELERATION_PIN 13
-#define RAPID_SPEED_PIN 14
+#define RAPID_PIN 14
+
+constexpr uint32_t UNITS_SWITCH_DELAY_MS = 1000;
+
+constexpr uint32_t DEBOUNCE_DELAY_US = 5000; // 5ms debounce
 
 const uint16_t ACCELERATION_JERK = 10; // The number of steps per second that the stepper can accelerate from zero to without acceleration being taken into account. See PIOStepper::Update
 
@@ -28,8 +33,8 @@ const uint16_t ACCELERATION_PIN_DEADZONE = 10;
 const uint16_t RAPID_SPEED_PIN_DEADZONE = 10;
 
 // #define PIEZO_PIN GPIO_NUM_2
-const uint16_t ACCELERATION = 20000; // steps/s/s
-const uint16_t DECELERATION = 60000;
+const uint16_t ACCELERATION = 20000;		// steps/s/s
+const uint16_t DECELERATION_MULTIPLIER = 6; // 6x acceleration for deceleration since this mill has lots of friction
 
 const uint8_t enableValue = 0;
 const uint8_t disableValue = 1;

@@ -1,4 +1,8 @@
 #/bin/bash
+pwd
+
+PICOTOOL_PATH=../../tools/linux
+export PATH=$PICOTOOL_PATH:$PATH
 
 picotool reboot -u -f
 
