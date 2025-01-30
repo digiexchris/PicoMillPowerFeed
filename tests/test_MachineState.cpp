@@ -1,6 +1,7 @@
 #include "../src/MachineState.hpp"
 #include "../src/config.hpp"
 #include "TestCommon.hpp"
+#include "TestDisplay.hpp"
 #include "TestStepper.hpp"
 #include <gtest/gtest.h>
 #include <memory>
@@ -9,13 +10,24 @@ using ::testing::Return;
 
 using namespace PicoMill;
 
-TEST(MachineState, INIT)
+class MachineStateTest : public ::testing::Test
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
-}
+protected:
+	void SetUp() override
+	{
+		display = std::make_shared<PicoMill::TestDisplay>();
+		stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
+		time = std::make_shared<TestTime>();
+		stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
+		state = std::make_unique<Machine>(display, stepperState, 100, 200);
+	}
+
+	std::shared_ptr<PicoMill::TestDisplay> display;
+	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper;
+	std::shared_ptr<TestTime> time;
+	std::shared_ptr<PicoMill::TestStepperState> stepperState;
+	std::shared_ptr<Machine> state;
+};
 
 bool compareCommands(std::shared_ptr<PicoMill::Command> cmd)
 {
@@ -24,13 +36,8 @@ bool compareCommands(std::shared_ptr<PicoMill::Command> cmd)
 		   startCmd->speed == 100;
 }
 
-TEST(MachineState, Left_Normal_Speed)
+TEST_F(MachineStateTest, Left_Normal_Speed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
-
 	// Set up expectation before executing the action
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
@@ -40,15 +47,11 @@ TEST(MachineState, Left_Normal_Speed)
 
 	// Execute the action after setting up expectations
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::LEFT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 }
 
-TEST(MachineState, Right_Normal_Speed)
+TEST_F(MachineStateTest, Right_Normal_Speed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
 
 	// Set up expectation before executing the action
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -59,18 +62,13 @@ TEST(MachineState, Right_Normal_Speed)
 
 	// Execute the action after setting up expectations
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 }
-TEST(MachineState, Left_Rapid_Speed)
+TEST_F(MachineStateTest, Left_Rapid_Speed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
-
 	// Set rapid speed first
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
-	state.OnValueChange(rapidStateChange);
+	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for left movement at rapid speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -80,19 +78,15 @@ TEST(MachineState, Left_Rapid_Speed)
 		.Times(1);
 
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::LEFT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 }
 
-TEST(MachineState, Right_Rapid_Speed)
+TEST_F(MachineStateTest, Right_Rapid_Speed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
 
 	// Set rapid speed first
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
-	state.OnValueChange(rapidStateChange);
+	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for right movement at rapid speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -102,15 +96,11 @@ TEST(MachineState, Right_Rapid_Speed)
 		.Times(1);
 
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 }
 
-TEST(MachineState, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
+TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
 
 	// Set up expectation for right movement at normal speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -119,7 +109,7 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 			return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
@@ -128,7 +118,7 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		.Times(1);
 	// Set up expectation for right movement at rapid speed
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
-	state.OnValueChange(rapidStateChange);
+	state->OnValueChange(rapidStateChange);
 
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
@@ -136,7 +126,7 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		return speedCmd->speed == 100; })))
 		.Times(1);
 	stateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 
 	// Set up expectation for right movement at normal speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -145,16 +135,11 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		return stopCmd->type == PicoMill::Command::Type::STOP ; })))
 		.Times(1);
 	stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_LOW);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 }
 
-TEST(MachineState, Right_Normal_Then_ChangeSpeed)
+TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
-
 	// Start right movement at normal speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
@@ -162,25 +147,20 @@ TEST(MachineState, Right_Normal_Then_ChangeSpeed)
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 
 	// Change normal speed while moving
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
 		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
-		return speedCmd->speed == 150; })))
+		return speedCmd->speed == 100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
-	auto speedChange = std::make_shared<UInt32StateChange>(DeviceState::NORMAL_SPEED_CHANGE, 150);
-	state.OnValueChange(speedChange);
+	auto speedChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+	state->OnValueChange(speedChange);
 }
 
-TEST(MachineState, Right_Normal_Then_Rapid_Then_Change_normal_speed_Maintains_Rapid_Speed)
+TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes_Rapid_Speed)
 {
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
-
 	// Start right movement at normal speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
 															   {
@@ -188,7 +168,7 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Change_normal_speed_Maintains_Ra
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+	state->OnValueChange(stateChange);
 
 	// Switch to rapid speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -197,11 +177,20 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Change_normal_speed_Maintains_Ra
 		return speedCmd->speed == 200; })))
 		.Times(1);
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
-	state.OnValueChange(rapidStateChange);
+	state->OnValueChange(rapidStateChange);
 
-	// Change normal speed while in rapid mode - should not affect current speed
-	auto speedChange = std::make_shared<UInt32StateChange>(DeviceState::NORMAL_SPEED_CHANGE, 150);
-	state.OnValueChange(speedChange);
+	// Change rapid speed while in rapid mode
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+															   {
+		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		return speedCmd->speed == 200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
+		.Times(1);
+	auto encoderStateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+	state->OnValueChange(encoderStateChange);
+
+	// Change encoder while in rapid mode - should not affect current speed
+	auto speedChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+	state->OnValueChange(speedChange);
 
 	// Switch to normal speed
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
@@ -210,35 +199,35 @@ TEST(MachineState, Right_Normal_Then_Rapid_Then_Change_normal_speed_Maintains_Ra
 		return speedCmd->speed == 150; })))
 		.Times(1);
 	auto normalStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
-	state.OnValueChange(normalStateChange);
+	state->OnValueChange(normalStateChange);
 }
 
-TEST(MachineState, Right_Normal_Then_Change_rapid_speed_Maintains_normal_Speed)
-{
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
-	std::shared_ptr<TestTime> time = std::make_shared<TestTime>();
-	std::shared_ptr<PicoMill::TestStepperState> stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
-	Machine state(stepperState, 100, 200);
+// TODO test cases needed: negative speed change doesn't go below zero. If it goes to zero, set it to the minimum jerk speed
+// TODO need acceleration test cases
+// TODO need to add display calls to all test cases
 
-	// Start right movement at normal speed
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
-															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 100; })))
-		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
-	state.OnValueChange(stateChange);
+// Probably not needed because encoder changes the active speed.
+// TEST_F(MachineStateTest, Right_Normal_Then_Change_rapid_speed_Maintains_normal_Speed)
+// {
+// 	// Start right movement at normal speed
+// 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+// 															   {
+// 		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+// 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
+// 		.Times(1);
+// 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+// 	state->OnValueChange(stateChange);
 
-	// Change rapid speed while in normal mode - should not affect current speed
-	auto speedChange = std::make_shared<UInt32StateChange>(DeviceState::RAPID_SPEED_CHANGE, 250);
-	state.OnValueChange(speedChange);
+// 	// Change rapid speed while in normal mode - should not affect current speed
+// 	auto speedChange = std::make_shared < std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+// 	state->OnValueChange(speedChange);
 
-	// Switch to rapid speed
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
-															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
-		return speedCmd->speed == 250; })))
-		.Times(1);
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
-	state.OnValueChange(rapidStateChange);
-}
+// 	// Switch to rapid speed
+// 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+// 															   {
+// 		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+// 		return speedCmd->speed == 250; })))
+// 		.Times(1);
+// 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+// 	state->OnValueChange(rapidStateChange);
+// }
