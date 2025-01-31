@@ -12,8 +12,7 @@ namespace PicoMill
 		class TestStepper : public IStepper
 		{
 		public:
-			TestStepper(){};
-
+			MOCK_METHOD(void, SetAcceleration, (uint32_t acceleration), (override));
 			MOCK_METHOD(uint32_t, GetCurrentSpeed, (), (override));
 			MOCK_METHOD(void, SetDirection, (bool direction), (override));
 			MOCK_METHOD(bool, GetDirection, (), (override));
@@ -24,6 +23,7 @@ namespace PicoMill
 			MOCK_METHOD(void, Enable, (), (override));
 			MOCK_METHOD(void, Disable, (), (override));
 			MOCK_METHOD(bool, IsEnabled, (), (override));
+			MOCK_METHOD(void, Start, (), (override));
 		};
 
 	}

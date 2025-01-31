@@ -69,8 +69,8 @@ namespace PicoMill
 	private:
 		std::shared_ptr<Display> myDisplay;
 		std::shared_ptr<StepperState> myStepperState;
-		uint32_t myNormalSpeed;
-		uint32_t myRapidSpeed;
+		uint32_t myNormalSpeed = ACCELERATION_JERK;
+		uint32_t myRapidSpeed = ACCELERATION_JERK;
 		uint32_t myAcceleration;
 		uint8_t myState = 0;
 		Units myUnits = Units::Millimeter;

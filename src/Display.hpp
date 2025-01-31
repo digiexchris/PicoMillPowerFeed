@@ -15,19 +15,19 @@ namespace PicoMill
 	class Display
 	{
 	public:
-		void DrawStart();
-		void DrawMovingLeft();
-		void DrawMovingRight();
-		void DrawStopping();
-		void DrawStopped();
-		void DrawRapidLeft();
-		void DrawRapidRight();
-		void DrawSpeed(uint32_t speed);
+		virtual void DrawStart();
+		virtual void DrawMovingLeft();
+		virtual void DrawMovingRight();
+		virtual void DrawStopping();
+		virtual void DrawStopped();
+		virtual void DrawRapidLeft();
+		virtual void DrawRapidRight();
+		virtual void DrawSpeed(uint32_t aSpeed);
 		virtual void Clear() = 0;
-		void ToggleUnits();
+		virtual void ToggleUnits();
 
 	protected:
-		void DrawCenteredText(const char *text, const unsigned char *font, uint16_t y);
+		virtual void DrawCenteredText(const char *text, const unsigned char *font, uint16_t y);
 		virtual void DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y) = 0;
 		virtual void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) = 0;
 
@@ -37,6 +37,10 @@ namespace PicoMill
 		const uint16_t myWidth = 128;
 		const uint16_t myHeight = 32;
 		Units myUnits = Units::Millimeter;
+		uint32_t mySpeed = 0;
+
+		const float mmPerInch = 25.4;
+		const float inchPerMm = 1.0 / mmPerInch;
 
 		const uint8_t height = 32;
 		const uint8_t width = 32;

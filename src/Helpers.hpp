@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef UNIT_TEST
+#define configTICK_RATE_HZ 1000
+#else
 #include <FreeRTOS.h>
+#endif
 
 inline double ScaleValue(double value, double minOld, double maxOld, double minNew, double maxNew)
 {

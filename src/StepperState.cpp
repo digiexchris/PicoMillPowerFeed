@@ -43,6 +43,12 @@ namespace PicoMill
 		}
 		break;
 
+		case Command::Type::CHANGE_ACCELERATION:
+		{
+			std::shared_ptr<ChangeAcceleration> changeAcceleration = std::static_pointer_cast<ChangeAcceleration>(aCommand);
+			myStepper->SetAcceleration(changeAcceleration->acceleration);
+		}
+
 		case Command::Type::START:
 		{
 			std::shared_ptr<Start> start = std::static_pointer_cast<Start>(aCommand);

@@ -1,9 +1,9 @@
 #include "Display.hpp"
 #include "Helpers.hpp"
+#include "config.hpp"
 #include "icons.hpp"
 #include "textRenderer/12x16_font.h"
 #include <cstring>
-#include <task.h>
 
 namespace PicoMill
 {
@@ -20,11 +20,6 @@ namespace PicoMill
 
 		const char *bottom = "FEED";
 		DrawCenteredText(bottom, font_12x16, 32);
-
-		vTaskDelay(MS_TO_TICKS(250));
-		Clear();
-
-		DrawSpeed(0);
 	}
 
 	void Display::ToggleUnits()
@@ -66,19 +61,17 @@ namespace PicoMill
 
 	void Display::DrawSpeed(uint32_t aSpeed)
 	{
-		char speed[13];
-		snprintf(speed, sizeof(speed), "%u", aSpeed);
+		float speedPerMin = (aSpeed / stepsPerMm) * 60;
+		char speed[14];
+
 		if (myUnits == Units::Millimeter)
 		{
-
-			strcat(speed, " ");
-			strcat(speed, MMPM);
+			snprintf(speed, sizeof(speed), "%.1f %s", speedPerMin, MMPM);
 		}
 		else
 		{
-			snprintf(speed, sizeof(speed), "%u", aSpeed);
-			strcat(speed, " ");
-			strcat(speed, IPM);
+			speedPerMin = speedPerMin * inchPerMm;
+			snprintf(speed, sizeof(speed), "%.1f %s", speedPerMin, IPM);
 		}
 		DrawCenteredText(speed, font_12x16, 0);
 	}

@@ -28,11 +28,11 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Include the directories
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/pico-ssd1306)
 
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/MachineState.cpp)
+add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/MachineState.cpp ../src/Display.cpp)
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 
@@ -41,7 +41,7 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
 )
-
+target_compile_definitions(PicoApp_Tests PRIVATE UNIT_TEST)
 # Link against GoogleTest and GoogleMock
 target_link_libraries(PicoApp_Tests
 GTest::gtest_main

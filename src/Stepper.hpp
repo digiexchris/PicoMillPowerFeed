@@ -21,6 +21,8 @@ namespace PicoMill
 		virtual void Enable() = 0;
 		virtual void Disable() = 0;
 		virtual bool IsEnabled() = 0;
+		virtual ~IStepper() = default;
+		IStepper() = default;
 	};
 
 }

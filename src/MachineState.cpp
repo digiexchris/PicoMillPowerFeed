@@ -106,7 +106,17 @@ namespace PicoMill
 
 			if (IsStateSet(MachineState::RAPID))
 			{
-				myRapidSpeed += increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND;
+				int32_t speed = static_cast<int32_t>(myRapidSpeed) + (increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND);
+
+				if (speed < ACCELERATION_JERK)
+				{
+					myRapidSpeed = ACCELERATION_JERK;
+				}
+				else
+				{
+					myRapidSpeed = speed;
+				}
+
 				if (moving)
 				{
 					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
@@ -121,7 +131,17 @@ namespace PicoMill
 			}
 			else
 			{
-				myNormalSpeed += increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND;
+				int32_t speed = static_cast<int32_t>(myNormalSpeed) + (increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND);
+
+				if (speed < ACCELERATION_JERK)
+				{
+					myNormalSpeed = ACCELERATION_JERK;
+				}
+				else
+				{
+					myNormalSpeed = speed;
+				}
+
 				if (moving)
 				{
 					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
