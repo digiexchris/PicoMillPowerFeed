@@ -8,8 +8,8 @@
 namespace PicoMill
 {
 
-	const char *IPM = "IPM";
-	const char *MMPM = "MM ";
+	const char *IPM = "ipm";
+	const char *MMPM = "mm ";
 
 	void Display::DrawStart()
 	{
@@ -61,7 +61,7 @@ namespace PicoMill
 
 	void Display::DrawSpeed(uint32_t aSpeed)
 	{
-		float speedPerMin = (aSpeed / stepsPerMm) * 60;
+		float speedPerMin = (static_cast<float>(aSpeed) / stepsPerMm) * 60;
 		char speed[14];
 
 		if (myUnits == Units::Millimeter)

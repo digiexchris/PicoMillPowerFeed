@@ -1,23 +1,33 @@
 [
 {
   "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_MachineState.cpp.o -c /workspace/tests/test_MachineState.cpp",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_Display.cpp.o -c /workspace/tests/test_Display.cpp",
+  "file": "/workspace/tests/test_Display.cpp"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_MachineState.cpp.o -c /workspace/tests/test_MachineState.cpp",
   "file": "/workspace/tests/test_MachineState.cpp"
 },
 {
   "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_basicStateTest.cpp.o -c /workspace/tests/test_basicStateTest.cpp",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_basicStateTest.cpp.o -c /workspace/tests/test_basicStateTest.cpp",
   "file": "/workspace/tests/test_basicStateTest.cpp"
 },
 {
   "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/StepperState.cpp.o -c /workspace/src/StepperState.cpp",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/StepperState.cpp.o -c /workspace/src/StepperState.cpp",
   "file": "/workspace/src/StepperState.cpp"
 },
 {
   "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -I/workspace/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/MachineState.cpp.o -c /workspace/src/MachineState.cpp",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/MachineState.cpp.o -c /workspace/src/MachineState.cpp",
   "file": "/workspace/src/MachineState.cpp"
+},
+{
+  "directory": "/workspace/build",
+  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/include -I/workspace/lib/pico-ssd1306 -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -fcolor-diagnostics -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/Display.cpp.o -c /workspace/src/Display.cpp",
+  "file": "/workspace/src/Display.cpp"
 },
 {
   "directory": "/workspace/build",
