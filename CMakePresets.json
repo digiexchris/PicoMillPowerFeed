@@ -13,7 +13,7 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "PICO_PLATFORM": "rp2040",
+        "PICO_PLATFORM_VALUE": "rp2040",
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_C_STANDARD": "11",
         "PICO_CXX_ENABLE_EXCEPTIONS": "ON",
@@ -47,20 +47,33 @@
       }
     },
     {
-      "name": "devcontainer-linux-debug",
+      "name": "devcontainer-host-debug",
       "generator": "Ninja",
       "description": "Debug Linux",
       "inherits": "default-debug",
       "cacheVariables": {
         "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
-        "PICO_SDK_PATH": "../pico/pico-sdk"
+        "PICO_SDK_PATH": "../pico/pico-sdk",
+        "PICO_PLATFORM_VALUE": "host"
+        // "BUILD_TESTS": "ON"
       }
     },
     {
-      "name": "devcontainer-linux-debug-tests-only",
+      "name": "devcontainer-rp2040-debug",
       "generator": "Ninja",
       "description": "Debug Linux",
-      "inherits": "devcontainer-linux-debug",
+      "inherits": "default-debug",
+      "cacheVariables": {
+        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
+        "PICO_SDK_PATH": "../pico/pico-sdk",
+        "PICO_PLATFORM_VALUE": "rp2040"
+      }
+    },
+    {
+      "name": "devcontainer-linux-native-debug-tests-only",
+      "generator": "Ninja",
+      "description": "Debug Linux",
+      "inherits": "devcontainer-host-debug",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
@@ -112,17 +125,30 @@
       ]
     },
     {
-      "name": "Debug",
-      "configurePreset": "devcontainer-linux-debug",
+      "name": "Debug Host",
+      "configurePreset": "devcontainer-host-debug",
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp.elf",
+        // "PicoApp_Tests",
         "copy_compile_commands_src"
+        // "copy_compile_commands_tests"
+      ]
+    },
+    {
+      "name": "Debug RP2040",
+      "configurePreset": "devcontainer-rp2040-debug",
+      "description": "Build using the linux-debug configuration",
+      "targets": [
+        "PicoApp.elf",
+        "PicoApp_Tests",
+        "copy_compile_commands_src",
+        "copy_compile_commands_tests"
       ]
     },
     {
       "name": "Debug with Tests",
-      "configurePreset": "devcontainer-linux-debug-tests-only",
+      "configurePreset": "devcontainer-linux-native-debug-tests-only",
       "description": "Build Tests",
       "targets": [
         "PicoApp_Tests",

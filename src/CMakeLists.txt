@@ -5,6 +5,9 @@ FILE(GLOB_RECURSE app_sources
 
 set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
 set(FAMILY "rp2040")
+
+# Disable auto-installing picotool
+set(PICO_SDK_FETCH_FROM_GIT_AUTO OFF)
 set(FREERTOS_PORT "GCC_RP2040" CACHE STRING "" FORCE)
 add_library(freertos_config INTERFACE)
 target_include_directories(freertos_config SYSTEM
@@ -32,8 +35,11 @@ add_executable(PicoApp
 ${app_sources}
         )
 
+option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
+
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
+  PICO_PLATFORM=${PICO_PLATFORM_VALUE}
 )
 
 # target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="Usb/tusb_config.h")
@@ -41,7 +47,8 @@ target_compile_definitions (PicoApp PRIVATE
 add_compile_options(
     ### Gnu/Clang C Options
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fdiagnostics-color=always>
+    # $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wall>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
@@ -70,10 +77,13 @@ endif()
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 
 add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
+add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src no-OS-FatFS-SDIO-SPI-RPi-Pico)
 target_link_libraries(PicoApp
 pico_ssd1306
 # you will also need hardware i2c library for communication with the display
-hardware_i2c)
+hardware_i2c
+no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
+pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE
         ${CMAKE_HOME_DIRECTORY}

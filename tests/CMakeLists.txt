@@ -2,7 +2,7 @@
 set(CMAKE_BUILD_TYPE Debug) 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
 
 # add_compile_options(
 #     ### Gnu/Clang C Options
@@ -38,8 +38,8 @@ add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/Mach
 
 add_compile_options(
     ### Gnu/Clang C Options
-    $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+    $<$<CXX_COMPILER_ID:GNU>:-fdiagnostics-color=always>
+    # $<$<CXX_COMPILER_ID:Clang>:-fcolor-diagnostics>
 )
 target_compile_definitions(PicoApp_Tests PRIVATE UNIT_TEST)
 # Link against GoogleTest and GoogleMock

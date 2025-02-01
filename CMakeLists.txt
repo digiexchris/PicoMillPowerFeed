@@ -20,7 +20,9 @@ if(BUILD_PICO_APP)
   add_compile_options(
       ### Gnu/Clang C Options
       $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-      $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+      $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fdiagnostics-color=always>
+
+      # $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
   )
 
   # include(FetchContent)
