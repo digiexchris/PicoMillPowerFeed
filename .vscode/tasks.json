@@ -16,6 +16,26 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "Flash",
+            "type": "process",
+            // "linux": {
+                "command": "${workspaceFolder}/tools/linux/flash.sh",
+            // },
+            // "windows": {
+            //     "command": "${workspaceFolder}/tools/win64/flash.bat",
+            // },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            },
+            "args": [
+                "${workspaceFolder}/build/src/PicoApp.elf"
+            ],
+            "hide": true,
+            "problemMatcher": []
         }
     ]
 }

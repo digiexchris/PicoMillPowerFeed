@@ -53,6 +53,7 @@
       "inherits": "default-debug",
       "cacheVariables": {
         "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
+        // "PICO_COMPILER": "/usr/bin/arm-none-eabi-gcc",
         "PICO_SDK_PATH": "../pico/pico-sdk",
         "PICO_PLATFORM_VALUE": "host"
         // "BUILD_TESTS": "ON"
@@ -141,9 +142,7 @@
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp.elf",
-        "PicoApp_Tests",
         "copy_compile_commands_src",
-        "copy_compile_commands_tests"
       ]
     },
     {

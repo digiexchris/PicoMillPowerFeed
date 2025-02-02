@@ -3,6 +3,9 @@ FILE(GLOB_RECURSE app_sources
     ./src/*.c*
     )
 
+option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
+set(PICO_PLATFORM ${PICO_PLATFORM_VALUE} CACHE STRING "PICO_PLATFORM" FORCE)
+message(STATUS "PICO_PLATFORM: ${PICO_PLATFORM}")
 set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
 set(FAMILY "rp2040")
 
@@ -35,7 +38,7 @@ add_executable(PicoApp
 ${app_sources}
         )
 
-option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
+
 
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1

@@ -2,7 +2,7 @@
 pwd
 
 PICOTOOL_PATH=../../tools/linux
-export PATH=$PICOTOOL_PATH:$PATH
+export PATH=$PICOTOOL_PATH:/workspace/tools/linux/:$PATH
 
 picotool reboot -u -f
 
