@@ -46,6 +46,7 @@ const bool rightDir = true;
 #define I2C_MASTER_SCL_IO 17 /*!< gpio number for I2C master clock */
 #define I2C_MASTER_SDA_IO 16 /*!< gpio number for I2C master data  */
 #define I2C_MASTER_NUM i2c0	 /*!< I2C port number for master dev */
+#define SSD1306_ADDRESS 0x3C
 // redefined in u8g2_hal #define I2C_MASTER_FREQ_HZ 100000 /*!< I2C master clock frequency */
 
 // const adc1_channel_t speedPin = ADC1_CHANNEL_6;  //front knob pot, GPIO7 on the S3

@@ -2,6 +2,8 @@
 #include "drivers/RP2040_HAL.hpp"
 #include <iostream>
 #include <memory>
+#include <pico/stdio.h>
+#include <pico/time.h>
 
 extern "C"
 {
@@ -44,7 +46,12 @@ void createStepperTask()
 
 int main()
 {
+	stdio_init_all();
+	sleep_ms(2000);
+	printf("Starting PicoMill\n");
 	display = std::make_shared<PicoMill::Drivers::PicoSSD1306Display>();
+	display->DrawStart();
+	sleep_ms(1000);
 	stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
 	iTime = std::make_shared<PicoMill::Time>();
 	stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
@@ -54,8 +61,11 @@ int main()
 
 	hal = std::make_unique<PicoMill::Drivers::RP2040_HAL>(machineState);
 
-	display->Clear();
-	display->DrawSpeed(0);
+	printf("Starting display\n");
+	// display->Clear();
+	// display->DrawSpeed(0);
+
+	printf("Starting FreeRTOS\n");
 
 	createStepperTask();
 	vTaskStartScheduler();
