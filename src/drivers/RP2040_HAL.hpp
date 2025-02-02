@@ -2,9 +2,11 @@
 
 #include "../MachineState.hpp"
 #include "config.hpp"
+#include <FreeRTOS.h>
 #include <cstdint>
 #include <hardware/gpio.h>
 #include <memory>
+#include <queue.h>
 
 namespace PicoMill::Drivers
 {
@@ -24,14 +26,21 @@ namespace PicoMill::Drivers
 		// start the task that polls the ADC values
 		static std::shared_ptr<RP2040_HAL> GetInstance();
 
+		void Start();
+
 	private:
 		static std::shared_ptr<RP2040_HAL> myInstance;
 		std::shared_ptr<Machine> myMachine;
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);
 		static void EncInterruptHandler(uint gpio, uint32_t events);
+		// static void OnChangeQueueTask(void *pvParameters);
+		// void OnChangeQueueTaskImpl();
+		// void QueueStateChange(std::shared_ptr<StateChange> aChange);
+		static void SwitchInterruptHandlerImpl(void *instance, uint32_t gpio);
 		uint32_t myLastEncA = 0;
 		uint32_t myLastEncB = 0;
 		uint8_t myLastEncState = 0;
+		QueueHandle_t myOnChangeQueue;
 
 		static constexpr PinStateMapping PIN_STATES[] = {
 			{LEFTPIN, DeviceState::LEFT_HIGH, DeviceState::LEFT_LOW},

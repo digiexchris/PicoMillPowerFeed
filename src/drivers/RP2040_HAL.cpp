@@ -1,18 +1,19 @@
 #include "RP2040_HAL.hpp"
-
 #include "Encoder.hpp"
 #include "Helpers.hpp"
+#include "MachineState.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
+#include "portmacro.h"
 #include <FreeRTOS.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
 #include <hardware/timer.h>
 #include <memory>
 #include <pico/types.h>
+#include <queue.h>
 #include <task.h>
-
-#include "MachineState.hpp"
+#include <timers.h>
 
 namespace PicoMill::Drivers
 {
@@ -45,7 +46,10 @@ namespace PicoMill::Drivers
 		gpio_pull_up(ENCODER_A_PIN);
 		gpio_pull_up(ENCODER_B_PIN);
 		gpio_pull_up(ENCODER_BUTTON_PIN);
+	}
 
+	void RP2040_HAL::Start()
+	{
 		// Set up GPIO interrupts
 		gpio_set_irq_enabled_with_callback(LEFTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 		gpio_set_irq_enabled_with_callback(RIGHTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
@@ -53,7 +57,8 @@ namespace PicoMill::Drivers
 		gpio_set_irq_enabled_with_callback(ENCODER_A_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &EncInterruptHandler);
 		gpio_set_irq_enabled_with_callback(ENCODER_B_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &EncInterruptHandler);
 		gpio_set_irq_enabled_with_callback(ENCODER_BUTTON_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+
+		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 	}
 
 	std::shared_ptr<RP2040_HAL> RP2040_HAL::GetInstance()
@@ -65,7 +70,7 @@ namespace PicoMill::Drivers
 		return myInstance;
 	}
 
-	void RP2040_HAL::SwitchInterruptHandler(uint gpio, uint32_t events)
+	void RP2040_HAL::SwitchInterruptHandlerImpl(void *, uint32_t gpio)
 	{
 		auto instance = GetInstance();
 		auto currentTime = time_us_32();
@@ -81,10 +86,11 @@ namespace PicoMill::Drivers
 					return;
 				}
 
-				bool pinHigh = gpio_get(gpio);
-				instance->myMachine->OnValueChange(
-					std::make_shared<StateChange>(
-						pinHigh ? PIN_STATES[i].highState : PIN_STATES[i].lowState));
+				bool pinHigh = !gpio_get(gpio); // switches are active-low
+				auto stateChange = std::make_shared<StateChange>(
+					pinHigh ? PIN_STATES[i].highState : PIN_STATES[i].lowState);
+
+				instance->myMachine->OnValueChange(stateChange);
 
 				instance->myLastPinTimes[i] = currentTime;
 				break;
@@ -98,13 +104,27 @@ namespace PicoMill::Drivers
 				return;
 			}
 
-			bool pinHigh = gpio_get(gpio);
+			bool pinHigh = !gpio_get(gpio);
 			if (!pinHigh && (currentTime - instance->myEncoderButtonLastTime > UNITS_SWITCH_DELAY_MS * 1000))
 			{
-				instance->myMachine->OnValueChange(std::make_shared<StateChange>(DeviceState::UNITS_TOGGLE));
+				BaseType_t woken = false;
+				auto stateChange = std::make_shared<StateChange>(DeviceState::UNITS_TOGGLE);
+
+				instance->myMachine->OnValueChange(stateChange);
 			}
 			instance->myEncoderButtonLastTime = currentTime;
 		}
+	}
+
+	void RP2040_HAL::SwitchInterruptHandler(uint gpio, uint32_t events)
+	{
+		BaseType_t higherPriorityTaskWoken = pdFALSE;
+		xTimerPendFunctionCallFromISR(SwitchInterruptHandlerImpl,
+									  nullptr,
+									  gpio,
+									  &higherPriorityTaskWoken);
+
+		portYIELD_FROM_ISR(higherPriorityTaskWoken);
 	}
 
 	void RP2040_HAL::EncInterruptHandler(uint gpio, uint32_t events)
@@ -135,13 +155,19 @@ namespace PicoMill::Drivers
 				(lastState == 3 && state == 2) ||
 				(lastState == 2 && state == 0))
 			{
-				instance->myMachine->OnValueChange(std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1));
+				BaseType_t woken = false;
+				auto stateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+
+				instance->myMachine->OnValueChange(stateChange);
 			}
 			else
 			{
-				instance->myMachine->OnValueChange(std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, -1));
+				BaseType_t woken = false;
+				auto stateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, -1);
+
+				instance->myMachine->OnValueChange(stateChange);
 			}
-			lastState = state;
 		}
+		lastState = state;
 	}
 } // namespace PicoMill::Drivers

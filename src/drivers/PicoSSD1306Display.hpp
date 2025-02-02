@@ -14,11 +14,12 @@ namespace PicoMill::Drivers
 		PicoSSD1306Display();
 		void DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y) override;
 		void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
-		void Clear() override;
+		void ClearBuffer() override;
+		void WriteBuffer() override;
 
 	private:
 		void WaitForInit();
-		std::unique_ptr<pico_ssd1306::SSD1306> myDisplay;
+		pico_ssd1306::SSD1306 *mySSD1306;
 		uint64_t myInitTime = 0;
 		bool myIsReady = false;
 	};

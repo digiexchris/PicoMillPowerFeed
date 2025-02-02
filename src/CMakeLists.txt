@@ -48,10 +48,11 @@ target_compile_definitions (PicoApp PRIVATE
 # target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="Usb/tusb_config.h")
 
 add_compile_options(
-    ### Gnu/Clang C Options
+    ### Common Options
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fdiagnostics-color=always>
-    # $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+    
+    ### Warning Options
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wall>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
@@ -59,7 +60,9 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-variable>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-parameter>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-type-limits>
-    $<$<COMPILE_LANG_AND_ID:CXX,Clang,GNU>:-Wno-volatile>
+    
+    ### C++ Specific
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-volatile>
 )
 
 if (WIN32)
@@ -72,7 +75,7 @@ else()
 if(NOT BUILD_TESTS)
 add_custom_command(TARGET PicoApp POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
-COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
+# COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
 )
 endif()
 endif()
@@ -80,12 +83,12 @@ endif()
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 
 add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
-add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src no-OS-FatFS-SDIO-SPI-RPi-Pico)
+# add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src no-OS-FatFS-SDIO-SPI-RPi-Pico)
 target_link_libraries(PicoApp
 pico_ssd1306
 # you will also need hardware i2c library for communication with the display
 hardware_i2c
-no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
+# no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE

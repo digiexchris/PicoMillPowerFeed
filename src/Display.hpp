@@ -23,8 +23,9 @@ namespace PicoMill
 		virtual void DrawRapidLeft();
 		virtual void DrawRapidRight();
 		virtual void DrawSpeed(uint32_t aSpeed);
-		virtual void Clear() = 0;
+		virtual void ClearBuffer() = 0;
 		virtual void ToggleUnits();
+		virtual void WriteBuffer() = 0;
 
 	protected:
 		virtual void DrawCenteredText(const char *text, const unsigned char *font, uint16_t y);

@@ -13,8 +13,8 @@
 #define dirPinStepper 4
 #define enablePinStepper 5
 #define stepPinStepper 6
-#define LEFTPIN 7
-#define RIGHTPIN 8
+#define LEFTPIN 8
+#define RIGHTPIN 7
 #define RAPIDPIN 9
 #define ENCODER_A_PIN 10
 #define ENCODER_B_PIN 11
@@ -25,7 +25,7 @@
 
 constexpr uint32_t UNITS_SWITCH_DELAY_MS = 1000;
 
-constexpr uint32_t DEBOUNCE_DELAY_US = 5000; // 5ms debounce
+constexpr uint32_t DEBOUNCE_DELAY_US = 10000; // 10ms debounce
 
 const uint16_t ACCELERATION_JERK = 10; // The number of steps per second that the stepper can accelerate from zero to without acceleration being taken into account. See PIOStepper::Update
 

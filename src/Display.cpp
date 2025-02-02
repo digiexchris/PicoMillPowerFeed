@@ -13,7 +13,7 @@ namespace PicoMill
 
 	void Display::DrawStart()
 	{
-		Clear();
+		ClearBuffer();
 
 		const char *top = "POWER";
 		DrawCenteredText(top, font_12x16, 16);
@@ -29,34 +29,34 @@ namespace PicoMill
 
 	void Display::DrawMovingLeft()
 	{
-		DrawImage(moveleft32, leftX, 0, moveleft32WidthPixels, moveleft32HeightPixels);
+		DrawImage(moveleft32, leftX, 32, moveleft32WidthPixels, moveleft32HeightPixels);
 	}
 
 	void Display::DrawMovingRight()
 	{
-		DrawImage(moveright32, rightX, 0, moveright32WidthPixels, moveright32HeightPixels);
+		DrawImage(moveright32, rightX, 32, moveright32WidthPixels, moveright32HeightPixels);
 	}
 
 	void Display::DrawStopping()
 	{
-		DrawImage(stop32inverted, leftX, 0, stop32invertedWidthPixels, stop32invertedHeightPixels);
-		DrawImage(stop32inverted, rightX, 0, stop32invertedWidthPixels, stop32invertedHeightPixels);
+		DrawImage(stop32, leftX, 16, stop32WidthPixels, stop32HeightPixels);
+		DrawImage(stop32, rightX, 16, stop32WidthPixels, stop32HeightPixels);
 	}
 
 	void Display::DrawStopped()
 	{
-		DrawImage(stop32, leftX, 0, stop32WidthPixels, stop32HeightPixels);
-		DrawImage(stop32, rightX, 0, stop32WidthPixels, stop32HeightPixels);
+		DrawImage(stop32, leftX, 32, stop32WidthPixels, stop32HeightPixels);
+		DrawImage(stop32, rightX, 32, stop32WidthPixels, stop32HeightPixels);
 	}
 
 	void Display::DrawRapidLeft()
 	{
-		DrawImage(rapidleft32, leftX, 0, rapidleft32WidthPixels, rapidleft32HeightPixels);
+		DrawImage(rapidleft32, leftX, 32, rapidleft32WidthPixels, rapidleft32HeightPixels);
 	}
 
 	void Display::DrawRapidRight()
 	{
-		DrawImage(rapidright32, rightX, 0, rapidright32WidthPixels, rapidright32HeightPixels);
+		DrawImage(rapidright32, rightX, 32, rapidright32WidthPixels, rapidright32HeightPixels);
 	}
 
 	void Display::DrawSpeed(uint32_t aSpeed)

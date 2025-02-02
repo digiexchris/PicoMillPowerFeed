@@ -9,7 +9,7 @@
             "servertype": "openocd",
             "gdbPath": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gdb",
             "liveWatch": {
-              "enabled": true,
+              "enabled": false,
               "samplesPerSecond": 4
             },
             "searchDir": [
@@ -45,13 +45,13 @@
               "interface/cmsis-dap.cfg",
               "target/rp2040.cfg"
             ],
-            "showDevDebugOutput": "raw",
+            //"showDevDebugOutput": "raw",
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
             //"runToEntryPoint": "main",
             "postRestartCommands": [
               "continue"
-            ],
-            "loadFiles": []
+            ]//,
+            //"loadFiles": []
           },
         {
             "type": "cppdbg",

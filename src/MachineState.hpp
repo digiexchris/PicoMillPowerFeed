@@ -35,6 +35,7 @@ namespace PicoMill
 	struct StateChange
 	{
 		DeviceState type;
+		StateChange(DeviceState aType) : type(aType){};
 	};
 
 	struct BoolStateChange : StateChange
@@ -57,7 +58,7 @@ namespace PicoMill
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 0, uint32_t aRapidSpeed = 0) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+		Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 0, uint32_t aRapidSpeed = 0);
 
 		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 
@@ -65,6 +66,8 @@ namespace PicoMill
 		{
 			return (myState & static_cast<uint8_t>(state)) != 0;
 		}
+
+		std::shared_ptr<Display> GetDisplay() const { return myDisplay; }
 
 	private:
 		std::shared_ptr<Display> myDisplay;

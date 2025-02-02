@@ -100,8 +100,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationTickHook(void) {
-};
+void vApplicationTickHook(void){};
 
 // just to supress a getentropy unimplemented linker error from newlib
 // if we end up using random numbers we'll have to implement this

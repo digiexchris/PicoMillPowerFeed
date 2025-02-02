@@ -1,14 +1,23 @@
 #include "MachineState.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
+#include "pico/stdio.h"
 #include <memory>
 
 namespace PicoMill
 {
 
+	Machine::Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed)
+	{
+		if (myDisplay == nullptr)
+		{
+			panic("Machine init without a valid Display object");
+		}
+	};
+
 	void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
 	{
-
+		printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange->type);
 		if (aStateChange->type == DeviceState::LEFT_HIGH || aStateChange->type == DeviceState::RIGHT_HIGH)
 		{
 			// Clear invalid states and ignore updates related to them
@@ -166,12 +175,22 @@ namespace PicoMill
 		}
 
 		UpdateDisplay();
+
+		printf("Machine::OnValueChange: Display Updated\n");
 	}
 
 	void Machine::UpdateDisplay()
 	{
-		myDisplay->Clear();
-		myDisplay->DrawSpeed(IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed);
+		if (myDisplay == nullptr)
+		{
+			panic("myDisplay is nullptr\n");
+		}
+
+		myDisplay->ClearBuffer();
+		myDisplay->WriteBuffer();
+
+		auto speed = IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed;
+		myDisplay->DrawSpeed(speed);
 
 		if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RAPID))
 		{
@@ -193,6 +212,8 @@ namespace PicoMill
 		{
 			myDisplay->DrawStopped();
 		}
+
+		myDisplay->WriteBuffer();
 	}
 
 } // namespace PicoMill

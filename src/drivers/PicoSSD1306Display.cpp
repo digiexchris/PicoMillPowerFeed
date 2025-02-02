@@ -20,7 +20,7 @@ namespace PicoMill::Drivers
 		// Initialize the display
 
 		// Init i2c0 controller
-		i2c_init(I2C_MASTER_NUM, 100000);
+		i2c_init(I2C_MASTER_NUM, 1000000);
 		// Set up pins 12 and 13
 		gpio_set_function(I2C_MASTER_SDA_IO, GPIO_FUNC_I2C);
 		gpio_set_function(I2C_MASTER_SCL_IO, GPIO_FUNC_I2C);
@@ -34,53 +34,36 @@ namespace PicoMill::Drivers
 		// ssd1306 to set itself up. This gets checked before each write to see if enough time has passed.
 		myInitTime = time_us_64();
 
-		auto display = pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH32);
+		// auto display = pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64);
 
 		// Create a new display object at address 0x3D and size of 128x32
-		myDisplay = std::make_unique<pico_ssd1306::SSD1306>(display);
+		mySSD1306 = new pico_ssd1306::SSD1306(pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64));
 
 		// Here we rotate the display by 180 degrees, so that it's not upside down from my perspective
 		// If your screen is upside down try setting it to 1 or 0
 		// myDisplay->setOrientation(0);
 
-		myDisplay->turnOn();
+		mySSD1306->turnOn();
 	}
 
-	void PicoSSD1306Display::WaitForInit()
+	void PicoSSD1306Display::WriteBuffer()
 	{
-		// if (!myIsReady)
-		// {
-		// 	if (time_us_64() - myInitTime < MS_TO_US(250))
-		// 	{
-		// 		// Sleep the remaining time until 250ms have passed since myInitTime
-		// 		sleep_us(MS_TO_US(250) - (time_us_64() - myInitTime));
-		// 	}
-		// 	else
-		// 	{
-		// 		myIsReady = true;
-		// 	}
-		// }
+		mySSD1306->sendBuffer();
 	}
 
 	void PicoSSD1306Display::DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y)
 	{
-		WaitForInit();
-		pico_ssd1306::drawText(myDisplay.get(), font, text, x, y);
-		myDisplay->sendBuffer();
+		pico_ssd1306::drawText(mySSD1306, font, text, x, y);
 	}
 
 	void PicoSSD1306Display::DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height)
 	{
-		WaitForInit();
-		myDisplay->addBitmapImage(x, y, width, height, const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(image)));
-		myDisplay->sendBuffer();
+		mySSD1306->addBitmapImage(x, y, width, height, const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(image)));
 	}
 
-	void PicoSSD1306Display::Clear()
+	void PicoSSD1306Display::ClearBuffer()
 	{
-		WaitForInit();
-		myDisplay->clear();
-		myDisplay->sendBuffer();
+		mySSD1306->clear();
 	}
 
 } // namespace PicoMill
