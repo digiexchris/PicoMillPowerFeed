@@ -44,7 +44,7 @@ namespace PicoMill::Drivers
 	{
 		Disable();
 
-		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 1, NULL);
+		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 9, NULL);
 	}
 
 	void PIOStepper::SetAcceleration(uint32_t acceleration)

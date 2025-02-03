@@ -20,7 +20,7 @@ namespace PicoMill::Drivers
 		// Initialize the display
 
 		// Init i2c0 controller
-		i2c_init(I2C_MASTER_NUM, 1000000);
+		i2c_init(I2C_MASTER_NUM, 100000);
 		// Set up pins 12 and 13
 		gpio_set_function(I2C_MASTER_SDA_IO, GPIO_FUNC_I2C);
 		gpio_set_function(I2C_MASTER_SCL_IO, GPIO_FUNC_I2C);

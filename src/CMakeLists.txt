@@ -81,11 +81,13 @@ endif()
 endif()
 
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
+pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
 
 add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src no-OS-FatFS-SDIO-SPI-RPi-Pico)
 target_link_libraries(PicoApp
 pico_ssd1306
+pico_multicore
 # you will also need hardware i2c library for communication with the display
 hardware_i2c
 # no-OS-FatFS-SD-SDIO-SPI-RPi-Pico

@@ -99,7 +99,7 @@ int main()
 	display = std::make_shared<PicoMill::Drivers::PicoSSD1306Display>();
 	display->DrawStart();
 	display->WriteBuffer();
-	sleep_ms(1000);
+	sleep_ms(500);
 	stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
 	iTime = std::make_shared<PicoMill::Time>();
 	stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
@@ -112,10 +112,6 @@ int main()
 	hal->Start();
 
 	printf("Started Subsystems\n");
-	display->ClearBuffer();
-	display->DrawStopped();
-
-	printf("Display Drawn\n");
 
 	createStepperTask();
 

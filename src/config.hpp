@@ -21,7 +21,6 @@
 #define ENCODER_BUTTON_PIN 12
 
 #define ACCELERATION_PIN 13
-#define RAPID_PIN 14
 
 constexpr uint32_t UNITS_SWITCH_DELAY_MS = 1000;
 

@@ -61,7 +61,7 @@ namespace PicoMill
 
 	void Display::DrawSpeed(uint32_t aSpeed)
 	{
-		float speedPerMin = (static_cast<float>(aSpeed) / stepsPerMm) * 60;
+		float speedPerMin = (static_cast<float>(aSpeed) / stepsPerMm) * 60.0;
 		char speed[14];
 
 		if (myUnits == Units::Millimeter)

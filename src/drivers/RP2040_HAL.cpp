@@ -5,9 +5,11 @@
 #include "StepperState.hpp"
 #include "config.hpp"
 #include "portmacro.h"
+#include "quadrature_encoder.pio.h"
 #include <FreeRTOS.h>
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
+#include <hardware/pio.h>
 #include <hardware/timer.h>
 #include <memory>
 #include <pico/types.h>
@@ -46,17 +48,20 @@ namespace PicoMill::Drivers
 		gpio_pull_up(ENCODER_A_PIN);
 		gpio_pull_up(ENCODER_B_PIN);
 		gpio_pull_up(ENCODER_BUTTON_PIN);
+
+		// we don't really need to keep the offset, as this program must be loaded
+		// at offset 0
+		pio_add_program(myEncPio, &quadrature_encoder_program);
+		quadrature_encoder_program_init(myEncPio, myEncSm, ENCODER_A_PIN, 0);
 	}
 
 	void RP2040_HAL::Start()
 	{
 		// Set up GPIO interrupts
-		gpio_set_irq_enabled_with_callback(LEFTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(RIGHTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(RAPIDPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(ENCODER_A_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &EncInterruptHandler);
-		gpio_set_irq_enabled_with_callback(ENCODER_B_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &EncInterruptHandler);
-		gpio_set_irq_enabled_with_callback(ENCODER_BUTTON_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		// gpio_set_irq_enabled_with_callback(LEFTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		// gpio_set_irq_enabled_with_callback(RIGHTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		// gpio_set_irq_enabled_with_callback(RAPIDPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		// gpio_set_irq_enabled_with_callback(ENCODER_BUTTON_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 
 		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 	}
@@ -127,47 +132,23 @@ namespace PicoMill::Drivers
 		portYIELD_FROM_ISR(higherPriorityTaskWoken);
 	}
 
-	void RP2040_HAL::EncInterruptHandler(uint gpio, uint32_t events)
+	void RP2040_HAL::EncoderUpdateTask(void *param)
 	{
 		auto instance = GetInstance();
-		bool pinState = events == GPIO_IRQ_EDGE_RISE;
-
-		switch (gpio)
+		while (1)
 		{
-		case ENCODER_A_PIN:
-			instance->myLastEncA = pinState;
-			break;
-		case ENCODER_B_PIN:
-			instance->myLastEncB = pinState;
-			break;
-		}
+			// note: thanks to two's complement arithmetic delta will always
+			// be correct even when new_value wraps around MAXINT / MININT
+			instance->myEncNewValue = quadrature_encoder_get_count(instance->myEncPio, instance->myEncSm);
+			int32_t delta = static_cast<int32_t>(instance->myEncNewValue) - instance->myEncOldValue;
+			instance->myEncOldValue = instance->myEncNewValue;
 
-		// Gray code state machine for quadrature encoding
-		static const uint8_t stateMap[] = {0x0, 0x2, 0x4, 0x6, 0x7, 0x5, 0x3, 0x1};
-		uint8_t state = (instance->myLastEncA << 1) | instance->myLastEncB;
-
-		static uint8_t lastState = 0;
-		if (state != lastState)
-		{
-			// Clockwise sequence: 0,1,3,2
-			if ((lastState == 0 && state == 1) ||
-				(lastState == 1 && state == 3) ||
-				(lastState == 3 && state == 2) ||
-				(lastState == 2 && state == 0))
+			if (delta != 0)
 			{
-				BaseType_t woken = false;
-				auto stateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
-
+				auto stateChange = std::make_shared<UInt32StateChange>(DeviceState::ENCODER_CHANGED, delta);
 				instance->myMachine->OnValueChange(stateChange);
 			}
-			else
-			{
-				BaseType_t woken = false;
-				auto stateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, -1);
-
-				instance->myMachine->OnValueChange(stateChange);
-			}
+			sleep_ms(100);
 		}
-		lastState = state;
 	}
 } // namespace PicoMill::Drivers
