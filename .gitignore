@@ -15,3 +15,7 @@ managed_components/
 .ccache/
 .cache/
 compile_commands.json
+.vscode-server/
+.cortex-debug
+.gnupg/
+.vscode-ctags

@@ -5,47 +5,47 @@ message(STATUS "BUILD_PICO_APP is ${BUILD_PICO_APP}")
 option(BUILD_PICO_APP "Build the Pico application" ON)
 option(BUILD_TESTS "Build the tests" OFF)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_C_STANDARD 99)
+
 if(BUILD_PICO_APP)
 
-  include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
+#   include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
 
   
 
   project(PicoProject C CXX ASM)
 
-  set(PICO_BOARD pico CACHE STRING "Board type")
+  set(NUTTX_PATH "${CMAKE_SOURCE_DIR}/nuttx-export-12.8.0")
+
+  include(cmake/raspberrypi-pico.cmake)
   
-  pico_sdk_init()
-
-  add_compile_options(
-      ### Gnu/Clang C Options
-      $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-      $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fdiagnostics-color=always>
-
-      # $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
+  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -Wall -Wshadow -Wundef -fno-strict-aliasing -Os")
+  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -D_DEBUG -D_LIBCPP_BUILD_STATIC -D_LIBCPP_NO_EXCEPTIONS ")
+  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -fcheck-new -fno-rtti -pedantic ")
+  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -nostdinc++")
+  
+  set(AC_DEFINES "${AC_DEFINES} -DCONFIG_WCHAR_BUILTIN")
+  
+  include_directories(
+          src
+          ${NUTTX_PATH}/include
+          ${NUTTX_PATH}/include/libcxx
+          ${NUTTX_PATH}/arch/chip
   )
-
-  # include(FetchContent)
-
-  # FetchContent_Declare(
-  #   Simple3dStepperMovementPlanner
-  #   GIT_REPOSITORY https://github.com/digiexchris/Simple3dStepperMovementPlanner.git
-  #   GIT_TAG main
-  # )
-
-  # FetchContent_MakeAvailable(Simple3dStepperMovementPlanner)
-
-
-
-  # Create an interface target to set system include directories for Pico SDK libraries
-  add_library(pico_system_include_dirs INTERFACE)
-  target_include_directories(pico_system_include_dirs SYSTEM INTERFACE ${PICO_INCLUDE_DIRS})
-
-  # Include directories for other Pico SDK libraries
-  target_link_libraries(pico_system_include_dirs INTERFACE pico_stdlib hardware_pio hardware_gpio pico_multicore pico_stdio_usb pico_printf pico_async_context_threadsafe_background
-  )
-
-  # Add subdirectories
+  
+  set(EXE_NAME PicoMill)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AC_HW_FLAGS} ${AC_DEFINES}")
+  set(CMAKE_CXX_FLAGS     "${AC_HW_FLAGS} ${AC_DEFINES} ${AC_COMMON_FLAGS} ${AC_CXX_EXTRA_FLAGS}")
+  if (PARAM_DEBUG)
+      set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -g")
+  endif()
+  
+  set(CMAKE_SKIP_RPATH ON)
+  set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_LINKER} ${AC_LINKER_FLAGS} -o ${EXE_NAME}.elf <OBJECTS> <LINK_LIBRARIES>")
+  set(BUILD_SHARED_LIBS OFF)
   add_subdirectory(src)
 else()
   project(PicoProject C CXX ASM)

@@ -1,0 +1,1 @@
+{ "qe", SCHED_PRIORITY_DEFAULT, 2048, qe_main },

@@ -1,0 +1,1 @@
+{ "getprime", 50, 2048, getprime_main },

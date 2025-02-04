@@ -2,7 +2,7 @@
 
 #include "Common.hpp"
 #include "Stepper.hpp"
-#include <memory>
+#include <memory.h>
 
 #include <stdint.h>
 
@@ -33,13 +33,13 @@ namespace PicoMill
 
 	struct ChangeSpeed : Command
 	{
-		ChangeSpeed(uint32_t speed) : speed(speed) { type = Type::CHANGE_SPEED; }
+		ChangeSpeed(uint32_t aspeed) : speed(aspeed) { type = Type::CHANGE_SPEED; }
 		uint32_t speed;
 	};
 
 	struct ChangeAcceleration : Command
 	{
-		ChangeAcceleration(uint32_t acceleration, uint32_t deceleration) : acceleration(acceleration) { type = Type::CHANGE_ACCELERATION; }
+		ChangeAcceleration(uint32_t anacceleration) : acceleration(anacceleration) { type = Type::CHANGE_ACCELERATION; }
 		uint32_t acceleration;
 	};
 

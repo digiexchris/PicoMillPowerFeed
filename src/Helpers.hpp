@@ -3,7 +3,7 @@
 #ifdef UNIT_TEST
 #define configTICK_RATE_HZ 1000
 #else
-#include <FreeRTOS.h>
+// #include <FreeRTOS.h>
 #endif
 
 inline double ScaleValue(double value, double minOld, double maxOld, double minNew, double maxNew)
@@ -23,7 +23,7 @@ T min(T a, T2 b)
 	return static_cast<T>(a < b ? a : b);
 }
 
-#define MS_TO_TICKS(ms) (ms * configTICK_RATE_HZ / 1000)
+//#define MS_TO_TICKS(ms) (ms * configTICK_RATE_HZ / 1000)
 
 #define MS_TO_US(ms) (ms * 1000)
 

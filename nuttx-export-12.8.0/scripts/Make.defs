@@ -1,0 +1,51 @@
+ARCHCFLAGS       = -Wstrict-prototypes -Wno-attributes -Wno-unknown-pragmas -Wno-psabi
+ARCHCPUFLAGS     = -mlittle-endian  -mcpu=cortex-m0 -mthumb -mfloat-abi=soft -mthumb -Wa,-mthumb -Wa,-mimplicit-it=always
+ARCHCXXFLAGS     = -Wno-attributes -Wno-unknown-pragmas -Wno-psabi -std=gnu++20 -fno-rtti
+ARCHPICFLAGS     = -fpic -msingle-pic-base -mpic-register=r10
+ARCHWARNINGS     = 
+ARCHWARNINGSXX   = 
+ARCHOPTIMIZATION = -fomit-frame-pointer --param=min-pagesize=0 -fno-common -Wall -Wshadow -Wundef -ffunction-sections -fdata-sections -g
+CROSSDEV         = arm-none-eabi-
+CC               = arm-none-eabi-gcc
+CXX              = arm-none-eabi-g++
+CPP              = arm-none-eabi-gcc -E -P -x c
+LD               = arm-none-eabi-ld
+AR               = arm-none-eabi-ar rcs
+NM               = arm-none-eabi-nm
+STRIP            = arm-none-eabi-strip --strip-unneeded
+OBJCOPY          = arm-none-eabi-objcopy
+OBJDUMP          = arm-none-eabi-objdump
+ZIG              = zig
+ZIGFLAGS         = -target thumb-freestanding-eabi -mcpu cortex_m0
+DC               = 
+DFLAGS           = 
+SWIFTC           = 
+SWIFTFLAGS       = 
+NXFLATLDFLAGS1   = -r -d -warn-common
+NXFLATLDFLAGS2   = -r -d -warn-common -T/workspace/nuttx/binfmt/libnxflat/gnu-nxflat-pcrel.ld -no-check-sections
+OBJEXT           = .o
+LIBEXT           = .a
+EXEEXT           = 
+HOSTCC           = cc
+HOSTINCLUDES     = 
+HOSTCFLAGS       = -O2 -Wall -Wstrict-prototypes -Wshadow -DHAVE_STRTOK_C=1
+HOSTLDFLAGS      = 
+HOSTEXEEXT       = 
+LDNAME           = raspberrypi-pico-flash.ld
+LDELFFLAGS       = -r -e main 
+LDMODULEFLAGS    = -r
+NUTTX_ARCH       = arm
+NUTTX_ARCH_CHIP  = rp2040
+NUTTX_BOARD      = raspberrypi-pico
+NUTTX_BUILD      = flat
+NUTTX_CXX        = cxx
+LLVM_ARCHTYPE    = thumbv6m
+LLVM_CPUTYPE     = cortex-m0
+LLVM_ABITYPE     = eabi
+EXTRA_LIBS       = /tools/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/libgcc.a /tools/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/libm.a /tools/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/../../../../arm-none-eabi/lib/thumb/v6-m/nofp/libstdc++.a
+EXTRA_OBJS       = 
+HEAD_OBJ         = 
+LDENDGROUP       = 
+LDFLAGS          = --print-memory-usage --entry=__start -nostdlib --gc-sections --cref -Map=/workspace/nuttx/nuttx.map
+LDSTARTGROUP     = 
+LDLIBS           = -lsched -ldrivers -lboards -lc -lmm -larch -lxx -lapps -lfs -lbinfmt -lopenamp -lboard -lboard 

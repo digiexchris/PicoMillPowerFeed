@@ -4,8 +4,8 @@
 #include "Event.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
-#include <cstdint>
-#include <memory>
+#include <memory.h>
+#include <stdint.h>
 
 namespace PicoMill
 {

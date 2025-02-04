@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-#include <chrono>
-
 namespace PicoMill
 {
 

@@ -1,7 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <cstdint>
 #include <stdint.h>
 // #define DEBUG_ABORTS 1
 // #define ENABLE_SSD1306 1

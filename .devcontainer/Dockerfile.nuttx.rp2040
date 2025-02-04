@@ -1,0 +1,304 @@
+FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-ubuntu-22.04
+# NOTE WE ARE NOT REMOVEING APT CACHE.
+# This should only be used for temp build images that artifacts will be copied from
+RUN apt-get update -qq &&  DEBIAN_FRONTEND="noninteractive" apt-get install -y -qq \
+  curl \
+  patch \
+  xz-utils\
+  bison \
+  clang \
+  cmake \
+  flex \
+  g++ \
+  gawk \
+  git \
+  gperf \
+  libncurses5-dev \
+  make \
+  ninja-build \
+  nodejs \
+  npm \
+  unzip
+
+RUN mkdir -p /tools
+WORKDIR /tools
+
+RUN mkdir -p /tools/nuttx-tools
+RUN curl -s -L https://bitbucket.org/nuttx/tools/get/9ad3e1ee75c7.tar.gz \
+  | tar -C nuttx-tools --strip-components=1 -xz
+
+RUN mkdir -p /tools/bloaty \
+  && git clone --depth 1 --branch v1.1 https://github.com/google/bloaty bloaty-src \
+  && cd bloaty-src \
+  && cmake -B build -DCMAKE_INSTALL_PREFIX=/tools/bloaty \
+  && cmake --build build \
+  && cmake --build build --target install \
+  && cd /tools && rm -rf bloaty-src
+
+RUN cd nuttx-tools/kconfig-frontends \
+  && ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
+  && make install && cd /tools && rm -rf nuttx-tools
+
+RUN mkdir -p /tools/gn \
+  && cd /tools/gn \
+  && git clone https://gn.googlesource.com/gn gn \
+  && cd gn && ./build/gen.py \
+  && cd out && ninja
+
+ENV ZAP_INSTALL_PATH=/tools/zap_release
+RUN mkdir -p $ZAP_INSTALL_PATH \
+  && cd $ZAP_INSTALL_PATH \
+  && curl -s -O -L https://github.com/project-chip/zap/releases/download/v2023.10.09-nightly/zap-linux-x64.zip \
+  && unzip zap-linux-x64.zip \
+  && rm zap-linux-x64.zip
+
+ENV ZAP_DEVELOPMENT_PATH=/tools/zap
+RUN cd /tools \
+  && curl -s -O -L https://github.com/project-chip/zap/archive/refs/tags/v2023.10.09-nightly.zip \
+  && unzip v2023.10.09-nightly.zip \
+  && mv zap-2023.10.09-nightly zap \
+  && rm v2023.10.09-nightly.zip \
+  && cd zap && npm install cross-spawn folder-hash
+
+#########################
+# Programming languages
+#########################
+
+# Install Rust and targets supported from NuttX
+ENV RUST_HOME=/tools/rust
+ENV CARGO_HOME=$RUST_HOME/cargo
+ENV RUSTUP_HOME=$RUST_HOME/rustup
+RUN mkdir -p $CARGO_HOME \
+  && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+  && $CARGO_HOME/bin/rustup target add thumbv6m-none-eabi \
+  && $CARGO_HOME/bin/rustup target add thumbv7m-none-eabi \
+  && $CARGO_HOME/bin/rustup target add riscv64gc-unknown-none-elf
+
+
+# Install Zig latest release
+ENV ZIG_VERSION=0.13.0
+ENV ZIG_HOME=/tools/zig
+RUN mkdir -p ${ZIG_HOME} \
+  && curl -s -O -L https://github.com/marler8997/zigup/releases/download/v2024_05_05/zigup-x86_64-linux.tar.gz \
+  && tar xzf zigup-x86_64-linux.tar.gz -C ${ZIG_HOME} \
+  && rm zigup-x86_64-linux.tar.gz \
+  && chmod +x ${ZIG_HOME}/zigup \
+  && ${ZIG_HOME}/zigup fetch --install-dir ${ZIG_HOME} ${ZIG_VERSION} \
+  && chmod +x ${ZIG_HOME}/${ZIG_VERSION}/files/zig
+
+# Install LDC2 latest release
+ENV LDC_VERSION=1.39.0
+ENV D_HOME=/tools/ldc2
+RUN mkdir -p ${D_HOME} \
+  && curl -s -O -L https://github.com/ldc-developers/ldc/releases/download/v${LDC_VERSION}/ldc2-${LDC_VERSION}-linux-x86_64.tar.xz \
+  && tar xf ldc2-${LDC_VERSION}-linux-x86_64.tar.xz -C ${D_HOME} \
+  && rm ldc2-${LDC_VERSION}-linux-x86_64.tar.xz
+
+RUN mkdir -p /tools
+WORKDIR /tools
+
+###########################################
+# Download the latest ARM clang toolchain prebuilt by ARM
+RUN mkdir -p clang-arm-none-eabi && \
+  curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
+  | tar -C clang-arm-none-eabi --strip-components 1 -xJ
+
+# Download the latest ARM GCC toolchain prebuilt by ARM
+RUN mkdir -p gcc-arm-none-eabi && \
+  curl -s -L  "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.Rel1/binrel/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi.tar.xz" \
+  | tar -C gcc-arm-none-eabi --strip-components 1 -xJ
+
+RUN apt-get update -qq && DEBIAN_FRONTEND="noninteractive" apt-get install -y -qq \
+  build-essential \
+  curl \
+  gcc \
+  libssl-dev
+
+RUN mkdir -p cmake && \
+  curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
+  | tar -C cmake --strip-components=1 -xz \
+  && cd cmake && ./bootstrap && make && make install && rm -rf cmake
+
+RUN dpkg --add-architecture i386
+# This is used for the final images so make sure to not store apt cache
+# Note: xtensa-esp32-elf-gdb is linked to libpython2.7
+RUN apt-get update -qq && DEBIAN_FRONTEND="noninteractive" TZ=Etc/UTC apt-get install -y -qq --no-install-recommends \
+  -o APT::Immediate-Configure=0 \
+  avr-libc \
+  ccache \
+  clang \
+  clang-tidy \
+  g++-12-multilib \
+  gcc-avr \
+  gcc-12-multilib \
+  genromfs \
+  gettext \
+  git \
+  lib32z1-dev \
+  libasound2-dev libasound2-dev:i386 \
+  libc6-dev-i386 \
+  libcurl4-openssl-dev \
+  libmp3lame-dev:i386 \
+  libmad0-dev:i386 \
+  libncurses5-dev \
+  libpulse-dev libpulse-dev:i386 \
+  libpython2.7 \
+  libtinfo5 \
+  libusb-1.0-0-dev libusb-1.0-0-dev:i386 \
+  libv4l-dev libv4l-dev:i386 \
+  libx11-dev libx11-dev:i386 \
+  libxext-dev libxext-dev:i386 \
+  linux-headers-generic \
+  linux-libc-dev:i386 \
+  ninja-build \
+  npm \
+  qemu-system-arm \
+  qemu-system-misc \
+  python3 \
+  python3-pip \
+  python-is-python3 \
+  u-boot-tools \
+  unzip \
+  wget \
+  xxd \
+  file \
+  subversion \
+  tclsh \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set GCC-12 as Default compiler
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20 && \
+  update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 20 && \
+  update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30 && \
+  update-alternatives --set cc /usr/bin/gcc && \
+  update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 && \
+  update-alternatives --set c++ /usr/bin/g++
+
+# Configure out base setup for adding python packages
+ENV PIP_DISABLE_PIP_VERSION_CHECK=true
+# This disables the cache with value 0. We do not want caching as it
+# increases the images size.
+ENV PIP_NO_CACHE_DIR=0
+# We are using the minimal python installation from the system so include
+# setuptools and also wheel so we can use the binary releases of packages
+# instead of requiring them to be compiled.
+RUN pip3 install setuptools
+RUN pip3 install wheel
+RUN pip3 install cmake-format
+# Install CodeChecker and use it to statically analyze the code.
+# RUN pip3 install CodeChecker
+# Install cvt2utf to check for non-UTF characters.
+RUN pip3 install cvt2utf
+# Install pytest
+RUN pip3 install cxxfilt
+RUN pip3 install construct
+RUN pip3 install esptool==4.8.dev4
+RUN pip3 install imgtool
+RUN pip3 install kconfiglib
+RUN pip3 install pexpect==4.8.0
+RUN pip3 install pyelftools
+RUN pip3 install pyserial==3.5
+RUN pip3 install pytest==6.2.5
+RUN pip3 install pytest-json==0.4.0
+RUN pip3 install pytest-ordering==0.6
+RUN pip3 install pytest-repeat==0.9.1
+# Install lark stringcase jinja2 and coloredlogs for matter build
+RUN pip3 install lark
+RUN pip3 install stringcase
+RUN pip3 install jinja2
+RUN pip3 install coloredlogs
+
+# Upgrade nodejs to the latest version
+RUN npm install -g n && n stable && hash -r
+
+# Used to generate symbol table files
+
+RUN mkdir -p /tools
+WORKDIR /tools
+
+ENV PATH="/tools/bloaty/bin:$PATH"
+ENV PATH="/tools/kconfig-frontends/bin:$PATH"
+ENV CARGO_HOME=/tools/rust/cargo
+ENV RUSTUP_HOME=/tools/rust/rustup
+ENV PATH="/tools/rust/cargo/bin:$PATH"
+ENV PATH="/tools/zig/0.13.0/files:$PATH"
+ENV PATH="/tools/ldc2/ldc2-1.39.0-linux-x86_64/bin:$PATH"
+# RUN cp /usr/bin/clang-extdef-mapping-10 clang-arm-none-eabi/bin/clang-extdef-mapping
+ENV PATH="/tools/clang-arm-none-eabi/bin:$PATH"
+ENV PATH="/tools/gcc-arm-none-eabi/bin:$PATH"
+ENV PATH="/tools/xtensa-esp32-elf-gcc/bin:$PATH"
+ENV PATH="/tools/xtensa-esp32s2-elf-gcc/bin:$PATH"
+ENV PATH="/tools/xtensa-esp32s3-elf-gcc/bin:$PATH"
+ENV PATH="/tools/wamr:$PATH"
+ENV PATH="/tools/gn:$PATH"
+ENV ZAP_INSTALL_PATH=/tools/zap_release
+ENV ZAP_DEVELOPMENT_PATH=/tools/zap
+
+# Configure ccache
+# use `/ccache` as cachedir for all users
+# RUN mkdir -p /ccache && \
+#   chmod 666 /ccache && \
+#   mkdir -p /tools/ccache/bin && \
+#   ln -sf `which ccache` /tools/ccache/bin/aarch64-none-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/aarch64-none-elf-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/arm-none-eabi-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/arm-none-eabi-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/avr-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/avr-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/avr32-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/avr32-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/cc && \
+#   ln -sf `which ccache` /tools/ccache/bin/c++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/clang && \
+#   ln -sf `which ccache` /tools/ccache/bin/clang++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/p32-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/rx-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/riscv-none-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/riscv-none-elf-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/sparc-gaisler-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/sparc-gaisler-elf-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32-elf-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32s2-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32s2-elf-g++ && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32s3-elf-gcc && \
+#   ln -sf `which ccache` /tools/ccache/bin/xtensa-esp32s3-elf-g++
+
+ENV PATH="/tools/ccache/bin:$PATH"
+# ENV CCACHE_DIR="/ccache"
+
+# [Optional] Uncomment this section to install additional packages.
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
+    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev
+
+# RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5 && \
+#     ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+
+RUN mkdir -p /tools/pico
+WORKDIR /tools/pico
+ENV PICO_SDK_PATH=/tools/pico/pico-sdk
+RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git --depth=1 && git -C pico-sdk submodule update --init
+RUN git clone -b master https://github.com/raspberrypi/pico-examples.git --depth=1
+RUN git clone -b master https://github.com/raspberrypi/pico-extras.git --depth=1
+RUN git clone -b master https://github.com/raspberrypi/debugprobe.git --depth=1
+
+
+# RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
+#     && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
+
+RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
+    && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && cp picotool /usr/local/bin
+
+# RUN git clone https://github.com/wtarreau/bootterm.git --depth=1 \
+#     && cd bootterm && make -j 8 install 
+
+# RUN useradd -m -s /bin/bash -d /workspace vscode && \
+
+RUN usermod -aG sudo,dialout,plugdev vscode
+    
+WORKDIR /workspace
+
+COPY 99-picoprobe.rules /etc/udev/rules.d/99-picoprobe.rules

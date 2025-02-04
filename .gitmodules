@@ -10,12 +10,12 @@
 [submodule "pico/debugprobe"]
 	path = pico/debugprobe
 	url = https://github.com/raspberrypi/debugprobe.git
-[submodule "lib/pico-ssd1306"]
-	path = lib/pico-ssd1306
-	url = https://github.com/digiexchris/pico-ssd1306.git
 [submodule "FreeRTOS-Kernel"]
 	path = FreeRTOS-Kernel
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
-[submodule "lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico"]
-	path = lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
-	url = https://github.com/carlk3/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git
+[submodule "nuttx"]
+	path = nuttx
+	url = https://github.com/apache/nuttx.git
+[submodule "apps/apps"]
+	path = apps/apps
+	url = https://github.com/apache/nuttx-apps

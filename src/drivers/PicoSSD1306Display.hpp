@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Display.hpp"
-#include "ssd1306.h"
-#include <memory>
-#include <sys/_stdint.h>
+#include <memory.h>
+#include <stdint.h>
 
 namespace PicoMill::Drivers
 {
@@ -19,7 +18,7 @@ namespace PicoMill::Drivers
 
 	private:
 		void WaitForInit();
-		pico_ssd1306::SSD1306 *mySSD1306;
+		// pico_ssd1306::SSD1306 *mySSD1306;
 		uint64_t myInitTime = 0;
 		bool myIsReady = false;
 	};

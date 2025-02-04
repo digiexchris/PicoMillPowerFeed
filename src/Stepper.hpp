@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
+#include <stdint.h>
+#include <string.h>
 
 namespace PicoMill
 {

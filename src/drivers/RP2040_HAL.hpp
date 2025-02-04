@@ -2,13 +2,14 @@
 
 #include "../MachineState.hpp"
 #include "config.hpp"
-#include <FreeRTOS.h>
-#include <cstdint>
-#include <hardware/gpio.h>
-#include <hardware/pio.h>
-#include <memory>
-#include <pico/mutex.h>
-#include <queue.h>
+// #include <FreeRTOS.h>
+#include <stdint.h>
+// #include <hardware/gpio.h>
+// #include <hardware/pio.h>
+// #include <memory.h>
+// #include <pico/mutex.h>
+// #include <queue.h>
+#include <array.h>
 
 namespace PicoMill::Drivers
 {

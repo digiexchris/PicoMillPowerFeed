@@ -1,7 +1,7 @@
 #include "MachineState.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
-#include "pico/stdio.h"
+// #include "pico/stdio.h"
 #include <memory>
 
 namespace PicoMill
@@ -11,7 +11,7 @@ namespace PicoMill
 	{
 		if (myDisplay == nullptr)
 		{
-			panic("Machine init without a valid Display object");
+			// panic("Machine init without a valid Display object");
 		}
 	};
 

@@ -1,182 +1,78 @@
 {
-  "version": 3,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 19,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "default",
-      "generator": "Ninja",
-      "description": "Default configuration for Raspberry Pi Pico",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "PICO_PLATFORM_VALUE": "rp2040",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_C_STANDARD": "11",
-        "PICO_CXX_ENABLE_EXCEPTIONS": "ON",
-        "PICO_CXX_ENABLE_RTTI": "ON",
-        "FREERTOS_KERNEL_PATH": "${sourceDir}/FreeRTOS-Kernel"
-      },
-      "hidden": true
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19,
+        "patch": 0
     },
-    {
-      "name": "default-debug",
-      "description": "Debug",
-      "inherits": "default",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_FLAGS_DEBUG": "-O0 -g",
-        "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g",
-        "PICO_DEOPTIMIZED_DEBUG": "ON"
-      },
-      "hidden": true
-    },
-    {
-      "name": "x64-debug",
-      "generator": "Ninja",
-      "description": "Debug Windows",
-      "inherits": "default-debug",
-      "cacheVariables": {
-        "PICO_SDK_PATH": "$env{PICO_INSTALL_PATH}/pico-sdk",
-        "PICO_TOOLCHAIN_PATH": "$env{PICO_INSTALL_PATH}/gcc-arm-none-eabi/bin",
-        "CMAKE_MAKE_PROGRAM": "$env{PICO_INSTALL_PATH}/ninja/ninja.exe",
-        "WIN32": "ON"
-      }
-    },
-    {
-      "name": "devcontainer-host-debug",
-      "generator": "Ninja",
-      "description": "Debug Linux",
-      "inherits": "default-debug",
-      "cacheVariables": {
-        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
-        // "PICO_COMPILER": "/usr/bin/arm-none-eabi-gcc",
-        "PICO_SDK_PATH": "../pico/pico-sdk",
-        "PICO_PLATFORM_VALUE": "host"
-        // "BUILD_TESTS": "ON"
-      }
-    },
-    {
-      "name": "devcontainer-rp2040-debug",
-      "generator": "Ninja",
-      "description": "Debug Linux",
-      "inherits": "default-debug",
-      "cacheVariables": {
-        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
-        "PICO_SDK_PATH": "../pico/pico-sdk",
-        "PICO_PLATFORM_VALUE": "rp2040"
-      }
-    },
-    {
-      "name": "devcontainer-linux-native-debug-tests-only",
-      "generator": "Ninja",
-      "description": "Debug Linux",
-      "inherits": "devcontainer-host-debug",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "/usr/bin/clang",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-        "BUILD_PICO_APP": "OFF",
-        "BUILD_TESTS": "ON"
-      }
-    },
-    {
-      "name": "native-linux-debug",
-      "generator": "Ninja",
-      "description": "Debug Linux",
-      "inherits": "default-debug",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "/opt/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
-        "CMAKE_CXX_COMPILER": "/opt/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-g++",
-        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
-        "PICO_SDK_PATH": "../pico/pico-sdk",
-        "PICO_TOOLCHAIN_PATH": "/opt/toolchains/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "default",
-      "description": "Build using the default configuration",
-      "configurePreset": "default",
-      "targets": [
-        "PicoApp.elf",
-        "copy_compile_commands_src"
-      ],
-      "hidden": true
-    },
-    {
-      "name": "Linux Debug",
-      "configurePreset": "native-linux-debug",
-      "description": "Build using the linux-debug configuration",
-      "targets": [
-        "PicoApp.elf",
-        "copy_compile_commands_src"
-      ]
-    },
-    {
-      "name": "Linux Debug with Tests",
-      "configurePreset": "native-linux-debug",
-      "description": "Build Tests",
-      "targets": [
-        "PicoApp_Tests",
-        "copy_compile_commands_tests"
-      ]
-    },
-    {
-      "name": "Debug Host",
-      "configurePreset": "devcontainer-host-debug",
-      "description": "Build using the linux-debug configuration",
-      "targets": [
-        "PicoApp.elf",
-        // "PicoApp_Tests",
-        "copy_compile_commands_src"
-        // "copy_compile_commands_tests"
-      ]
-    },
-    {
-      "name": "Debug RP2040",
-      "configurePreset": "devcontainer-rp2040-debug",
-      "description": "Build using the linux-debug configuration",
-      "targets": [
-        "PicoApp.elf",
-        "copy_compile_commands_src",
-      ]
-    },
-    {
-      "name": "Debug with Tests",
-      "configurePreset": "devcontainer-linux-native-debug-tests-only",
-      "description": "Build Tests",
-      "targets": [
-        "PicoApp_Tests",
-        "copy_compile_commands_tests"
-      ]
-    },
-    {
-      "name": "Windows Debug",
-      "configurePreset": "x64-debug",
-      "description": "Build using the linux-debug configuration",
-      "targets": [
-        "PicoApp.elf",
-        "copy_compile_commands_src"
-      ]
-    },
-    {
-      "name": "Windows Debug with Tests",
-      "configurePreset": "x64-debug",
-      "description": "Build Tests",
-      "targets": [
-        "all"
-      ]
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "default",
-      "configurePreset": "default",
-      "description": "Test using the default configuration"
-    }
-  ]
+    "configurePresets": [
+        {
+            "name": "default",
+            "generator": "Ninja",
+            "description": "Default configuration for Raspberry Pi Pico",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            },
+            "hidden": true
+        },
+        {
+            "name": "default-debug",
+            "description": "Debug",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_C_FLAGS_DEBUG": "-O0 -g",
+                "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g",
+                "PICO_DEOPTIMIZED_DEBUG": "ON"
+            },
+            "hidden": true
+        },
+        {
+            "name": "raspberrypi-pico",
+            "generator": "Ninja",
+            "description": "raspberrypi-pico",
+            "inherits": "default-debug",
+            "binaryDir": "${sourceDir}/build/raspberrypi-pico",
+            "cacheVariables": {
+                "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "description": "Build using the default configuration",
+            "configurePreset": "default",
+            "targets": [
+                "all"
+            ],
+            "hidden": false
+        },
+        {
+            "name": "default-debug",
+            "description": "Build using the default configuration",
+            "configurePreset": "default-debug",
+            "targets": [
+                "all"
+            ],
+            "hidden": false
+        },
+        {
+            "name": "raspberrypi-pico",
+            "description": "Build using the default configuration",
+            "configurePreset": "raspberrypi-pico",
+            "targets": [
+                "all"
+            ],
+            "hidden": false
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default",
+            "description": "Test using the default configuration"
+        }
+    ]
 }

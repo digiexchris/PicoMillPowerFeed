@@ -4,14 +4,14 @@
 #include "Helpers.hpp"
 #include "build/src/stepper.pio.h"
 #include "config.hpp"
-#include "pico/time.h"
-#include "stepper.pio.h"
-#include <FreeRTOS.h>
-#include <cmath>
-#include <cstdint>
-#include <exception>
+// #include "pico/time.h"
+// #include "stepper.pio.h"
+// #include <FreeRTOS.h>
+#include <exception.h>
+#include <math.h>
 #include <pico/printf.h>
-#include <stdexcept>
+#include <stdexcept.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <task.h>
 
