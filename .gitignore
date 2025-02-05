@@ -19,3 +19,8 @@ compile_commands.json
 .cortex-debug
 .gnupg/
 .vscode-ctags
+*.o
+*.bin
+src/*.dep
+.depend
+.built

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Common.hpp"
-#include "Stepper.hpp"
+#include "Common.hxx"
+#include "Stepper.hxx"
 // #include <memory>
 
 #include <stdint.h>

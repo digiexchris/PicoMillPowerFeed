@@ -1,6 +1,7 @@
 #!/bin/bash
 cd nuttx
 # ln -s ../.config ./
+export PICO_SDK_PATH=/tools/pico/pico-sdk
 make menuconfig
 make export
 cd ..

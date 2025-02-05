@@ -1,6 +1,6 @@
-#include "MachineState.hpp"
-#include "StepperState.hpp"
-#include "config.hpp"
+#include "MachineState.hxx"
+#include "StepperState.hxx"
+#include "config.hxx"
 // #include "pico/stdio.h"
 // #include <memory>
 #include <stdio.h>

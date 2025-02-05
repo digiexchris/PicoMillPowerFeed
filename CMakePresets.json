@@ -36,7 +36,9 @@
             "binaryDir": "${sourceDir}/build/raspberrypi-pico",
             "cacheVariables": {
                 "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
-                "BOARD_CONFIG": "raspberrypi-pico:usbnsh"
+                // "BOARD_CONFIG": "raspberrypi-pico:usbnsh",
+                "PICO_SDK_PATH": "/tools/pico/pico-sdk",
+                "CMAKE_VERBOSE_MAKEFILE": "ON"
             }
         }
     ],

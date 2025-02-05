@@ -4,11 +4,10 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "${workspaceFolder}/build"
-            ],
+            "command": "make",
+            "options": {
+                "cwd": "${workspaceFolder}/nuttx"
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -20,12 +19,7 @@
         {
             "label": "Flash",
             "type": "process",
-            // "linux": {
-                "command": "${workspaceFolder}/tools/linux/flash.sh",
-            // },
-            // "windows": {
-            //     "command": "${workspaceFolder}/tools/win64/flash.bat",
-            // },
+            "command": "${workspaceFolder}/tools/linux/flash.sh",
             "group": "build",
             "presentation": {
                 "reveal": "always",

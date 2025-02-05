@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Stepper.hpp"
+#include "../Stepper.hpp"
 // #include "hardware/pio.h" // Include the header file that defines PIO
 
 namespace PicoMill::Drivers

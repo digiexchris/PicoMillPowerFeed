@@ -42,8 +42,8 @@ if(BUILD_PICO_APP)
 
   # add_subdirectory(nuttx)
   set(EXE_NAME PicoMill)
-
-  
+  message(STATUS "Pico sdk path is ${PICO_SDK_PATH}")
+include(${NUTTX_PATH}/scripts/toolchain.cmake)
   
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AC_HW_FLAGS} ${AC_DEFINES}")
   set(CMAKE_CXX_FLAGS     "${AC_HW_FLAGS} ${AC_DEFINES} ${AC_COMMON_FLAGS} ${AC_CXX_EXTRA_FLAGS}")

@@ -1,12 +1,12 @@
-#include "PicoSSD1306Display.hpp"
+#include "PicoSSD1306Display.hxx"
 // #include "hardware/i2c.h"
 // #include "ssd1306.h"
 // #include "textRenderer/12x16_font.h"
 // #include "textRenderer/TextRenderer.h"
 #include <stdint.h>
 
-#include "Helpers.hpp"
-#include "config.hpp"
+#include "../Helpers.hxx"
+#include "../config.hxx"
 // #include <hardware/gpio.h>
 // #include <hardware/timer.h>
 // #include <pico/time.h>

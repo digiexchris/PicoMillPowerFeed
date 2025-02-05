@@ -1,8 +1,7 @@
-#include "StepperState.hpp"
-#include "Common.hpp"
-#include "config.hpp"
+#include "StepperState.hxx"
+#include "Common.hxx"
+#include "config.hxx"
 #include <stdlib.h>
-#include <sys/stat.h>
 
 namespace PicoMill
 {

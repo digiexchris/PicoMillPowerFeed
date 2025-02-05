@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Display.hpp"
-#include "Event.hpp"
-#include "StepperState.hpp"
-#include "config.hpp"
+#include "Display.hxx"
+#include "Event.hxx"
+#include "StepperState.hxx"
+#include "config.hxx"
 // #include <memory>
 #include <stdint.h>
 

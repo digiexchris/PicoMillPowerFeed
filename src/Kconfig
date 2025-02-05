@@ -1,0 +1,25 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config PICOMILL
+	tristate "PicoMill power feed"
+	default y
+	select HAVE_CXX
+	select CONFIG_HAS_CXX_COMPILER
+	select NXFONTS
+	---help---
+		RP2040 based power feed for milling machines
+
+if PICOMILL
+
+config PICOMILL_PRIORITY
+	int "picomill task priority"
+	default 100
+
+config PICOMILL_STACKSIZE
+	int "picomill stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+endif

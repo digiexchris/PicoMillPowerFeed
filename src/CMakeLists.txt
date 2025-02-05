@@ -96,6 +96,8 @@ ${app_sources}
 # hardware_i2c
 # # no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 # pico_stdlib)
+
+message(STATUS "Pico sdk path is ${PICO_SDK_PATH}")
 include(${NUTTX_PATH}/scripts/target.cmake)
 include(${NUTTX_PATH}/scripts/toolchain.cmake)
 target_include_directories(${EXE_NAME} PRIVATE

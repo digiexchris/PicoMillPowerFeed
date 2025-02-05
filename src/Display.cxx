@@ -1,7 +1,7 @@
-#include "Display.hpp"
-#include "Helpers.hpp"
-#include "config.hpp"
-#include "icons.hpp"
+#include "Display.hxx"
+#include "Helpers.hxx"
+#include "config.hxx"
+#include "icons.hxx"
 // #include "textRenderer/12x16_font.h"
 // #include <stdio.h>
 #include <nuttx/nx/nx.h>
