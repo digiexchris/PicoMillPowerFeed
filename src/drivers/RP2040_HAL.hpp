@@ -6,10 +6,10 @@
 #include <stdint.h>
 // #include <hardware/gpio.h>
 // #include <hardware/pio.h>
-// #include <memory.h>
+// #include <memory>
 // #include <pico/mutex.h>
 // #include <queue.h>
-#include <array.h>
+// #include <array>
 
 namespace PicoMill::Drivers
 {
@@ -24,23 +24,24 @@ namespace PicoMill::Drivers
 	class RP2040_HAL
 	{
 	public:
-		RP2040_HAL(std::shared_ptr<Machine> aMachineState);
+		RP2040_HAL(Machine &aMachineState);
 
 		// start the task that polls the ADC values
-		static std::shared_ptr<RP2040_HAL> GetInstance();
+		static RP2040_HAL &GetInstance();
 
 		void Start();
 
 	private:
-		static std::shared_ptr<RP2040_HAL> myInstance;
-		std::shared_ptr<Machine> myMachine;
+		static RP2040_HAL &myInstance;
+		static RP2040_HAL *myInstancePtr;
+		Machine &myMachine;
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);
 		static void SwitchInterruptHandlerImpl(void *instance, uint32_t gpio);
 		static void EncoderUpdateTask(void *instance);
 		uint32_t myEncNewValue = 0;
 		uint32_t myEncOldValue = 0;
 		uint8_t myLastEncState = 0;
-		const PIO myEncPio = pio1;
+		// const PIO myEncPio = pio1;
 		const uint myEncSm = 0;
 
 		static constexpr PinStateMapping PIN_STATES[] = {
@@ -49,7 +50,7 @@ namespace PicoMill::Drivers
 			{RAPIDPIN, DeviceState::RAPID_HIGH, DeviceState::RAPID_LOW},
 			{ACCELERATION_PIN, DeviceState::ACCELERATION_HIGH, DeviceState::ACCELERATION_LOW}};
 
-		std::array<uint32_t, sizeof(PIN_STATES) / sizeof(PIN_STATES[0])> myLastPinTimes = {0};
+		uint32_t myLastPinTimes[sizeof(PIN_STATES) / sizeof(PIN_STATES[0])] = {0};
 
 		uint32_t myEncoderButtonLastTime = 0;
 		bool myEncoderButtonLastState = false;

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <sys/_stdint.h>
+#include <stdint.h>
 
 namespace PicoMill
 {

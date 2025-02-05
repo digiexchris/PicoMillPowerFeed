@@ -35,7 +35,8 @@
             "inherits": "default-debug",
             "binaryDir": "${sourceDir}/build/raspberrypi-pico",
             "cacheVariables": {
-                "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja"
+                "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
+                "BOARD_CONFIG": "raspberrypi-pico:usbnsh"
             }
         }
     ],

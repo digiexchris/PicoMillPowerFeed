@@ -19,7 +19,7 @@ namespace PicoMill::Drivers
 		 * @param pio The PIO instance to use
 		 * @param sm The PIO state machine to use
 		 */
-		PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, PIO pio, uint sm, uint16_t stepsPerRev);
+		PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, /*PIO pio, uint sm, */ uint16_t stepsPerRev);
 
 		void SetDirection(bool direction) override;
 		bool GetDirection() override;

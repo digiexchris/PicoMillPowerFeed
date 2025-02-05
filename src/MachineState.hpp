@@ -4,7 +4,7 @@
 #include "Event.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
-#include <memory.h>
+// #include <memory>
 #include <stdint.h>
 
 namespace PicoMill
@@ -58,20 +58,22 @@ namespace PicoMill
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = ACCELERATION_JERK, uint32_t aRapidSpeed = ACCELERATION_JERK * 2);
+		Machine(Display &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed = ACCELERATION_JERK, uint32_t aRapidSpeed = ACCELERATION_JERK * 2);
+		Machine(const Machine &) = delete;
+		Machine &operator=(const Machine &) = delete;
 
-		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
+		void OnValueChange(StateChange &anStateChange);
 
 		bool IsStateSet(MachineState state) const
 		{
 			return (myState & static_cast<uint8_t>(state)) != 0;
 		}
 
-		std::shared_ptr<Display> GetDisplay() const { return myDisplay; }
+		Display &GetDisplay() const { return myDisplay; }
 
 	private:
-		std::shared_ptr<Display> myDisplay;
-		std::shared_ptr<StepperState> myStepperState;
+		Display &myDisplay;
+		StepperState &myStepperState;
 		uint32_t myNormalSpeed = ACCELERATION_JERK;
 		uint32_t myRapidSpeed = ACCELERATION_JERK;
 		uint32_t myAcceleration;

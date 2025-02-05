@@ -2,23 +2,18 @@
 #include "StepperState.hpp"
 #include "config.hpp"
 // #include "pico/stdio.h"
-#include <memory>
+// #include <memory>
+#include <stdio.h>
 
 namespace PicoMill
 {
 
-	Machine::Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed)
-	{
-		if (myDisplay == nullptr)
-		{
-			// panic("Machine init without a valid Display object");
-		}
-	};
+	Machine::Machine(Display &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
-	void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
+	void Machine::OnValueChange(StateChange &aStateChange)
 	{
-		printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange->type);
-		if (aStateChange->type == DeviceState::LEFT_HIGH || aStateChange->type == DeviceState::RIGHT_HIGH)
+		printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange.type);
+		if (aStateChange.type == DeviceState::LEFT_HIGH || aStateChange.type == DeviceState::RIGHT_HIGH)
 		{
 			// Clear invalid states and ignore updates related to them
 			if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RIGHT))
@@ -29,7 +24,7 @@ namespace PicoMill
 			}
 		}
 
-		switch (aStateChange->type)
+		switch (aStateChange.type)
 		{
 		case DeviceState::LEFT_HIGH:
 			SetState(MachineState::LEFT);
@@ -37,16 +32,16 @@ namespace PicoMill
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(leftDir, myRapidSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = Start(leftDir, myRapidSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			else
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(leftDir, myNormalSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = Start(leftDir, myNormalSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			break;
@@ -54,8 +49,8 @@ namespace PicoMill
 			ClearState(MachineState::LEFT);
 			if (!IsStateSet(MachineState::RIGHT))
 			{
-				std::shared_ptr<Command> command = std::make_shared<Stop>();
-				myStepperState->ProcessCommand(command);
+				Command command = Stop();
+				myStepperState.ProcessCommand(command);
 			}
 			break;
 		case DeviceState::RIGHT_HIGH:
@@ -64,16 +59,16 @@ namespace PicoMill
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(rightDir, myRapidSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = Start(rightDir, myRapidSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			else
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(rightDir, myNormalSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = Start(rightDir, myNormalSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			break;
@@ -81,8 +76,8 @@ namespace PicoMill
 			ClearState(MachineState::RIGHT);
 			if (!IsStateSet(MachineState::LEFT))
 			{
-				std::shared_ptr<Command> command = std::make_shared<Stop>();
-				myStepperState->ProcessCommand(command);
+				Command command = Stop();
+				myStepperState.ProcessCommand(command);
 			}
 			break;
 		case DeviceState::RAPID_HIGH:
@@ -91,8 +86,8 @@ namespace PicoMill
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = ChangeSpeed(myRapidSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			break;
@@ -102,16 +97,16 @@ namespace PicoMill
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = ChangeSpeed(myNormalSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			break;
 		case DeviceState::ENCODER_CHANGED:
 		{
-			auto state = std::static_pointer_cast<Int8StateChange>(aStateChange);
+			auto state = static_cast<Int8StateChange &>(aStateChange);
 			bool moving = IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT);
-			int8_t increment = state->value;
+			int8_t increment = state.value;
 
 			if (IsStateSet(MachineState::RAPID))
 			{
@@ -128,15 +123,15 @@ namespace PicoMill
 
 				if (moving)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = ChangeSpeed(myRapidSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 			else if (IsStateSet(MachineState::ACCELERATION_HIGH))
 			{
 				myAcceleration += ENCODER_COUNTS_TO_ACCELERATION;
-				std::shared_ptr<Command> command = std::make_shared<ChangeAcceleration>(myAcceleration, myAcceleration);
-				myStepperState->ProcessCommand(command);
+				ChangeAcceleration command(myAcceleration);
+				myStepperState.ProcessCommand(command);
 			}
 			else
 			{
@@ -153,8 +148,8 @@ namespace PicoMill
 
 				if (moving)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
-					myStepperState->ProcessCommand(command);
+					Command command = ChangeSpeed(myNormalSpeed);
+					myStepperState.ProcessCommand(command);
 				}
 			}
 		}
@@ -162,7 +157,7 @@ namespace PicoMill
 		break;
 
 		case DeviceState::UNITS_TOGGLE:
-			myDisplay->ToggleUnits();
+			myDisplay.ToggleUnits();
 			break;
 
 		case DeviceState::ACCELERATION_HIGH:
@@ -181,39 +176,34 @@ namespace PicoMill
 
 	void Machine::UpdateDisplay()
 	{
-		if (myDisplay == nullptr)
-		{
-			panic("myDisplay is nullptr\n");
-		}
-
-		myDisplay->ClearBuffer();
-		myDisplay->WriteBuffer();
+		myDisplay.ClearBuffer();
+		myDisplay.WriteBuffer();
 
 		auto speed = IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed;
-		myDisplay->DrawSpeed(speed);
+		myDisplay.DrawSpeed(speed);
 
 		if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RAPID))
 		{
-			myDisplay->DrawRapidLeft();
+			myDisplay.DrawRapidLeft();
 		}
 		else if (IsStateSet(MachineState::RIGHT) && IsStateSet(MachineState::RAPID))
 		{
-			myDisplay->DrawRapidRight();
+			myDisplay.DrawRapidRight();
 		}
 		else if (IsStateSet(MachineState::LEFT))
 		{
-			myDisplay->DrawMovingLeft();
+			myDisplay.DrawMovingLeft();
 		}
 		else if (IsStateSet(MachineState::RIGHT))
 		{
-			myDisplay->DrawMovingRight();
+			myDisplay.DrawMovingRight();
 		}
 		else
 		{
-			myDisplay->DrawStopped();
+			myDisplay.DrawStopped();
 		}
 
-		myDisplay->WriteBuffer();
+		myDisplay.WriteBuffer();
 	}
 
 } // namespace PicoMill

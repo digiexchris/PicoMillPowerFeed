@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Display.hpp"
-#include <memory.h>
+// #include <memory.h>
 #include <stdint.h>
 
 namespace PicoMill::Drivers
@@ -11,7 +11,7 @@ namespace PicoMill::Drivers
 	{
 	public:
 		PicoSSD1306Display();
-		void DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y) override;
+		void DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y) override;
 		void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
 		void ClearBuffer() override;
 		void WriteBuffer() override;

@@ -1,5 +1,6 @@
 #!/bin/bash
 cd nuttx
+# ln -s ../.config ./
 make menuconfig
 make export
 cd ..

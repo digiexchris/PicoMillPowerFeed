@@ -9,7 +9,6 @@
 #include "config.hpp"
 // #include <hardware/gpio.h>
 // #include <hardware/timer.h>
-#include <memory.h>
 // #include <pico/time.h>
 
 namespace PicoMill::Drivers
@@ -51,7 +50,7 @@ namespace PicoMill::Drivers
 		// mySSD1306->sendBuffer();
 	}
 
-	void PicoSSD1306Display::DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y)
+	void PicoSSD1306Display::DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y)
 	{
 		// pico_ssd1306::drawText(mySSD1306, font, text, x, y);
 	}

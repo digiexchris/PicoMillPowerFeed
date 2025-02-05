@@ -2,8 +2,13 @@
 #include "Helpers.hpp"
 #include "config.hpp"
 #include "icons.hpp"
-#include "textRenderer/12x16_font.h"
-#include <cstring>
+// #include "textRenderer/12x16_font.h"
+// #include <stdio.h>
+#include <nuttx/nx/nx.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <nuttx/nx/nxfonts.h>
 
 namespace PicoMill
 {
@@ -11,15 +16,26 @@ namespace PicoMill
 	const char *IPM = "ipm";
 	const char *MMPM = "mm ";
 
+	NXHANDLE Display::myDefaultFontHandle = nxf_getfonthandle(FONTID_PIXEL_LCD_MACHINE);
+
+	Display::Display() noexcept
+	{
+		if (!myDefaultFontHandle)
+		{
+			printf("nxhello_main: Failed to get font handle: %d\n", errno);
+			abort();
+		}
+	}
+
 	void Display::DrawStart()
 	{
 		ClearBuffer();
 
 		const char *top = "POWER";
-		DrawCenteredText(top, font_12x16, 16);
+		DrawCenteredText(top, myDefaultFontHandle, 16);
 
 		const char *bottom = "FEED";
-		DrawCenteredText(bottom, font_12x16, 32);
+		DrawCenteredText(bottom, myDefaultFontHandle, 32);
 	}
 
 	void Display::ToggleUnits()
@@ -70,22 +86,23 @@ namespace PicoMill
 		}
 		else
 		{
-			speedPerMin = speedPerMin * inchPerMm;
+			speedPerMin = MMToInch(speedPerMin);
 			snprintf(speed, sizeof(speed), "%.1f %s", speedPerMin, IPM);
 		}
-		DrawCenteredText(speed, font_12x16, 0);
+		DrawCenteredText(speed, myDefaultFontHandle, 0);
 	}
 
-	void Display::DrawCenteredText(const char *text, const unsigned char *font, uint16_t y)
+	void Display::DrawCenteredText(const char *text, const NXHANDLE &aFont, uint16_t y)
 	{
-		uint16_t textWidth = GetTextWidth(text, font);
+		uint16_t textWidth = GetTextWidth(text, aFont);
 		uint16_t x = (myWidth - textWidth) / 2;
-		DrawText(text, font, x, y);
+		DrawText(text, aFont, x, y);
 	}
 
-	uint16_t Display::GetTextWidth(const char *text, const unsigned char *font)
+	uint16_t Display::GetTextWidth(const char *text, const NXHANDLE &aFont)
 	{
-		return font[0] * strlen(text);
+		auto font = nxf_getfontset(aFont);
+		return font->mxwidth * strlen(text);
 	}
 
 } // namespace PicoMill

@@ -19,24 +19,32 @@ if(BUILD_PICO_APP)
   project(PicoProject C CXX ASM)
 
   set(NUTTX_PATH "${CMAKE_SOURCE_DIR}/nuttx-export-12.8.0")
+  
+  # -export-12.8.0
 
-  include(cmake/raspberrypi-pico.cmake)
+  # include(cmake/raspberrypi-pico.cmake)
   
   set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -Wall -Wshadow -Wundef -fno-strict-aliasing -Os")
   set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -D_DEBUG -D_LIBCPP_BUILD_STATIC -D_LIBCPP_NO_EXCEPTIONS ")
-  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -fcheck-new -fno-rtti -pedantic ")
-  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -nostdinc++")
+  set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -fcheck-new -fno-rtti -fno-exceptions -pedantic ")
+  # set(AC_COMMON_FLAGS "${AC_COMMON_FLAGS} -nostdinc++")
   
   set(AC_DEFINES "${AC_DEFINES} -DCONFIG_WCHAR_BUILTIN")
   
-  include_directories(
-          src
-          ${NUTTX_PATH}/include
-          ${NUTTX_PATH}/include/libcxx
-          ${NUTTX_PATH}/arch/chip
-  )
-  
+
+
+  # include_directories(
+  #         src
+  #         ${NUTTX_PATH}/include
+  #         ${NUTTX_PATH}/include/libcxx
+  #         ${NUTTX_PATH}/arch/chip
+  # )
+
+  # add_subdirectory(nuttx)
   set(EXE_NAME PicoMill)
+
+  
+  
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AC_HW_FLAGS} ${AC_DEFINES}")
   set(CMAKE_CXX_FLAGS     "${AC_HW_FLAGS} ${AC_DEFINES} ${AC_COMMON_FLAGS} ${AC_CXX_EXTRA_FLAGS}")
   if (PARAM_DEBUG)

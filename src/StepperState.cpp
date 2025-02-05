@@ -1,7 +1,6 @@
 #include "StepperState.hpp"
 #include "Common.hpp"
 #include "config.hpp"
-#include <memory.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
@@ -10,7 +9,7 @@ namespace PicoMill
 
 	void StepperState::ProcessStop()
 	{
-		myStepper->SetSpeed(0);
+		myStepper.SetSpeed(0);
 
 		switch (myState)
 		{
@@ -28,9 +27,9 @@ namespace PicoMill
 		}
 	}
 
-	void StepperState::ProcessCommand(std::shared_ptr<Command> aCommand)
+	void StepperState::ProcessCommand(Command &aCommand)
 	{
-		switch (aCommand->type)
+		switch (aCommand.type)
 		{
 		case Command::Type::STOP:
 
@@ -38,21 +37,21 @@ namespace PicoMill
 			break;
 		case Command::Type::CHANGE_SPEED:
 		{
-			std::shared_ptr<ChangeSpeed> changeSpeed = std::static_pointer_cast<ChangeSpeed>(aCommand);
-			ProcessNewSpeed(changeSpeed->speed);
+			ChangeSpeed &changeSpeed = static_cast<ChangeSpeed &>(aCommand);
+			ProcessNewSpeed(changeSpeed.speed);
 		}
 		break;
 
 		case Command::Type::CHANGE_ACCELERATION:
 		{
-			std::shared_ptr<ChangeAcceleration> changeAcceleration = std::static_pointer_cast<ChangeAcceleration>(aCommand);
-			myStepper->SetAcceleration(changeAcceleration->acceleration);
+			ChangeAcceleration &changeAcceleration = static_cast<ChangeAcceleration &>(aCommand);
+			myStepper.SetAcceleration(changeAcceleration.acceleration);
 		}
 
 		case Command::Type::START:
 		{
-			std::shared_ptr<Start> start = std::static_pointer_cast<Start>(aCommand);
-			ProcessStart(start->direction, start->speed);
+			Start &start = static_cast<Start &>(aCommand);
+			ProcessStart(start.direction, start.speed);
 		}
 
 		break;
@@ -61,10 +60,8 @@ namespace PicoMill
 
 	void StepperState::ProcessStart(bool direction, uint32_t speed)
 	{
-		auto mySpeed = myStepper->GetCurrentSpeed();
-		auto myDirection = myStepper->GetDirection();
-		auto myTargetSpeed = myStepper->GetTargetSpeed();
-		auto myTargetDirection = myStepper->GetTargetDirection();
+		auto mySpeed = myStepper.GetCurrentSpeed();
+		auto myDirection = myStepper.GetDirection();
 
 		switch (myState)
 		{
@@ -73,7 +70,7 @@ namespace PicoMill
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myStepper.SetDirection(direction);
 			}
 			else if (speed > mySpeed)
 			{
@@ -90,23 +87,23 @@ namespace PicoMill
 
 			if (mySpeed != speed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 			break;
 		case States::COASTING:
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myStepper.SetDirection(direction);
 			}
 			else if (speed > mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::ACCELERATING;
 			}
 			else if (speed < mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::DECELERATING;
 			}
 			else
@@ -119,7 +116,7 @@ namespace PicoMill
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myStepper.SetDirection(direction);
 			}
 			else if (speed > mySpeed)
 			{
@@ -136,20 +133,20 @@ namespace PicoMill
 
 			if (mySpeed != speed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 			break;
 		case States::STOPPED:
 			if (myDirection != direction)
 			{
-				myStepper->SetDirection(direction);
+				myStepper.SetDirection(direction);
 			}
 
 			if (speed != 0)
 			{
 
 				myState = States::ACCELERATING;
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 
 			break;
@@ -157,7 +154,7 @@ namespace PicoMill
 			bool willChangeDirection = false;
 			if (myDirection != direction)
 			{
-				myStepper->SetDirection(direction);
+				myStepper.SetDirection(direction);
 				willChangeDirection = true;
 			}
 
@@ -179,7 +176,7 @@ namespace PicoMill
 
 			if (mySpeed != speed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 			break;
 		}
@@ -187,17 +184,14 @@ namespace PicoMill
 
 	void StepperState::ProcessNewSpeed(uint32_t speed)
 	{
-		auto mySpeed = myStepper->GetCurrentSpeed();
-		auto myDirection = myStepper->GetDirection();
-		auto myTargetSpeed = myStepper->GetTargetSpeed();
-		auto myTargetDirection = myStepper->GetTargetDirection();
+		auto mySpeed = myStepper.GetCurrentSpeed();
 
 		switch (myState)
 		{
 		case States::CHANGING_DIRECTION:
 			if (speed != mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 		case States::ACCELERATING:
 			if (speed < mySpeed)
@@ -207,18 +201,18 @@ namespace PicoMill
 
 			if (mySpeed != speed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 			break;
 		case States::COASTING:
 			if (speed < mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::DECELERATING;
 			}
 			else if (speed > mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::ACCELERATING;
 			}
 			else
@@ -229,22 +223,22 @@ namespace PicoMill
 		case States::DECELERATING:
 			if (speed > mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::ACCELERATING;
 			}
 			else if (speed == mySpeed)
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 				myState = States::COASTING;
 			}
 			else
 			{
-				myStepper->SetSpeed(speed);
+				myStepper.SetSpeed(speed);
 			}
 			break;
 		case States::STOPPED:
 			myState = States::ACCELERATING;
-			myStepper->SetSpeed(speed);
+			myStepper.SetSpeed(speed);
 			break;
 		}
 	}
@@ -253,10 +247,10 @@ namespace PicoMill
 	{
 
 		// due to precaching this, it will only be accurate to speeds within 4 steps or whatever the stepper's steps per update is
-		auto mySpeed = myStepper->GetCurrentSpeed();
-		auto myDirection = myStepper->GetDirection();
-		auto myTargetSpeed = myStepper->GetTargetSpeed();
-		auto myTargetDirection = myStepper->GetTargetDirection();
+		auto mySpeed = myStepper.GetCurrentSpeed();
+		auto myDirection = myStepper.GetDirection();
+		auto myTargetSpeed = myStepper.GetTargetSpeed();
+		auto myTargetDirection = myStepper.GetTargetDirection();
 
 		switch (myState)
 		{
@@ -303,12 +297,12 @@ namespace PicoMill
 				if (disableIdleTimeout >= 0)
 				{
 
-					if (myStepper->IsEnabled())
+					if (myStepper.IsEnabled())
 					{
-						const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
+						const uint64_t currentTime = myTime.GetCurrentTimeInMilliseconds();
 						if (disableIdleTimeout > 0 && myStoppedAt + disableIdleTimeout < currentTime)
 						{
-							myStepper->Disable();
+							myStepper.Disable();
 							myStoppedAt = 0;
 						}
 						else

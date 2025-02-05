@@ -2,7 +2,7 @@
 
 #include "Common.hpp"
 #include "Stepper.hpp"
-#include <memory.h>
+// #include <memory>
 
 #include <stdint.h>
 
@@ -29,6 +29,8 @@ namespace PicoMill
 		};
 
 		Type type;
+
+		virtual ~Command() = default;
 	};
 
 	struct ChangeSpeed : Command
@@ -58,13 +60,13 @@ namespace PicoMill
 	class StepperState
 	{
 	public:
-		StepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : myStepper(aStepper), myTime(aTime)
+		StepperState(IStepper &aStepper, ITime &aTime) : myStepper(aStepper), myTime(aTime)
 		{
 			myState = States::STOPPED;
 			myStoppedAt = 0;
 		}
 
-		virtual void ProcessCommand(std::shared_ptr<Command> command);
+		virtual void ProcessCommand(Command &command);
 		virtual States GetState() { return myState; }
 		virtual void Run();
 
@@ -79,9 +81,9 @@ namespace PicoMill
 
 		uint64_t myStoppedAt;
 
-		std::shared_ptr<IStepper> myStepper;
+		IStepper &myStepper;
 
-		std::shared_ptr<ITime> myTime;
+		ITime &myTime;
 	};
 
 } // namespace Stepper

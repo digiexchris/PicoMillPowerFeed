@@ -11,7 +11,7 @@
 // #include <hardware/irq.h>
 // #include <hardware/pio.h>
 // #include <hardware/timer.h>
-#include <memory.h>
+#include <assert.h>
 // #include <pico/types.h>
 // #include <queue.h>
 // #include <task.h>
@@ -19,13 +19,13 @@
 
 namespace PicoMill::Drivers
 {
-	std::shared_ptr<RP2040_HAL> RP2040_HAL::myInstance;
+	RP2040_HAL *RP2040_HAL::myInstancePtr = nullptr;
+	RP2040_HAL &RP2040_HAL::myInstance = *myInstancePtr; // Initial definition
 
-	RP2040_HAL::RP2040_HAL(std::shared_ptr<Machine> aMachineState)
+	RP2040_HAL::RP2040_HAL(Machine &aMachineState)
+		: myMachine(aMachineState)
 	{
-		myMachine = aMachineState;
-
-		RP2040_HAL::myInstance = std::shared_ptr<RP2040_HAL>(this);
+		myInstancePtr = this;
 
 		// Configure GPIO pins as inputs with pull-ups
 		// gpio_init(LEFTPIN);
@@ -66,12 +66,9 @@ namespace PicoMill::Drivers
 		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 	}
 
-	std::shared_ptr<RP2040_HAL> RP2040_HAL::GetInstance()
+	RP2040_HAL &RP2040_HAL::GetInstance()
 	{
-		if (myInstance == nullptr)
-		{
-			throw std::runtime_error("RP2040_HAL instance not initialized");
-		}
+		assert(myInstancePtr != nullptr);
 		return myInstance;
 	}
 

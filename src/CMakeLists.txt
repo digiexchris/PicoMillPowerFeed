@@ -40,23 +40,23 @@ ${app_sources}
           COMMAND ${CMAKE_OBJCOPY} ARGS -S -O binary ${CMAKE_BINARY_DIR}/${EXE_NAME}.elf ${CMAKE_BINARY_DIR}/${EXE_NAME}.bin
   )
   
-  target_link_libraries(${EXE_NAME} --start-group)
-  
-  target_link_libraries(${EXE_NAME} sched)
-  target_link_libraries(${EXE_NAME} drivers)
-  target_link_libraries(${EXE_NAME} boards)
-  target_link_libraries(${EXE_NAME} c)
-  target_link_libraries(${EXE_NAME} mm)
-  target_link_libraries(${EXE_NAME} arch)
-  target_link_libraries(${EXE_NAME} xx)
-  target_link_libraries(${EXE_NAME} apps)
-  target_link_libraries(${EXE_NAME} fs)
-  target_link_libraries(${EXE_NAME} binfmt)
-  target_link_libraries(${EXE_NAME} board)
-  target_link_libraries(${EXE_NAME} gcc)
-  target_link_libraries(${EXE_NAME} supc++)
-  
-  target_link_libraries(${EXE_NAME} --end-group)
+#   target_link_libraries(${EXE_NAME} 
+#   sched
+#   drivers
+#   boards
+#   c
+#   mm
+#   arch
+#   xx
+#   apps
+#   fs
+#   binfmt
+#   board
+#   gcc
+#   supc++
+#   uClibc++
+#  nxfonts
+#   )
 
 # add_compile_options(
 #     ### Common Options
@@ -76,12 +76,13 @@ ${app_sources}
 #     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-volatile>
 # )
 
-if(NOT BUILD_TESTS)
-add_custom_command(TARGET ${EXE_NAME} POST_BUILD
-COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
-# COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
-)
-endif()
+
+# if(NOT BUILD_TESTS)
+# add_custom_command(TARGET ${EXE_NAME} POST_BUILD
+# COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
+# # COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
+# )
+# endif()
 
 # pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 # pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
@@ -95,11 +96,14 @@ endif()
 # hardware_i2c
 # # no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 # pico_stdlib)
-
+include(${NUTTX_PATH}/scripts/target.cmake)
+include(${NUTTX_PATH}/scripts/toolchain.cmake)
 target_include_directories(${EXE_NAME} PRIVATE
         ${CMAKE_HOME_DIRECTORY}
         ${header_dir_list}
         ${CMAKE_CURRENT_SOURCE_DIR})
+
+
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 

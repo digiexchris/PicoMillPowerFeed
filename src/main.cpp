@@ -1,16 +1,18 @@
 #include "MachineState.hpp"
 #include "drivers/RP2040_HAL.hpp"
-#include <memory.h>
+// #include <memory.h>
 #include <nuttx/config.h>
+#include <unistd.h>
 
 #include "Common.hpp"
 #include "Display.hpp"
 #include "Stepper.hpp"
 #include "StepperState.hpp"
 #include "config.hpp"
-#include "drivers/PIOSte7pper.hpp"
+// #include "drivers/PIOSte7pper.hpp"
+#include "Helpers.hpp"
 #include "drivers/PicoSSD1306Display.hpp"
-#include <stdio.h>
+// #include <stdio.h>
 
 // std::shared_ptr<PicoMill::IStepper> stepper;
 // std::shared_ptr<PicoMill::Time> iTime;
@@ -21,7 +23,7 @@
 
 // std::unique_ptr<PicoMill::Drivers::RP2040_HAL> hal;
 
-std::shared_ptr<PicoMill::Display> display;
+PicoMill::Drivers::PicoSSD1306Display display = PicoMill::Drivers::PicoSSD1306Display();
 
 // void stepperUpdateTask(void *pvParameters)
 // {
@@ -39,13 +41,11 @@ std::shared_ptr<PicoMill::Display> display;
 
 int main()
 {
-	usleep(us_to_ms(2000));
-	printf("Starting PicoMill\n");
-
-	display = std::make_shared<PicoMill::Drivers::PicoSSD1306Display>();
-	display->DrawStart();
-	display->WriteBuffer();
-	usleep(us_to_ms((500));
+	usleep(MS_TO_US(2000));
+	// printf("Starting PicoMill\n");
+	display.DrawStart();
+	display.WriteBuffer();
+	usleep(MS_TO_US(500));
 	// stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
 	// iTime = std::make_shared<PicoMill::Time>();
 	// stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
@@ -66,6 +66,6 @@ int main()
 	// printf("Starting FreeRTOS\n");
 	// vTaskStartScheduler();
 
-	printf("It should never get here");
+	// printf("It should never get here");
 	return 0;
 }
