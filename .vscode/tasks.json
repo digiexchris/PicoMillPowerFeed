@@ -26,9 +26,9 @@
                 "panel": "dedicated"
             },
             "args": [
-                "${workspaceFolder}/build/src/PicoApp.elf"
+                "${workspaceFolder}/nuttx/nuttx.uf2"
             ],
-            "hide": true,
+            "hide": false,
             "problemMatcher": []
         }
     ]

@@ -1,6 +1,6 @@
 include $(APPDIR)/Make.defs
 
-PICOMILLDIR = $(APPDIR)/external/PicoMill
+PICOMILLDIR = $(APPDIR)/Machine/PicoMill
 
 # Application info
 PROGNAME = picomill

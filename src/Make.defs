@@ -19,6 +19,5 @@
 # under the License.
 #
 ############################################################################
-ifneq ($(CONFIG_PICOMILL),)
-CONFIGURED_APPS += $(APPDIR)/external/PicoMill
-endif
+
+CONFIGURED_APPS += $(APPDIR)/Machine/PicoMill

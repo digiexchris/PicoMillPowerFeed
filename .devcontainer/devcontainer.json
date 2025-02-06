@@ -8,6 +8,8 @@
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh",
         "PICO_SDK_PATH": "/tools/pico/pico-sdk"
+        // "PYTHON_PATH": "/usr/local/lib/python3.12/dist-packages",
+        // "PYTHONPATH": "/usr/local/lib/python3.12/dist-packages"
     },
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
     "workspaceFolder": "/workspace",

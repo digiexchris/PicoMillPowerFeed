@@ -6,5 +6,4 @@
 #
 
 menu "External Apps"
-source "/workspace/apps/external/PicoMill/Kconfig"
 endmenu # External Apps

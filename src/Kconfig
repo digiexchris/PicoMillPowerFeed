@@ -6,9 +6,33 @@
 config PICOMILL
 	tristate "PicoMill power feed"
 	default y
+
+	select ALLOW_BSD_COMPONENTS
+	select ALLOW_GPL_COMPONENTS
+	select ALLOW_MIT_COMPONENTS
+	select ALLOW_ECLIPSE_COMPONENTS
+	select ALLOW_ICS_COMPONENTS
+	select RP2040_I2C
+	select RP2040_I2C0
+	select ARCH_LEDS_CPU_ACTIVITY
+	RP2040_I2C0_SDA_GPIO=16
+	RP2040_I2C0_SCL_GPIO=17
+
 	select HAVE_CXX
 	select CONFIG_HAS_CXX_COMPILER
 	select NXFONTS
+	select NXFONT_PIXEL_LCD_MACHINE
+	select SPECIFIC_DRIVERS
+	select I2C
+	select DRIVERS_VIRTIO
+	select LCD
+	select LCD_SH1106_OLED_132
+	select SSD1306_POWEROFF_RECONFIGURE
+	select CCACHE
+
+	
+	LCD_MAXCONTRAST=255
+
 	---help---
 		RP2040 based power feed for milling machines
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../src/Stepper.hpp"
-#include "../src/StepperState.hpp"
+#include "../src/Stepper.hxx"
+#include "../src/StepperState.hxx"
 
 #include <gmock/gmock.h>
 namespace PicoMill

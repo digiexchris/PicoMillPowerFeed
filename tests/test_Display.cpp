@@ -1,6 +1,5 @@
-#include "../src/config.hpp"
-#include "TestDisplay.hpp"
-#include "textRenderer/12x16_font.h"
+#include "../src/config.hxx"
+#include "TestDisplay.hxx"
 #include "gmock/gmock.h"
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "../src/Common.hpp"
+#include "../src/Common.hxx"
 #include <chrono>
 #include <gmock/gmock.h>
 

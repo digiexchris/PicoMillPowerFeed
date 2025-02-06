@@ -1,0 +1,630 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<package schemaVersion="1.7.28" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Open-CMSIS-Pack/Open-CMSIS-Pack-Spec/v1.7.28/schema/PACK.xsd">
+  <name>RP2xxx_DFP</name>
+  <description>Raspberry Pi RP2xxx Device Family Pack</description>
+  <vendor>RaspberryPi</vendor>
+  <!-- <license>license.txt</license> -->
+  <url>https://github.com/raspberrypi/cmsis-rp2xxx-dfp/releases/download/v0.9.5/</url>
+  <repository type="git">https://github.com/raspberrypi/cmsis-rp2xxx-dfp.git</repository>
+
+  <releases>
+    <release version="0.9.5" date="2024-05-24" tag="v0.9.5">
+      - Update Documentation
+      - Fix compatibility with CMSIS 6.1.0
+    </release>
+    <release version="0.9.4" date="2024-04-24" tag="v0.9.4">
+      - Add .pidx file
+      - Rename to RaspberryPi.RP2xxx_DFP
+      - Upload generated .pdsc file to release assets
+    </release>
+    <release version="0.9.3" date="2024-04-08" tag="v0.9.3">
+      - Tidy up the split between __wrapper and pico-sdk, with new sdk branch
+      - Add support for pio
+      - Add support for Pico W in polling mode, including a heartbeat example
+      - Use atomic blocks, as these are now supported by latest debugprobe firmware
+    </release>
+  </releases>
+
+  <keywords>
+    <keyword>Raspberry Pi</keyword>
+    <keyword>RP2040</keyword>
+  </keywords>
+
+  <devices>
+    <family Dfamily="RP2040 Series" Dvendor="RPi:170">
+        <processor Dcore="Cortex-M0+" DcoreVersion="r0p1" Dclock="133000000" Dfpu="NO_FPU" Dmpu="MPU" Dendian="Little-endian" Pname="Core0"/>
+        <processor Dcore="Cortex-M0+" DcoreVersion="r0p1" Dclock="133000000" Dfpu="NO_FPU" Dmpu="MPU" Dendian="Little-endian" Pname="Core1"/>
+        <book name="https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf" title="RP2040 Datasheet" public="true"/>
+
+        <description>
+          Designed by Raspberry Pi, RP2040 features a dual-core Arm Cortex-M0+ processor with 264KB internal RAM and support for up to 16MB of off-chip Flash.
+          A wide range of flexible I/O options includes I2C, SPI, and — uniquely — Programmable I/O (PIO).
+          These support endless possible applications for this small and affordable package.
+        </description>
+
+        <debug svd="CMSIS/SVD/rp2040.svd"/>
+        <compile header="CMSIS/Device/RP2040/Include/rp2040.h" define="RP2040"/>
+        <environment name="uv">
+          <CMisc>-std=gnu11</CMisc>
+          <LMisc>--diag_suppress=L6314,L6170</LMisc>
+          <preBuild2>$Stools\pio_all.bat</preBuild2>
+          <postBuild2>$Stools\elf2uf2.exe "#L" ".\@L.uf2"</postBuild2>
+        </environment>
+        <debugvars configfile="CMSIS/Debug/rp2040.dbgconf" version="1.0.0">
+          // Debug Access Variables, can be modified by user via copies of DBGCONF files as created by uVision. Also see sub-family level.
+        </debugvars>
+
+        <sequences>
+          <!-- Helper sequences -->
+          <sequence name="Dormant2SWD" info="Switch from dormant mode to SWD mode">
+            <block atomic="true">
+              // Ensure current debug interface is in reset state
+              DAP_SWJ_Sequence(51, 0x0007FFFFFFFFFFFF);
+              DAP_SWJ_Sequence(3,  0x00);                // At least 2 idle cycles (SWDIO/TMS Low)
+
+              // At least 8 cycles SWDIO/TMS HIGH
+              DAP_SWJ_Sequence(8, 0xFF);
+
+              // Alert Sequence Bits  0.. 63
+              DAP_SWJ_Sequence(64, 0x86852D956209F392);
+
+              // Alert Sequence Bits 64..127
+              DAP_SWJ_Sequence(64, 0x19BC0EA2E3DDAFE9);
+
+              // 4 cycles SWDIO/TMS LOW + 8-Bit SWD Activation Code (0x1A)
+              DAP_SWJ_Sequence(12, 0x1A0);
+            </block>
+          </sequence>
+
+          <sequence name="CheckForPicoDAP" info="Ensure TARGETSEL sequence not applied to DAP w/o multi-drop">
+            <block atomic="true">
+              __var swDP      = 0x0BC12477;  // Cortex-M0+ SW-DP with multi-drop (Core0 and Core1 sub-systems)
+              __var rescueDP  = 0x10212927;  // Raspberry Pi Pico Rescue DP
+              __var dpIdrAddr = 0x0;
+              __var value     = 0x0;
+
+              // Ensure current debug interface is in reset state
+              DAP_SWJ_Sequence(51, 0x0007FFFFFFFFFFFF);
+              DAP_SWJ_Sequence(3,  0x00);                // At least 2 idle cycles (SWDIO/TMS Low)
+
+              value = ReadDP(dpIdrAddr);                 // Read DPIDR
+                                                         // Read inside atomic block in case debug
+                                                         // unit continously clocks.
+            </block>
+            <control if="value != swDP &amp;&amp; value != rescueDP">
+              <block>
+                Message(2, "Unexpected DAP ID (0x%08X), make sure a Raspberry Pi Pico is connected!", value);
+              </block>
+            </control>
+          </sequence>
+
+          <sequence name="SelectCore" Pname="Core0" info="TARGETSEL sequence for Core 0">
+            <block atomic="true">
+              // Enter SWD Line Reset State
+              DAP_SWJ_Sequence(51, 0x0007FFFFFFFFFFFF);  // &gt; 50 cycles SWDIO/TMS High
+              DAP_SWJ_Sequence(3,  0x00);                // At least 2 idle cycles (SWDIO/TMS Low)
+
+              // DP TARGETSEL Write Request
+              DAP_SWJ_Sequence(8, 0x99);
+
+              // 5 Cycles not driven (drive HIGH to match DAP internal pull-up level)
+              // CAUTION: This needs to be double-checked with Raspberry Pi. In theory,
+              //          this should not harm target GPIO ports. But if the target
+              //          drives SWDIO during the normally expected back-off phasem,
+              //          this could become problematic!
+              DAP_SWJ_Sequence(5, 0x1F);
+
+              // Write TARGETSEL Value - Core 0
+              DAP_SWJ_Sequence(32, 0x01002927);
+
+              // Parity + 2 idle cycles
+              DAP_SWJ_Sequence(3, 0x0);
+
+              ReadDP(0x0);                               // Read DPIDR to enable SWD interface
+                                                         // Read inside atomic block in case debug
+                                                         // unit continously clocks.
+            </block>
+          </sequence>
+
+          <sequence name="SelectCore" Pname="Core1" info="TARGETSEL sequence for Core 1">
+            <block atomic="true">
+              // Enter SWD Line Reset State
+              DAP_SWJ_Sequence(51, 0x0007FFFFFFFFFFFF);  // &gt; 50 cycles SWDIO/TMS High
+              DAP_SWJ_Sequence(3,  0x00);                // At least 2 idle cycles (SWDIO/TMS Low)
+
+              // DP TARGETSEL Write Request
+              DAP_SWJ_Sequence(8, 0x99);
+
+              // 5 Cycles not driven (drive HIGH to match DAP internal pull-up level)
+              // CAUTION: This needs to be double-checked with Raspberry Pi. In theory,
+              //          this should not harm target GPIO ports. But if the target
+              //          drives SWDIO during the normally expected back-off phasem,
+              //          this could become problematic!
+              DAP_SWJ_Sequence(5, 0x1F);
+
+              // Write TARGETSEL Value - Core 1
+              DAP_SWJ_Sequence(32, 0x11002927);
+
+              // Parity + 2 idle cycles
+              DAP_SWJ_Sequence(3, 0x1);
+
+              ReadDP(0x0);                               // Read DPIDR to enable SWD interface
+                                                         // Read inside atomic block in case debug
+                                                         // unit continously clocks.
+            </block>
+          </sequence>
+
+          <sequence name="DebugPortSetup">
+            <block>
+              Sequence("Dormant2SWD");
+              Sequence("CheckForPicoDAP");
+              Sequence("SelectCore");
+            </block>
+          </sequence>
+        </sequences>
+
+        <device Dname="RP2040">
+          <memory name="External_Flash" access="rx"           start="0x10000000" size="0x00200000" default="1" startup="1"/>
+          <memory name="SRAM"           access="rwx"          start="0x20000000" size="0x00042000" default="1" init="0"/>
+
+          <algorithm name="CMSIS/Flash/Raspberry_Pi_Pico.FLM"  start="0x10000000" size="0x00200000" RAMstart="0x20040000" RAMsize="0x00002000" default="1"/>
+
+          <!-- feature type="QFP" n="48"/-->
+        </device>
+    </family>
+  </devices>
+
+
+  <conditions>
+    <!-- Compiler Conditions -->
+    <condition id="ARMCC">
+        <accept Tcompiler="ARMCC" Toptions="AC6"/>
+        <accept Tcompiler="ARMCC" Toptions="AC6LTO"/>
+    </condition>
+    <condition id="GCC">
+      <require Tcompiler="GCC"/>
+    </condition>
+
+    <condition id="GNU Assembler">
+        <accept Tcompiler="ARMCC" Toptions="AC6"/>
+        <accept Tcompiler="ARMCC" Toptions="AC6LTO"/>
+        <accept Tcompiler="GCC"/>
+        <accept Tcompiler="CLANG"/>
+    </condition>
+
+    <!-- Device Conditions -->
+    <condition id="RP2040">
+      <description>Raspberry Pi RP2040 device</description>
+      <require Dvendor="RPi:170" Dname="RP2040*"/>
+    </condition>
+
+    <!-- Device + CMSIS Conditions -->
+    <condition id="RP2040 CMSIS">
+      <description>Raspberry Pi RP2040 device and CMSIS-CORE</description>
+      <require condition="RP2040"/>
+      <require Cclass="CMSIS" Cgroup="CORE"/>
+    </condition>
+    
+    <condition id="RP2040 CMSIS STARTUP">
+      <description>Raspberry Pi RP2040 device, CMSIS-CORE and startup</description>
+      <require condition="RP2040 CMSIS"/>
+      <require Cclass="Device" Cgroup="Startup"/>
+    </condition>
+
+    <condition id="RP2040 BOARD">
+      <description>Raspberry Pi RP2040 device and board</description>
+      <require condition="RP2040 CMSIS STARTUP"/>
+      <require Cclass="Device" Cgroup="Pico Board"/>
+    </condition>
+
+    <condition id="Pico W SDK">
+      <description>Raspberry Pi RP2040 SDK</description>
+      <require condition="RP2040"/>
+      <require Cclass="Device" Cgroup="Pico Board" Cvariant="Pico W"/>
+      <require Cclass="Device" Cgroup="Pico SDK"/>
+    </condition>
+
+  </conditions>
+
+  <components>
+
+    <component Cclass="Device" Cgroup="Pico Board" Cversion="1.5.1" Cvariant="None" condition="RP2040" >
+        <description>No Board</description>
+        <files>
+            <file category="include"                name="__boards_wrapper/none/" />
+        </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="Pico Board" Cversion="1.5.1" Cvariant="Pico" condition="RP2040" >
+        <description>Pico Board</description>
+        <files>
+            <file category="include"                name="__boards_wrapper/pico_base/" />
+        </files>
+    </component>
+
+    <component Cclass="Device" Cgroup="Pico Board" Cversion="1.5.1" Cvariant="Pico W" condition="RP2040" >
+        <description>Pico W Board</description>
+        <files>
+            <file category="include"                name="__boards_wrapper/pico_w_base/" />
+        </files>
+    </component>
+
+    <!-- CMSIS-Startup components -->
+    <!-- Cortex-M0+ -->
+    
+    <component Cclass="Device" Cgroup="Startup" Cvariant="C Startup" Cversion="1.1.0" condition="RP2040 CMSIS" isDefaultVariant="true">
+      <description>System Startup for Raspberry PI RP2040 device</description>
+      <RTE_Components_h>
+        #define RTE_Device_Startup_RP2040    /* Device Startup for RP2040 */
+      </RTE_Components_h>
+
+      <files>
+        <!-- include folder / device header file -->
+        <file category="header"       name="CMSIS/Device/RP2040/Include/rp2040.h"/>
+
+        <!-- startup / linker file -->
+        <file category="sourceC"                        name="CMSIS/Device/RP2040/Source/startup_rp2040.c"     version="1.2.0" attr="config"/>
+        <file category="linkerScript" condition="ARMCC" name="CMSIS/Device/RP2040/Source/ARM/rp2040.sct"       version="1.2.1" attr="config"/>
+        <file category="linkerScript" condition="GCC"   name="CMSIS/Device/RP2040/Source/GCC/gcc_arm.ld"       version="1.0.0" attr="config"/>
+
+        <!-- system file -->
+        <file category="sourceC"                        name="CMSIS/Device/RP2040/Source/system_rp2040.c"      version="1.1.0" attr="config"/>
+        
+        <!-- Stage 2 Boot -->
+        <file category="sourceAsm"                      name="pico-sdk/src/rp2_common/boot_stage2/compile_time_choice.S" condition="GNU Assembler"/>
+        
+        <file category="include"                        name="pico-sdk/src/boards/include/" />
+        <file category="include"                        name="pico-sdk/src/rp2_common/cmsis/include/" />
+        
+        <!-- the language="asm" has been well supported yet */
+        <file category="include" language="asm"         name="pico-sdk/src/rp2040/hardware_regs/include/"/>
+        <file category="include" language="asm"         name="pico-sdk/src/rp2_common/hardware_irq/include/"/>
+        <file category="include" language="asm"         name="pico-sdk/src/rp2_common/pico_platform/include/"/>
+        <file category="include" language="asm"         name="pico-sdk/src/common/pico_base/include/"/>
+        
+        <file category="include" language="asm"         name="__wrapper/pico_base/"/>
+        <file category="include" language="asm"         name="pico-sdk/src/rp2_common/boot_stage2/include/"/>
+        <file category="include" language="asm"         name="pico-sdk/src/rp2_common/boot_stage2/asminclude/"/>
+        -->
+        <file category="include"                        name="pico-sdk/src/rp2040/hardware_regs/include/"/>
+        <file category="include"                        name="pico-sdk/src/rp2_common/hardware_irq/include/"/>
+        <file category="include"                        name="pico-sdk/src/rp2_common/pico_platform/include/"/>
+        <file category="include"                        name="pico-sdk/src/common/pico_base/include/"/>
+        
+        <!-- <file category="include"                        name="__boards_wrapper/pico_base/" /> -->
+        <file category="include"                        name="pico-sdk/src/rp2_common/boot_stage2/include/"/>
+        <file category="include"                        name="pico-sdk/src/rp2_common/boot_stage2/asminclude/"/>
+        
+      </files>
+    </component>
+    <!--
+    <component Cclass="Device" Cgroup="Startup"                      Cversion="1.0.0" condition="RP2040 CMSIS">
+      <description>DEPRECATED: System and Startup for Raspberry PI RP2040 device</description>
+      <files>
+
+        <file category="header"  name="CMSIS/Device/RP2040/Include/rp2040.h"/>
+
+        <file category="sourceAsm"    condition="ARMCC" name="CMSIS/Device/RP2040/Source/ARM/startup_rp2040.S" version="1.0.0" attr="config"/>
+        <file category="linkerScript" condition="ARMCC" name="CMSIS/Device/RP2040/Source/ARM/rp2040.sct"       version="1.0.0" attr="config"/>
+        <file category="sourceAsm"    condition="GCC"   name="CMSIS/Device/RP2040/Source/GCC/startup_rp2040.S" version="1.0.0" attr="config"/>
+        <file category="linkerScript" condition="GCC"   name="CMSIS/Device/RP2040/Source/GCC/gcc_arm.ld"       version="1.0.0" attr="config"/>
+
+        <file category="sourceC"                        name="CMSIS/Device/RP2040/Source/system_rp2040.c"      version="1.0.0" attr="config"/>
+      </files>
+    </component>
+    -->
+
+    <component Cclass="Device" Cgroup="Pico SDK" Cversion="1.5.1" condition="RP2040 BOARD" >
+        <description>The Raspberry Pi Pico SDK.</description>
+        
+        <files>
+            
+            <file category="include"                name="__wrapper/" />
+            <file category="preIncludeGlobal"       name="__wrapper/env_wrapper.h" version="1.5.2" attr="config" />
+            <file category="sourceC"                name="__wrapper/env_wrapper.c" />
+            
+            
+            
+            
+            <file category="include"    name="pico-sdk/src/" />
+            <file category="include"    name="pico-sdk/src/boards/include/" />
+            <file category="sourceC"    name="pico-sdk/src/host/pico_stdlib/stdlib.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_platform/platform.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2040/hardware_structs/include/" />
+            <file category="include"    name="pico-sdk/src/rp2040/hardware_regs/include/" />
+            <file category="include"    name="pico-sdk/src/common/pico_base/include/" />
+            
+            
+            <file category="include"    name="pico-sdk/src/common/pico_sync/include/" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_sync/critical_section.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_sync/lock_core.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_sync/mutex.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_sync/sem.c" />
+            
+            <file category="include"    name="pico-sdk/src/common/pico_time/include/" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_time/time.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_time/timeout_helper.c" />
+            
+            <file category="include"    name="pico-sdk/src/common/pico_util/include/" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_util/queue.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_util/pheap.c" />
+            <file category="sourceC"    name="pico-sdk/src/common/pico_util/datetime.c" />
+            
+            
+            <file category="include"    name="pico-sdk/src/common/pico_stdlib/include/" />
+            <file category="include"    name="pico-sdk/src/common/pico_binary_info/include/" />
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_base/include/" />
+            
+            
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_watchdog/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_watchdog/watchdog.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_pll/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_pll/pll.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_xosc/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_xosc/xosc.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_flash/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_flash/flash.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_dma/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_dma/dma.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_irq/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_irq/irq.c" />
+            <file category="sourceAsm"  name="pico-sdk/src/rp2_common/hardware_irq/irq_handler_chain.S"  condition="GNU Assembler"/>
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_gpio/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_gpio/gpio.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_resets/include/" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_clocks/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_clocks/clocks.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_timer/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_timer/timer.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_sync/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_sync/sync.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_claim/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_claim/claim.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_spi/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_spi/spi.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_pwm/include/" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_i2c/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_i2c/i2c.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_i2c_slave/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_i2c_slave/i2c_slave.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_uart/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_uart/uart.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_adc/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_adc/adc.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_interp/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_interp/interp.c" />
+
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_pio/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/hardware_pio/pio.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_multicore/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_multicore/multicore.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/hardware_divider/include/" />
+            <file category="sourceAsm"  name="pico-sdk/src/rp2_common/hardware_divider/divider.S"  condition="GNU Assembler"/>
+
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_bootrom/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_bootrom/bootrom.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_rand/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_rand/rand.c" />
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_unique_id/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_unique_id/unique_id.c" />
+            
+            
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_runtime/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_runtime/runtime.c" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_printf/include/" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_stdio/include/" />
+            <file category="sourceC"    name="__wrapper/stdio.c" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_stdio_uart/include/" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_stdio_usb/include/" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_stdio_semihosting/include/" />
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_double/include/" />
+            
+        </files>
+        <Pre_Include_Local_Component_h>
+            #define LIB_CMSIS_CORE                  1
+            #define PICO_CMSIS_RENAME_EXCEPTIONS    1
+        </Pre_Include_Local_Component_h>
+        <RTE_Components_h>
+            #define RTE_Device_Pico_SDK     /* Device Pico-SDK */
+        </RTE_Components_h>
+    </component>
+
+    <component Cclass="Device" Cgroup="Pico W SDK" Cversion="1.5.1" condition="Pico W SDK" >
+        <description>Pico W SDK Extras.</description>
+        
+        <files>
+            <file category="preIncludeLocal"       name="__wrapper/lwipopts.h" version="1.5.1" attr="config" />
+
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_async_context/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_async_context/async_context_base.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_async_context/async_context_poll.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_async_context/async_context_threadsafe_background.c" />
+
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_cyw43_arch/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_cyw43_arch/cyw43_arch.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_cyw43_arch/cyw43_arch_poll.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_cyw43_arch/cyw43_arch_threadsafe_background.c" />
+
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_cyw43_driver/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_cyw43_driver/cyw43_bus_pio_spi.c" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_cyw43_driver/cyw43_driver.c" />
+
+            <file category="include"    name="pico-sdk/src/rp2_common/pico_lwip/include/" />
+            <file category="sourceC"    name="pico-sdk/src/rp2_common/pico_lwip/lwip_nosys.c" />
+
+            <file category="include"    name="pico-sdk/lib/cyw43-driver/firmware/" />
+            <file category="include"    name="pico-sdk/lib/cyw43-driver/src/" />
+            <file category="sourceC"    name="pico-sdk/lib/cyw43-driver/src/cyw43_ctrl.c" />
+            <file category="sourceC"    name="pico-sdk/lib/cyw43-driver/src/cyw43_ll.c" />
+            <file category="sourceC"    name="pico-sdk/lib/cyw43-driver/src/cyw43_lwip.c" />
+            <file category="sourceC"    name="pico-sdk/lib/cyw43-driver/src/cyw43_stats.c" />
+
+
+            <file category="include"    name="pico-sdk/lib/lwip/src/include/" />
+
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/acd.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/autoip.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/dhcp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/etharp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/icmp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/igmp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/ip4.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/ip4_addr.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv4/ip4_frag.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/dhcp6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/ethip6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/icmp6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/inet6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/ip6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/ip6_addr.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/ip6_frag.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/mld6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ipv6/nd6.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/altcp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/altcp_alloc.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/altcp_tcp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/def.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/dns.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/inet_chksum.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/init.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/ip.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/mem.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/memp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/netif.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/pbuf.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/raw.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/stats.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/sys.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/tcp.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/tcp_in.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/tcp_out.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/timeouts.c" />
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/core/udp.c" />
+
+            <file category="sourceC"    name="pico-sdk/lib/lwip/src/netif/ethernet.c" />
+        </files>
+    </component>
+
+  </components>
+
+    <boards>
+      <board vendor="Raspberry Pi" name="Raspberry Pi Pico" revision="Rev. 3" salesContact="https://www.raspberrypi.org/contact/"
+               orderForm   ="https://www.raspberrypi.org/products/raspberry-pi-pico/">
+        <description>The new flexible $4 microcontroller board from Raspberry Pi</description>
+        <image small="Images/RPi_Pico.png" large="Images/RPi_Pico.png" public="true"/>
+
+        <book category="overview"  name="https://www.raspberrypi.org/products/raspberry-pi-pico/" title="Raspberry Pi Pico"/>
+        <book category="other"     name="https://datasheets.raspberrypi.com/pico/Pico-R3-Fritzing.fzpz" title="Fritzing Part" public="true"/>
+        <book category="other"     name="https://datasheets.raspberrypi.com/pico/Pico-R3-step.zip" title="STEP File" public="true"/>
+        <book category="setup"     name="https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf" title="Getting Started Guide" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf" title="RP2040 Datasheet" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf" title="Raspberry Pi Pico Datasheet" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf" title="Hardware design with RP2040" public="true"/>
+        <book category="schematic" name="https://datasheets.raspberrypi.com/pico/RPi-Pico-R3-PUBLIC-20200119.zip" title="Schematics" public="true"/>
+        <book category="other"     name="Documentation/README.md" title="Guide"/>
+
+        <mountedDevice Dname="RP2040" Dvendor="RPi:170"/>
+
+        <feature type="USB" n="1" name="USB 1.1 with device and host support"/>
+        <feature type="DIO" n="26" name="26 × multi-function GPIO pins"/>
+        <feature type="TempSens" n="1"/>
+        <feature type="SPI" n="2" name=""/>
+        <feature type="I2C" n="2" name=""/>
+        <feature type="ConnOther" n="2" name="UART"/>
+        <feature type="ConnOther" n="3" name="12-bit ADC"/>
+        <feature type="ConnOther" n="16" name="PWM Channels"/>
+        <feature type="ConnOther" n="8" name="Programmable I/O (PIO) state machines for custom peripheral support"/>
+
+        <debugInterface adapter="JTAG/SW" connector="3-pin SWD I/F"/>
+      </board>
+      <board vendor="Raspberry Pi" name="Raspberry Pi Pico W" revision="Rev. 3" salesContact="https://www.raspberrypi.org/contact/"
+               orderForm   ="https://www.raspberrypi.org/products/raspberry-pi-pico/">
+        <description>The new flexible $4 microcontroller board from Raspberry Pi - plus wireless</description>
+        <image small="Images/RPi_Pico.png" large="Images/RPi_Pico.png" public="true"/>
+
+        <book category="overview"  name="https://www.raspberrypi.org/products/raspberry-pi-pico/" title="Raspberry Pi Pico"/>
+        <book category="other"     name="https://datasheets.raspberrypi.com/picow/PicoW-Fritzing.fzpz" title="Fritzing Part" public="true"/>
+        <book category="other"     name="https://datasheets.raspberrypi.com/picow/PicoW-step.zip" title="STEP File" public="true"/>
+        <book category="setup"     name="https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf" title="Getting Started Guide" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf" title="RP2040 Datasheet" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/picow/pico-w-datasheet.pdf" title="Raspberry Pi Pico W Datasheet" public="true"/>
+        <book category="manual"    name="https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf" title="Hardware design with RP2040" public="true"/>
+        <book category="schematic" name="https://datasheets.raspberrypi.com/picow/RPi-PicoW-PUBLIC-20220607.zip" title="Schematics" public="true"/>
+        <book category="other"     name="Documentation/README.md" title="Guide"/>
+
+        <mountedDevice Dname="RP2040" Dvendor="RPi:170"/>
+
+        <feature type="USB" n="1" name="USB 1.1 with device and host support"/>
+        <feature type="DIO" n="26" name="26 × multi-function GPIO pins"/>
+        <feature type="TempSens" n="1"/>
+        <feature type="SPI" n="2" name=""/>
+        <feature type="I2C" n="2" name=""/>
+        <feature type="ConnOther" n="2" name="UART"/>
+        <feature type="ConnOther" n="3" name="12-bit ADC"/>
+        <feature type="ConnOther" n="16" name="PWM Channels"/>
+        <feature type="ConnOther" n="8" name="Programmable I/O (PIO) state machines for custom peripheral support"/>
+
+        <debugInterface adapter="JTAG/SW" connector="3-pin SWD I/F"/>
+      </board>
+    </boards>
+
+    <examples>
+      <example name="Breath_LED" folder="example/mdk/pico" doc="README.md" version="1.0">
+        <description>This is a basic example demonstrating the development using RP2040_DFP on Pico.</description>
+        <board name="Raspberry Pi Pico" vendor="Raspberry Pi"/>
+        <project>
+          <environment name="uv"  load="rp2040_example.uvprojx"/>
+        </project>
+        <attributes>
+          <component Cclass="CMSIS" Cgroup="Core"/>
+          <component Cclass="Device" Cgroup="Startup"/>
+          <component Cclass="Device" Cgroup="Pico Board" Cvariant="Pico"/>
+          <component Cclass="Device" Cgroup="Pico SDK"/>
+          <keyword>Pico</keyword>
+          <keyword>Getting Started</keyword>
+        </attributes>
+      </example>
+      <example name="Breath_LED" folder="example/mdk/pico_w" doc="README.md" version="1.0">
+        <description>This is a basic example demonstrating the development using RP2040_DFP on Pico W.</description>
+        <board name="Raspberry Pi Pico W" vendor="Raspberry Pi"/>
+        <project>
+          <environment name="uv"  load="rp2040_example.uvprojx"/>
+        </project>
+        <attributes>
+          <component Cclass="CMSIS" Cgroup="Core"/>
+          <component Cclass="Device" Cgroup="Startup"/>
+          <component Cclass="Device" Cgroup="Pico Board" Cvariant="Pico W"/>
+          <component Cclass="Device" Cgroup="Pico SDK"/>
+          <component Cclass="Device" Cgroup="Pico W SDK"/>
+          <keyword>Pico W</keyword>
+          <keyword>Getting Started</keyword>
+        </attributes>
+      </example>
+    </examples> 
+
+</package>

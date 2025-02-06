@@ -1,5 +1,5 @@
-#include "../src/MachineState.hpp"
-#include "../src/config.hpp"
+#include "../src/MachineState.hxx"
+#include "../src/config.hxx"
 #include "TestCommon.hpp"
 #include "TestDisplay.hpp"
 #include "TestStepper.hpp"

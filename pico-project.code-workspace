@@ -32,7 +32,7 @@
 		]
 	},
 	"settings": {
-		"cortex-debug.gdbPath.linux": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gdb",
+		"cortex-debug.gdbPath.linux": "/tools/gcc-arm-none-eabi/bin/arm-none-eabi-gdb",
 		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
 		"C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
 		"files.associations": {
@@ -78,6 +78,8 @@
 		"cmake.showSystemKits": false,
 		"cmake.sourceDirectory": "${workspaceFolder}",
 		"cmake.useCMakePresets": "always",
-		"device-manager.manageAllDevices": true
+		"device-manager.manageAllDevices": true,
+		"cortex-debug.liveWatchRefreshRate": 250,
+		"cortex-debug.gdbPath": "/tools/gcc-arm-none-eabi/bin/arm-none-eabi-gdb"
 	}
 }

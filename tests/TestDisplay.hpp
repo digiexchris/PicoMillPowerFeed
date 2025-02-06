@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../src/Display.hpp"
+#include "../src/Display.hxx"
 #include <gmock/gmock.h>
 
 namespace PicoMill

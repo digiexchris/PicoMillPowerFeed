@@ -39,60 +39,60 @@ RUN cd nuttx-tools/kconfig-frontends \
   && ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
   && make install && cd /tools && rm -rf nuttx-tools
 
-RUN mkdir -p /tools/gn \
-  && cd /tools/gn \
-  && git clone https://gn.googlesource.com/gn gn \
-  && cd gn && ./build/gen.py \
-  && cd out && ninja
+# RUN mkdir -p /tools/gn \
+#   && cd /tools/gn \
+#   && git clone https://gn.googlesource.com/gn gn \
+#   && cd gn && ./build/gen.py \
+#   && cd out && ninja
 
-ENV ZAP_INSTALL_PATH=/tools/zap_release
-RUN mkdir -p $ZAP_INSTALL_PATH \
-  && cd $ZAP_INSTALL_PATH \
-  && curl -s -O -L https://github.com/project-chip/zap/releases/download/v2023.10.09-nightly/zap-linux-x64.zip \
-  && unzip zap-linux-x64.zip \
-  && rm zap-linux-x64.zip
+# ENV ZAP_INSTALL_PATH=/tools/zap_release
+# RUN mkdir -p $ZAP_INSTALL_PATH \
+#   && cd $ZAP_INSTALL_PATH \
+#   && curl -s -O -L https://github.com/project-chip/zap/releases/download/v2023.10.09-nightly/zap-linux-x64.zip \
+#   && unzip zap-linux-x64.zip \
+#   && rm zap-linux-x64.zip
 
-ENV ZAP_DEVELOPMENT_PATH=/tools/zap
-RUN cd /tools \
-  && curl -s -O -L https://github.com/project-chip/zap/archive/refs/tags/v2023.10.09-nightly.zip \
-  && unzip v2023.10.09-nightly.zip \
-  && mv zap-2023.10.09-nightly zap \
-  && rm v2023.10.09-nightly.zip \
-  && cd zap && npm install cross-spawn folder-hash
+# ENV ZAP_DEVELOPMENT_PATH=/tools/zap
+# RUN cd /tools \
+#   && curl -s -O -L https://github.com/project-chip/zap/archive/refs/tags/v2023.10.09-nightly.zip \
+#   && unzip v2023.10.09-nightly.zip \
+#   && mv zap-2023.10.09-nightly zap \
+#   && rm v2023.10.09-nightly.zip \
+#   && cd zap && npm install cross-spawn folder-hash
 
 #########################
 # Programming languages
 #########################
 
-# Install Rust and targets supported from NuttX
-ENV RUST_HOME=/tools/rust
-ENV CARGO_HOME=$RUST_HOME/cargo
-ENV RUSTUP_HOME=$RUST_HOME/rustup
-RUN mkdir -p $CARGO_HOME \
-  && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
-  && $CARGO_HOME/bin/rustup target add thumbv6m-none-eabi \
-  && $CARGO_HOME/bin/rustup target add thumbv7m-none-eabi \
-  && $CARGO_HOME/bin/rustup target add riscv64gc-unknown-none-elf
+# # Install Rust and targets supported from NuttX
+# ENV RUST_HOME=/tools/rust
+# ENV CARGO_HOME=$RUST_HOME/cargo
+# ENV RUSTUP_HOME=$RUST_HOME/rustup
+# RUN mkdir -p $CARGO_HOME \
+#   && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+#   && $CARGO_HOME/bin/rustup target add thumbv6m-none-eabi \
+#   && $CARGO_HOME/bin/rustup target add thumbv7m-none-eabi \
+#   && $CARGO_HOME/bin/rustup target add riscv64gc-unknown-none-elf
 
 
-# Install Zig latest release
-ENV ZIG_VERSION=0.13.0
-ENV ZIG_HOME=/tools/zig
-RUN mkdir -p ${ZIG_HOME} \
-  && curl -s -O -L https://github.com/marler8997/zigup/releases/download/v2024_05_05/zigup-x86_64-linux.tar.gz \
-  && tar xzf zigup-x86_64-linux.tar.gz -C ${ZIG_HOME} \
-  && rm zigup-x86_64-linux.tar.gz \
-  && chmod +x ${ZIG_HOME}/zigup \
-  && ${ZIG_HOME}/zigup fetch --install-dir ${ZIG_HOME} ${ZIG_VERSION} \
-  && chmod +x ${ZIG_HOME}/${ZIG_VERSION}/files/zig
+# # Install Zig latest release
+# ENV ZIG_VERSION=0.13.0
+# ENV ZIG_HOME=/tools/zig
+# RUN mkdir -p ${ZIG_HOME} \
+#   && curl -s -O -L https://github.com/marler8997/zigup/releases/download/v2024_05_05/zigup-x86_64-linux.tar.gz \
+#   && tar xzf zigup-x86_64-linux.tar.gz -C ${ZIG_HOME} \
+#   && rm zigup-x86_64-linux.tar.gz \
+#   && chmod +x ${ZIG_HOME}/zigup \
+#   && ${ZIG_HOME}/zigup fetch --install-dir ${ZIG_HOME} ${ZIG_VERSION} \
+#   && chmod +x ${ZIG_HOME}/${ZIG_VERSION}/files/zig
 
-# Install LDC2 latest release
-ENV LDC_VERSION=1.39.0
-ENV D_HOME=/tools/ldc2
-RUN mkdir -p ${D_HOME} \
-  && curl -s -O -L https://github.com/ldc-developers/ldc/releases/download/v${LDC_VERSION}/ldc2-${LDC_VERSION}-linux-x86_64.tar.xz \
-  && tar xf ldc2-${LDC_VERSION}-linux-x86_64.tar.xz -C ${D_HOME} \
-  && rm ldc2-${LDC_VERSION}-linux-x86_64.tar.xz
+# # Install LDC2 latest release
+# ENV LDC_VERSION=1.39.0
+# ENV D_HOME=/tools/ldc2
+# RUN mkdir -p ${D_HOME} \
+#   && curl -s -O -L https://github.com/ldc-developers/ldc/releases/download/v${LDC_VERSION}/ldc2-${LDC_VERSION}-linux-x86_64.tar.xz \
+#   && tar xf ldc2-${LDC_VERSION}-linux-x86_64.tar.xz -C ${D_HOME} \
+#   && rm ldc2-${LDC_VERSION}-linux-x86_64.tar.xz
 
 RUN mkdir -p /tools
 WORKDIR /tools
@@ -274,7 +274,9 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
     gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev
 
-# RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5 && \
+RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5 
+
+#&& \
 #     ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 
 RUN mkdir -p /tools/pico
@@ -292,13 +294,20 @@ RUN git clone -b master https://github.com/raspberrypi/debugprobe.git --depth=1
 RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
     && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && cp picotool /usr/local/bin
 
+RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
+    && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
+
 # RUN git clone https://github.com/wtarreau/bootterm.git --depth=1 \
 #     && cd bootterm && make -j 8 install 
 
 # RUN useradd -m -s /bin/bash -d /workspace vscode && \
 
 RUN usermod -aG sudo,dialout,plugdev vscode
+RUN apt-get update && apt-get install -y usbutils ninja-build build-essential wget ca-certificates \
+gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev python3-pyocd
     
 WORKDIR /workspace
+ENV PYTHONPATH=$PYTHONPATH:/usr/local/lib/python3.12:/usr/local/lib/python3.10:/usr/lib/python3:/usr/lib/python3/dist-packages
+ENV PYTHON_PATH=$PYTHON_PATH:/usr/local/lib/python3.12:/usr/local/lib/python3.10:/usr/lib/python3:/usr/lib/python3/dist-packages
 
 COPY 99-picoprobe.rules /etc/udev/rules.d/99-picoprobe.rules

@@ -2,21 +2,6 @@
 set(CMAKE_BUILD_TYPE Debug) 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
-
-# add_compile_options(
-#     ### Gnu/Clang C Options
-#     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
-
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wall>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Weverything>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-variable>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-parameter>
-#     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-type-limits>
-# )
 
 include(FetchContent)
 FetchContent_Declare(
@@ -27,12 +12,9 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Include the directories
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/pico-ssd1306)
-
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/MachineState.cpp ../src/Display.cpp)
+add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cxx ../src/MachineState.cxx ../src/Display.cxx)
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 
@@ -46,9 +28,6 @@ target_compile_definitions(PicoApp_Tests PRIVATE UNIT_TEST)
 target_link_libraries(PicoApp_Tests
 GTest::gtest_main
 GTest::gmock_main
-# StepTimingPlanner
-# tcmalloc
-# profiler
 )
 
 add_custom_command(
