@@ -3,7 +3,8 @@
 {
     "name": "C++ Raspberry Pi Pico",
     "build": {
-        "dockerfile": "Dockerfile.nuttx.rp2040"
+        // "dockerfile": "Dockerfile.nuttx.rp2040"
+        "dockerfile": "Dockerfile.rpi"
     },
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh",
@@ -57,7 +58,7 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "sudo cp /workspace/tools/linux/picotool /usr/local/bin/",
+    "postCreateCommand": "sudo cp /workspace/tools/linux/picotool /usr/local/bin/"
     // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     //"remoteUser": "vscode"
 }

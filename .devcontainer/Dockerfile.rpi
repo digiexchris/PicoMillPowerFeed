@@ -12,21 +12,116 @@ ENV TOOLCHAINDIR="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
-    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev
-RUN mkdir /toolchain
-WORKDIR /toolchain
+    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev gperf gawk make bison g++ gcc xz-utils patch curl unzip \
+    avr-libc \
+  ccache \
+  clang \
+  clang-tidy \
+  g++-12-multilib \
+  gcc-avr \
+  gcc-12-multilib \
+  genromfs \
+  gettext \
+  git \
+  flex \
+  lib32z1-dev \
+  libasound2-dev \
+  #  libasound2-dev:i386 \
+  # libc6-dev-i386 \
+  libcurl4-openssl-dev \
+  # libmp3lame-dev:i386 \
+  # libmad0-dev:i386 \
+  libncurses5-dev \
+  # libpulse-dev libpulse-dev:i386 \
+  # libpython2.7 \
+  libtinfo5 \
+  # libusb-1.0-0-dev libusb-1.0-0-dev:i386 \
+  libv4l-dev \
+  # libv4l-dev:i386 \
+  libx11-dev \
+  # libx11-dev:i386 \
+  libxext-dev \
+  # libxext-dev:i386 \
+  linux-headers-generic \
+  # linux-libc-dev:i386 \
+  ninja-build \
+  # npm \
+  qemu-system-arm \
+  qemu-system-misc \
+  python3 \
+  python3-pip \
+  python-is-python3 \
+  u-boot-tools \
+  unzip \
+  wget \
+  xxd \
+  file \
+  subversion \
+  tclsh 
 
-RUN echo "$TOOLCHAINURL/$TOOLCHAINARCHIVE"
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20 && \
+  update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 20 && \
+  update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30 && \
+  update-alternatives --set cc /usr/bin/gcc && \
+  update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30 && \
+  update-alternatives --set c++ /usr/bin/g++
 
-RUN wget $TOOLCHAINURL/$TOOLCHAINARCHIVE 
-RUN tar xf $TOOLCHAINARCHIVE
+RUN mkdir -p /tools
+WORKDIR /tools
 
-RUN mv $TOOLCHAINDIR gcc-arm-none && \
-    rm $TOOLCHAINARCHIVE
-ENV PATH=$PATH:/toolchain/gcc-arm-none/bin
+###########################################
+# Download the latest ARM clang toolchain prebuilt by ARM
+RUN mkdir -p clang-arm-none-eabi && \
+  curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
+  | tar -C clang-arm-none-eabi --strip-components 1 -xJ
 
-RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5 && \
-    ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+# Download the latest ARM GCC toolchain prebuilt by ARM
+RUN mkdir -p gcc-arm-none-eabi && \
+  curl -s -L  "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.Rel1/binrel/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi.tar.xz" \
+  | tar -C gcc-arm-none-eabi --strip-components 1 -xJ
+
+RUN mkdir -p /tools/nuttx-tools
+RUN curl -s -L https://bitbucket.org/nuttx/tools/get/9ad3e1ee75c7.tar.gz \
+| tar -C nuttx-tools --strip-components=1 -xz
+  
+# RUN mkdir -p /tools/bloaty \
+# && git clone --depth 1 --branch v1.1 https://github.com/google/bloaty bloaty-src \
+# && cd bloaty-src \
+# && cmake -B build -DCMAKE_INSTALL_PREFIX=/tools/bloaty \
+# && cmake --build build \
+# && cmake --build build --target install \
+# && cd /tools && rm -rf bloaty-src
+
+RUN cd nuttx-tools/kconfig-frontends \
+&& ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
+&& make install && cd /tools && rm -rf nuttx-tools
+
+RUN mkdir -p cmake && \
+  curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
+  | tar -C cmake --strip-components=1 -xz \
+  && cd cmake && ./bootstrap && make && make install && rm -rf cmake
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=true
+RUN pip3 install cxxfilt
+RUN pip3 install kconfiglib
+RUN pip3 install pyelftools
+
+ENV PATH="/tools/clang-arm-none-eabi/bin:$PATH"
+ENV PATH="/tools/gcc-arm-none-eabi/bin:$PATH"
+# RUN mkdir /toolchain
+# WORKDIR /toolchain
+
+# RUN echo "$TOOLCHAINURL/$TOOLCHAINARCHIVE"
+
+# RUN wget $TOOLCHAINURL/$TOOLCHAINARCHIVE 
+# RUN tar xf $TOOLCHAINARCHIVE
+
+# RUN mv $TOOLCHAINDIR gcc-arm-none && \
+#     rm $TOOLCHAINARCHIVE
+# ENV PATH=$PATH:/toolchain/gcc-arm-none/bin
+
+RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5
+    # ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
 # RUN mkdir -p /workspaces/pico
 # WORKDIR /workspaces/pico
 # RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git --depth=1 && git -C pico-sdk submodule update --init
@@ -39,13 +134,20 @@ RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncurse
 RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
     && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
 
-# RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
-#     && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && cp picotool /usr/local/bin
+
 
 # RUN git clone https://github.com/wtarreau/bootterm.git --depth=1 \
 #     && cd bootterm && make -j 8 install 
+RUN mkdir -p /tools/pico
+WORKDIR /tools/pico
+ENV PICO_SDK_PATH=/tools/pico/pico-sdk
+RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git --depth=1 && git -C pico-sdk submodule update --init
+RUN git clone -b master https://github.com/raspberrypi/pico-examples.git --depth=1
+RUN git clone -b master https://github.com/raspberrypi/pico-extras.git --depth=1
+RUN git clone -b master https://github.com/raspberrypi/debugprobe.git --depth=1
 
-
+RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
+    && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && cp picotool /usr/local/bin
 # Install Node.js and npm for the webserial ui
 # RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 #     && apt-get install -y nodejs \
@@ -57,4 +159,4 @@ WORKDIR /workspace
 
 COPY 99-picoprobe.rules /etc/udev/rules.d/99-picoprobe.rules
 
-RUN usermod -aG plugdev vscode
+RUN usermod -aG plugdev,sudo,dialout vscode
