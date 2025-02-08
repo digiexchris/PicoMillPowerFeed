@@ -3,6 +3,7 @@
 // #include "ssd1306.h"
 // #include "textRenderer/12x16_font.h"
 // #include "textRenderer/TextRenderer.h"
+#include <cstdio>
 #include <stdint.h>
 
 #include "../Helpers.hxx"
@@ -14,8 +15,10 @@
 namespace PicoMill::Drivers
 {
 
-	PicoSSD1306Display::PicoSSD1306Display()
+	PicoSSD1306Display::PicoSSD1306Display() : Display()
 	{
+
+		printf("Creating PicoSSD1306Display\n");
 		// Initialize the display
 
 		// Init i2c0 controller
@@ -62,6 +65,7 @@ namespace PicoMill::Drivers
 
 	void PicoSSD1306Display::ClearBuffer()
 	{
+		printf("Clearing buffer\n");
 		// mySSD1306->clear();
 	}
 

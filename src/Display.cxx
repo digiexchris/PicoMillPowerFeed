@@ -18,7 +18,7 @@ namespace PicoMill
 
 	NXHANDLE Display::myDefaultFontHandle = nxf_getfonthandle(FONTID_PIXEL_LCD_MACHINE);
 
-	Display::Display() noexcept
+	Display::Display()
 	{
 		if (!myDefaultFontHandle)
 		{

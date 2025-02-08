@@ -57,7 +57,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   xxd \
   file \
   subversion \
-  tclsh 
+  tclsh gdb-multiarch minicom
 
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20 && \
   update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 20 && \

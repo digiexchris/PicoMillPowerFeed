@@ -24,14 +24,15 @@ config PICOMILL
 	select NXFONT_PIXEL_LCD_MACHINE
 	select SPECIFIC_DRIVERS
 	select I2C
-	select DRIVERS_VIRTIO
 	select LCD
 	select LCD_SH1106_OLED_132
 	select SSD1306_POWEROFF_RECONFIGURE
 	select CCACHE
-
+	select LCD_SSD1306_I2C
 	
 	LCD_MAXCONTRAST=255
+	RP2040_I2C0_SCL_GPIO=17
+	RP2040_I2C0_SDA_GPIO=16
 
 	---help---
 		RP2040 based power feed for milling machines

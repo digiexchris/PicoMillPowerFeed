@@ -12,7 +12,7 @@
 // #include "drivers/PIOSte7pper.hpp"
 #include "Helpers.hxx"
 #include "drivers/PicoSSD1306Display.hxx"
-// #include <stdio.h>
+#include <stdio.h>
 
 // std::shared_ptr<PicoMill::IStepper> stepper;
 // std::shared_ptr<PicoMill::Time> iTime;
@@ -23,7 +23,7 @@
 
 // std::unique_ptr<PicoMill::Drivers::RP2040_HAL> hal;
 
-PicoMill::Drivers::PicoSSD1306Display display = PicoMill::Drivers::PicoSSD1306Display();
+static PicoMill::Drivers::PicoSSD1306Display display = PicoMill::Drivers::PicoSSD1306Display();
 
 // void stepperUpdateTask(void *pvParameters)
 // {
@@ -43,8 +43,9 @@ extern "C"
 	int
 	picomill_main(int argc, FAR char *argv[])
 	{
+		syslog_initialize();
 		usleep(MS_TO_US(2000));
-		// printf("Starting PicoMill\n");
+		printf("Starting PicoMill\n");
 		display.DrawStart();
 		display.WriteBuffer();
 		usleep(MS_TO_US(500));
@@ -69,6 +70,10 @@ extern "C"
 		// vTaskStartScheduler();
 
 		// printf("It should never get here");
+		while (true)
+		{
+			usleep(MS_TO_US(1000));
+		}
 		return 0;
 	}
 }
