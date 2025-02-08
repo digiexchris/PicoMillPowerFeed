@@ -13,7 +13,7 @@ ENV TOOLCHAINDIR="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
     gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev gperf gawk make bison g++ gcc xz-utils patch curl unzip \
-    avr-libc \
+    avr-libc kconfig-frontends \
   ccache \
   clang \
   clang-tidy \
@@ -59,6 +59,26 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
   subversion \
   tclsh gdb-multiarch minicom
 
+  ENV DEBIAN_FRONTEND=noninteractive
+  ENV LC_ALL=C.UTF-8
+  ENV LANG=C.UTF-8
+  ENV IDF_CCACHE_ENABLE=1
+  ARG CONTAINER_USER=esp
+  ARG CONTAINER_GROUP=esp
+  ARG ESP_BOARD=all
+  ARG ESP_IDF_VERSION=release/v5.2
+  # libpython2.7 is due to GDB
+  RUN apt-get update \
+      && apt-get install -y git curl wget flex bison gperf python3 python3-venv python3-pip  \
+      python3-setuptools ninja-build ccache libffi-dev libssl-dev dfu-util \
+      libusb-1.0-0 libpython2.7 unzip \
+      && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
+  # RUN adduser --disabled-password --gecos "" ${CONTAINER_USER}
+  # USER vscode
+  # ENV USER=${CONTAINER_USER}
+  # WORKDIR /home/${CONTAINER_USER}
+  
+
 RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20 && \
   update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 20 && \
   update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30 && \
@@ -68,17 +88,27 @@ RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 20 && \
 
 RUN mkdir -p /tools
 WORKDIR /tools
+ENV IDF_TOOLS_PATH=/tools/espressif
+RUN mkdir -p espressif/frameworks/ \
+      && git clone --branch ${ESP_IDF_VERSION} -q --depth 1 --shallow-submodules \
+      --recursive https://github.com/espressif/esp-idf.git \
+      /tools/espressif/frameworks/esp-idf \
+      && python3 /tools/espressif/frameworks/esp-idf/tools/idf_tools.py install cmake \
+      && /tools/espressif/frameworks/esp-idf/install.sh ${ESP_BOARD}
+  
+  ENV IDF_TOOLS_PATH=/tools/espressif
+  RUN echo "source /tools/espressif/frameworks/esp-idf/export.sh > /dev/null 2>&1" >> /home/vscode/.bashrc
 
 ###########################################
 # Download the latest ARM clang toolchain prebuilt by ARM
-RUN mkdir -p clang-arm-none-eabi && \
-  curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
-  | tar -C clang-arm-none-eabi --strip-components 1 -xJ
+# RUN mkdir -p clang-arm-none-eabi && \
+#   curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
+#   | tar -C clang-arm-none-eabi --strip-components 1 -xJ
 
-# Download the latest ARM GCC toolchain prebuilt by ARM
-RUN mkdir -p gcc-arm-none-eabi && \
-  curl -s -L  "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.Rel1/binrel/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi.tar.xz" \
-  | tar -C gcc-arm-none-eabi --strip-components 1 -xJ
+# # Download the latest ARM GCC toolchain prebuilt by ARM
+# RUN mkdir -p gcc-arm-none-eabi && \
+#   curl -s -L  "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.Rel1/binrel/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi.tar.xz" \
+#   | tar -C gcc-arm-none-eabi --strip-components 1 -xJ
 
 RUN mkdir -p /tools/nuttx-tools
 RUN curl -s -L https://bitbucket.org/nuttx/tools/get/9ad3e1ee75c7.tar.gz \
@@ -92,14 +122,14 @@ RUN curl -s -L https://bitbucket.org/nuttx/tools/get/9ad3e1ee75c7.tar.gz \
 # && cmake --build build --target install \
 # && cd /tools && rm -rf bloaty-src
 
-RUN cd nuttx-tools/kconfig-frontends \
-&& ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
-&& make install && cd /tools && rm -rf nuttx-tools
+# RUN cd nuttx-tools/kconfig-frontends \
+# && ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
+# && make install && cd /tools && rm -rf nuttx-tools
 
-RUN mkdir -p cmake && \
-  curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
-  | tar -C cmake --strip-components=1 -xz \
-  && cd cmake && ./bootstrap && make && make install && rm -rf cmake
+# RUN mkdir -p cmake && \
+#   curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
+#   | tar -C cmake --strip-components=1 -xz \
+#   && cd cmake && ./bootstrap && make && make install && rm -rf cmake
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=true
 RUN pip3 install cxxfilt

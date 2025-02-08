@@ -25,9 +25,9 @@ set(CMAKE_C_STANDARD 99)
   #         ${NUTTX_PATH}/arch/chip
   # )
 
-  # add_subdirectory(nuttx)
-  set(EXE_NAME PicoMill)
-  message(STATUS "Pico sdk path is ${PICO_SDK_PATH}")
+  add_subdirectory(nuttx)
+  set(EXE_NAME PowerFeed)
+  # message(STATUS "Pico sdk path is ${PICO_SDK_PATH}")
 # include(${NUTTX_PATH}/scripts/toolchain.cmake)
   
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AC_HW_FLAGS} ${AC_DEFINES}")

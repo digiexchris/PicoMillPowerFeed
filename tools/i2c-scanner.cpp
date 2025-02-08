@@ -15,18 +15,18 @@
 // #include "StepperState.hpp"
 // #include "config.hpp"
 // #include "drivers/PIOStepper.hpp"
-// #include "drivers/PicoSSD1306Display.hpp"
+// #include "drivers/ConsoleDisplay.hpp"
 
-// std::shared_ptr<PicoMill::IStepper> stepper;
-// std::shared_ptr<PicoMill::Time> iTime;
+// std::shared_ptr<PowerFeed::IStepper> stepper;
+// std::shared_ptr<PowerFeed::Time> iTime;
 
-// std::shared_ptr<PicoMill::StepperState> stepperState;
+// std::shared_ptr<PowerFeed::StepperState> stepperState;
 
-// std::shared_ptr<PicoMill::Machine> machineState;
+// std::shared_ptr<PowerFeed::Machine> machineState;
 
-// std::unique_ptr<PicoMill::Drivers::RP2040_HAL> hal;
+// std::unique_ptr<PowerFeed::Drivers::RP2040_HAL> hal;
 
-// std::shared_ptr<PicoMill::Display> display;
+// std::shared_ptr<PowerFeed::Display> display;
 
 // void stepperUpdateTask(void *pvParameters)
 // {
@@ -44,15 +44,15 @@
 
 // int main()
 // {
-// 	display = std::make_shared<PicoMill::Drivers::PicoSSD1306Display>();
-// 	stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
-// 	iTime = std::make_shared<PicoMill::Time>();
-// 	stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
-// 	machineState = std::make_shared<PicoMill::Machine>(display, stepperState);
+// 	display = std::make_shared<PowerFeed::Drivers::ConsoleDisplay>();
+// 	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(PowerFeed::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
+// 	iTime = std::make_shared<PowerFeed::Time>();
+// 	stepperState = std::make_shared<PowerFeed::StepperState>(stepper, iTime);
+// 	machineState = std::make_shared<PowerFeed::Machine>(display, stepperState);
 
 // 	// todo: load saved units and speed from eeprom
 
-// 	hal = std::make_unique<PicoMill::Drivers::RP2040_HAL>(machineState);
+// 	hal = std::make_unique<PowerFeed::Drivers::RP2040_HAL>(machineState);
 
 // 	display->Clear();
 // 	display->DrawSpeed(0);

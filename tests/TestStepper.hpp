@@ -4,7 +4,7 @@
 #include "../src/StepperState.hxx"
 
 #include <gmock/gmock.h>
-namespace PicoMill
+namespace PowerFeed
 {
 
 	namespace Drivers

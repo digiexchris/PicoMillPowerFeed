@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <stdint.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	constexpr double PI = 3.14159265358979323846;
@@ -40,4 +40,4 @@ namespace PicoMill
 				   alpha;
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

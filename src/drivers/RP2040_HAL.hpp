@@ -11,7 +11,7 @@
 // #include <queue.h>
 // #include <array>
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 
 	struct PinStateMapping
@@ -56,4 +56,4 @@ namespace PicoMill::Drivers
 		bool myEncoderButtonLastState = false;
 	};
 
-} // namespace PicoMill::Drivers
+} // namespace PowerFeed::Drivers

@@ -6,7 +6,7 @@
 using ::testing::_;
 using ::testing::Eq;
 
-namespace PicoMill
+namespace PowerFeed
 {
 	class DisplayTest : public ::testing::Test
 	{
@@ -44,4 +44,4 @@ namespace PicoMill
 		myDisplay->DrawSpeed(speed);
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

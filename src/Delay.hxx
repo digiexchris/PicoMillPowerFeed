@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 	/**
 		@brief Calculate the time interval between the previous step and this step

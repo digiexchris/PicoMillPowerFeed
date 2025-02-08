@@ -3,7 +3,7 @@
 #include "config.hxx"
 #include <stdlib.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	void StepperState::ProcessStop()

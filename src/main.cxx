@@ -11,19 +11,19 @@
 #include "config.hxx"
 // #include "drivers/PIOSte7pper.hpp"
 #include "Helpers.hxx"
-#include "drivers/PicoSSD1306Display.hxx"
+#include "drivers/ConsoleDisplay.hxx"
 #include <stdio.h>
 
-// std::shared_ptr<PicoMill::IStepper> stepper;
-// std::shared_ptr<PicoMill::Time> iTime;
+// std::shared_ptr<PowerFeed::IStepper> stepper;
+// std::shared_ptr<PowerFeed::Time> iTime;
 
-// std::shared_ptr<PicoMill::StepperState> stepperState;
+// std::shared_ptr<PowerFeed::StepperState> stepperState;
 
-// std::shared_ptr<PicoMill::Machine> machineState;
+// std::shared_ptr<PowerFeed::Machine> machineState;
 
-// std::unique_ptr<PicoMill::Drivers::RP2040_HAL> hal;
+// std::unique_ptr<PowerFeed::Drivers::RP2040_HAL> hal;
 
-static PicoMill::Drivers::PicoSSD1306Display display = PicoMill::Drivers::PicoSSD1306Display();
+static PowerFeed::Drivers::ConsoleDisplay display = PowerFeed::Drivers::ConsoleDisplay();
 
 // void stepperUpdateTask(void *pvParameters)
 // {
@@ -41,22 +41,22 @@ static PicoMill::Drivers::PicoSSD1306Display display = PicoMill::Drivers::PicoSS
 extern "C"
 {
 	int
-	picomill_main(int argc, FAR char *argv[])
+	PowerFeed_main(int argc, FAR char *argv[])
 	{
-		syslog_initialize();
+		// syslog_initialize();
 		usleep(MS_TO_US(2000));
-		printf("Starting PicoMill\n");
+		printf("Starting PowerFeed\n");
 		display.DrawStart();
 		display.WriteBuffer();
 		usleep(MS_TO_US(500));
-		// stepper = std::make_shared<PicoMill::Drivers::PIOStepper>(PicoMill::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
-		// iTime = std::make_shared<PicoMill::Time>();
-		// stepperState = std::make_shared<PicoMill::StepperState>(stepper, iTime);
-		// machineState = std::make_shared<PicoMill::Machine>(display, stepperState);
+		// stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(PowerFeed::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
+		// iTime = std::make_shared<PowerFeed::Time>();
+		// stepperState = std::make_shared<PowerFeed::StepperState>(stepper, iTime);
+		// machineState = std::make_shared<PowerFeed::Machine>(display, stepperState);
 
 		// // todo: load saved units and speed from eeprom
 
-		// hal = std::make_unique<PicoMill::Drivers::RP2040_HAL>(machineState);
+		// hal = std::make_unique<PowerFeed::Drivers::RP2040_HAL>(machineState);
 
 		// hal->Start();
 

@@ -1,4 +1,4 @@
-#include "PicoSSD1306Display.hxx"
+#include "ConsoleDisplay.hxx"
 // #include "hardware/i2c.h"
 // #include "ssd1306.h"
 // #include "textRenderer/12x16_font.h"
@@ -12,13 +12,13 @@
 // #include <hardware/timer.h>
 // #include <pico/time.h>
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 
-	PicoSSD1306Display::PicoSSD1306Display() : Display()
+	ConsoleDisplay::ConsoleDisplay() : Display()
 	{
 
-		printf("Creating PicoSSD1306Display\n");
+		printf("Creating ConsoleDisplay\n");
 		// Initialize the display
 
 		// Init i2c0 controller
@@ -48,25 +48,25 @@ namespace PicoMill::Drivers
 		// mySSD1306->turnOn();
 	}
 
-	void PicoSSD1306Display::WriteBuffer()
+	void ConsoleDisplay::WriteBuffer()
 	{
 		// mySSD1306->sendBuffer();
 	}
 
-	void PicoSSD1306Display::DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y)
+	void ConsoleDisplay::DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y)
 	{
 		// pico_ssd1306::drawText(mySSD1306, font, text, x, y);
 	}
 
-	void PicoSSD1306Display::DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t awidth, uint16_t aheight)
+	void ConsoleDisplay::DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t awidth, uint16_t aheight)
 	{
 		// mySSD1306->addBitmapImage(x, y, width, height, const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(image)));
 	}
 
-	void PicoSSD1306Display::ClearBuffer()
+	void ConsoleDisplay::ClearBuffer()
 	{
 		printf("Clearing buffer\n");
 		// mySSD1306->clear();
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

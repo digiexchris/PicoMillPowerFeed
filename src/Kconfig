@@ -3,48 +3,53 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-config PICOMILL
-	tristate "PicoMill power feed"
+config PowerFeed
+	tristate "PowerFeed power feed"
 	default y
+
+	# depends on LCD_SSD1306_I2C
 
 	select ALLOW_BSD_COMPONENTS
 	select ALLOW_GPL_COMPONENTS
 	select ALLOW_MIT_COMPONENTS
 	select ALLOW_ECLIPSE_COMPONENTS
 	select ALLOW_ICS_COMPONENTS
-	select RP2040_I2C
-	select RP2040_I2C0
-	select ARCH_LEDS_CPU_ACTIVITY
-	RP2040_I2C0_SDA_GPIO=16
-	RP2040_I2C0_SCL_GPIO=17
+	# select RP2040_I2C
+	# select RP2040_I2C0
+	# select ARCH_LEDS_CPU_ACTIVITY
+	# RP2040_I2C0_SDA_GPIO=16
+	# RP2040_I2C0_SCL_GPIO=17
 
 	select HAVE_CXX
 	select CONFIG_HAS_CXX_COMPILER
 	select NXFONTS
 	select NXFONT_PIXEL_LCD_MACHINE
 	select SPECIFIC_DRIVERS
-	select I2C
-	select LCD
-	select LCD_SH1106_OLED_132
-	select SSD1306_POWEROFF_RECONFIGURE
+	# select I2C
+	# select LCD
+	# select LCD_SH1106_OLED_132
+	# select SSD1306_POWEROFF_RECONFIGURE
 	select CCACHE
-	select LCD_SSD1306_I2C
 	
-	LCD_MAXCONTRAST=255
-	RP2040_I2C0_SCL_GPIO=17
-	RP2040_I2C0_SDA_GPIO=16
+	select CONFIG_SCHED_BACKTRACE
+	select CONFIG_DEBUG_SYMBOLS
+	select CONFIG_ALLSYMS
+	
+	# LCD_MAXCONTRAST=255
+	# RP2040_I2C0_SCL_GPIO=17
+	# RP2040_I2C0_SDA_GPIO=16
 
 	---help---
-		RP2040 based power feed for milling machines
+		Stepper based power feed for milling machines
 
-if PICOMILL
+if PowerFeed
 
-config PICOMILL_PRIORITY
-	int "picomill task priority"
+config PowerFeed_PRIORITY
+	int "PowerFeed task priority"
 	default 100
 
-config PICOMILL_STACKSIZE
-	int "picomill stack size"
+config PowerFeed_STACKSIZE
+	int "PowerFeed stack size"
 	default DEFAULT_TASK_STACKSIZE
 
 endif

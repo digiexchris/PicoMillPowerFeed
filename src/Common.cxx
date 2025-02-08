@@ -1,7 +1,7 @@
 #include "Common.hxx"
 // #include <chrono>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	uint64_t Time::GetCurrentTimeInMilliseconds() const
@@ -12,4 +12,4 @@ namespace PicoMill
 		return 0;
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

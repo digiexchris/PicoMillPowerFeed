@@ -6,5 +6,5 @@
 #
 
 menu "Machine"
-source "/workspace/apps/Machine/PicoMill/Kconfig"
+source "/workspace/apps/Machine/PowerFeed/Kconfig"
 endmenu # Machine

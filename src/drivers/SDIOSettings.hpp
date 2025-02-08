@@ -6,7 +6,7 @@
 // #include <cstdint>
 // #include <memory>
 
-// namespace PicoMill
+// namespace PowerFeed
 // {
 
 // 	class SDIOSettings : public SettingsManager
@@ -41,4 +41,4 @@
 // 		FATFS myFatFs;
 // 	};
 
-// } // namespace PicoMill
+// } // namespace PowerFeed

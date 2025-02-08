@@ -5,7 +5,7 @@
 // #include <memory>
 #include <stdio.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	Machine::Machine(Display &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
@@ -206,4 +206,4 @@ namespace PicoMill
 		myDisplay.WriteBuffer();
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

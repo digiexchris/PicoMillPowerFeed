@@ -10,7 +10,7 @@
 
 #include <nuttx/nx/nxfonts.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	const char *IPM = "ipm";
@@ -105,4 +105,4 @@ namespace PicoMill
 		return font->mxwidth * strlen(text);
 	}
 
-} // namespace PicoMill
+} // namespace PowerFeed

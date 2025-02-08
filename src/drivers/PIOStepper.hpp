@@ -3,7 +3,7 @@
 #include "../Stepper.hpp"
 // #include "hardware/pio.h" // Include the header file that defines PIO
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 	class PIOStepper : public IStepper
 	{
@@ -63,4 +63,4 @@ namespace PicoMill::Drivers
 		uint32_t myTargetSpeed = 0;	 // in steps per second
 	};
 
-} // namespace PicoMill::Drivers
+} // namespace PowerFeed::Drivers

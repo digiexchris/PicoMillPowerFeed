@@ -23,7 +23,7 @@
         // "-s",
         // "${env:PICO_SDK_PATH}/../openocd/tcl",
         "-c",
-        "adapter speed 5000",
+        "adapter speed 5000"
       ],
       "postLaunchCommands": [
         "monitor arm semihosting enable",
@@ -48,6 +48,69 @@
       ],
       //"showDevDebugOutput": "raw",
       "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+      //"runToEntryPoint": "main",
+      "postRestartCommands": [
+        "continue"
+      ] //,
+            //"loadFiles": []
+    },
+    {
+      "name": "ESP32S3 (DevContainer)",
+      "cwd": "${workspaceRoot}",
+      "executable": "/workspace/nuttx/nuttx.bin",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "gdbPath": "/tools/espressif/tools/xtensa-esp-elf-gdb/14.2_20240403/xtensa-esp-elf-gdb/bin/xtensa-esp32s3-elf-gdb",
+      
+      "liveWatch": {
+        "enabled": false,
+        "samplesPerSecond": 4
+      },
+      "searchDir": [
+        "/usr/local/share/openocd/scripts"
+      ],
+      "debuggerArgs": [
+        "set remotetimeout"
+      ],
+      "toolchainPrefix": "xtensa-esp32s3-elf",
+      "armToolchainPath": "/tools/espressif/tools/xtensa-esp-elf-gdb/14.2_20240403/xtensa-esp-elf-gdb/bin/",
+      "serverArgs": [
+        // "-s",
+        // "${env:PICO_SDK_PATH}/../openocd/tcl",
+        "-c",
+        "adapter speed 5000; set ESP_RTOS hwthread; set ESP_FLASH_SIZE 0",
+      ],
+      "postLaunchCommands": [
+        //"monitor arm semihosting enable",
+        "target remote :3333",
+        "set remote hardware-watchpoint-limit 2",
+        "mon reset halt",
+        "flushregs",
+        "monitor reset halt",
+        "thb nsh_main",
+        "c"
+      ],
+      "preLaunchTask": "build",
+      "rttConfig": {
+        "enabled": true,
+        "address": "auto",
+        "decoders": [
+          {
+            "label": "",
+            "port": 0,
+            "type": "console"
+          }
+        ]
+      },
+      "rtos": "auto",
+      //"device": "RP2040",
+      "configFiles": [
+        "board/esp32s3-builtin.cfg"
+        // "target/rp2040.cfg"
+      ],
+      //"showDevDebugOutput": "raw",
+      //"svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
       //"runToEntryPoint": "main",
       "postRestartCommands": [
         "continue"

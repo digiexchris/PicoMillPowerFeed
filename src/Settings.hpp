@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	struct Settings
@@ -22,4 +22,4 @@ namespace PicoMill
 		virtual void Save(std::shared_ptr<Settings> settings) = 0;
 	};
 
-} // namespace PicoMill
+} // namespace PowerFeed

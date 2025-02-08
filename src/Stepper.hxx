@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	class IStepper

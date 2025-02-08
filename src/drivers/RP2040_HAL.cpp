@@ -17,7 +17,7 @@
 // #include <task.h>
 // #include <timers.h>
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 	RP2040_HAL *RP2040_HAL::myInstancePtr = nullptr;
 	RP2040_HAL &RP2040_HAL::myInstance = *myInstancePtr; // Initial definition
@@ -148,4 +148,4 @@ namespace PicoMill::Drivers
 		// 	sleep_ms(100);
 		// }
 	}
-} // namespace PicoMill::Drivers
+} // namespace PowerFeed::Drivers

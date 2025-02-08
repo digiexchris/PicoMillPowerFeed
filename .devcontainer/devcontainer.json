@@ -4,11 +4,12 @@
     "name": "C++ Raspberry Pi Pico",
     "build": {
         // "dockerfile": "Dockerfile.nuttx.rp2040"
-        "dockerfile": "Dockerfile.rpi"
+        "dockerfile": "Dockerfile.esp32"
     },
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh",
-        "PICO_SDK_PATH": "/tools/pico/pico-sdk"
+        "PICO_SDK_PATH": "/tools/pico/pico-sdk",
+        "IDF_TOOLS_PATH": "/tools/espressif"
         // "PYTHON_PATH": "/usr/local/lib/python3.12/dist-packages",
         // "PYTHONPATH": "/usr/local/lib/python3.12/dist-packages"
     },
@@ -21,7 +22,7 @@
         "--privileged",
         "-v",
         "/dev/bus/usb:/dev/bus/usb",
-        "--device=/dev/bus/usb",
+        "--device=/dev/bus/usb"
         // "--device=/dev/ttyACM0"
     ],
     "customizations": {
@@ -50,7 +51,7 @@
                 "vadimcn.vscode-lldb",
                 "matepek.vscode-catch2-test-adapter",
                 "ms-vscode.makefile-tools"
-            ],
+            ]
         }
     },
     // Set *default* container specific settings.json values on container create.
@@ -58,7 +59,8 @@
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "sudo cp /workspace/tools/linux/picotool /usr/local/bin/"
+    "postCreateCommand": "sudo cp /workspace/tools/linux/picotool /usr/local/bin/",
+    "postAttachCommand": "source /tools/espressif/frameworks/esp-idf/export.sh > /dev/null 2>&1"
     // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     //"remoteUser": "vscode"
 }

@@ -7,7 +7,7 @@
 // #include <memory>
 #include <stdint.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	enum class MachineState : uint8_t
@@ -93,4 +93,4 @@ namespace PicoMill
 		}
 	};
 
-} // namespace PicoMill
+} // namespace PowerFeed

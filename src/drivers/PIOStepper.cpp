@@ -15,7 +15,7 @@
 #include <stdio.h>
 // #include <task.h>
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 
 	PIOStepper::PIOStepper(uint astepPin, uint adirPin, uint aenPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, /*PIO pio, uint sm,*/ uint16_t astepsPerRev)
@@ -179,4 +179,4 @@ namespace PicoMill::Drivers
 		}
 	}
 
-} // namespace PicoMill::Drivers
+} // namespace PowerFeed::Drivers

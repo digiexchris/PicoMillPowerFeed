@@ -4,13 +4,13 @@
 // #include <memory.h>
 #include <stdint.h>
 
-namespace PicoMill::Drivers
+namespace PowerFeed::Drivers
 {
 
-	class PicoSSD1306Display : public Display
+	class ConsoleDisplay : public Display
 	{
 	public:
-		PicoSSD1306Display();
+		ConsoleDisplay();
 		void DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y) override;
 		void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
 		void ClearBuffer() override;

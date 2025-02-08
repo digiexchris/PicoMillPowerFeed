@@ -20,4 +20,4 @@
 #
 ############################################################################
 
-CONFIGURED_APPS += $(APPDIR)/Machine/PicoMill
+CONFIGURED_APPS += $(APPDIR)/Machine/PowerFeed

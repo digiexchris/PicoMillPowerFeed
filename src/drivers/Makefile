@@ -7,7 +7,7 @@
 
 # # Source files - relative to this directory
 # CSRCS = 
-# CXXSRCS = PicoSSD1306Display.cxx
+# CXXSRCS = ConsoleDisplay.cxx
 
 # # # Include paths
 # # CFLAGS += ${shell $(INCDIR) "$(CC)" $(TOPDIR)$(DELIM)include}

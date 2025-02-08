@@ -4,7 +4,7 @@
 #include <nuttx/nx/nxfonts.h>
 #include <stdint.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 
 	enum class Units // per minute
@@ -54,4 +54,4 @@ namespace PicoMill
 		const uint8_t middleX = 64 - 16;
 	};
 
-} // namespace PicoMill
+} // namespace PowerFeed

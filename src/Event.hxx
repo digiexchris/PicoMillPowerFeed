@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-namespace PicoMill
+namespace PowerFeed
 {
 	struct Event
 	{
@@ -52,4 +52,4 @@ namespace PicoMill
 		uint32_t speed;
 	};
 
-} // namespace PicoMill
+} // namespace PowerFeed

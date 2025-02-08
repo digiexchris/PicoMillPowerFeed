@@ -1,34 +1,34 @@
 include $(APPDIR)/Make.defs
 
-PICOMILLDIR = $(APPDIR)/Machine/PicoMill
+PowerFeedDIR = $(APPDIR)/Machine/PowerFeed
 
 # Application info
-PROGNAME = picomill
+PROGNAME = PowerFeed
 PRIORITY = SCHED_PRIORITY_DEFAULT
 STACKSIZE = 2048
 
-VPATH += $(PICOMILLDIR)/drivers
-DEPPATH += --dep-path $(PICOMILLDIR)/drivers
+VPATH += $(PowerFeedDIR)/drivers
+DEPPATH += --dep-path $(PowerFeedDIR)/drivers
 
-OBJDIR = $(OUTDIR)/picomill
+OBJDIR = $(OUTDIR)/PowerFeed
 OBJPATH = --obj-path $(OBJDIR) --obj-path $(OBJDIR)/drivers
 
 # Include paths with full paths
-CFLAGS += -I$(PICOMILLDIR)
-CFLAGS += -I$(PICOMILLDIR)/drivers
-CXXFLAGS += -I$(PICOMILLDIR)
-CXXFLAGS += -I$(PICOMILLDIR)/drivers
+CFLAGS += -I$(PowerFeedDIR)
+CFLAGS += -I$(PowerFeedDIR)/drivers
+CXXFLAGS += -I$(PowerFeedDIR)
+CXXFLAGS += -I$(PowerFeedDIR)/drivers
 
 # Source files with explicit paths
 CSRCS = 
-CXXSRCS = $(PICOMILLDIR)/Common.cxx \
-          $(PICOMILLDIR)/Delay.cxx \
-          $(PICOMILLDIR)/Display.cxx \
-          $(PICOMILLDIR)/MachineState.cxx \
-          $(PICOMILLDIR)/StepperState.cxx \
-		  $(PICOMILLDIR)/drivers/PicoSSD1306Display.cxx
+CXXSRCS = $(PowerFeedDIR)/Common.cxx \
+          $(PowerFeedDIR)/Delay.cxx \
+          $(PowerFeedDIR)/Display.cxx \
+          $(PowerFeedDIR)/MachineState.cxx \
+          $(PowerFeedDIR)/StepperState.cxx \
+		  $(PowerFeedDIR)/drivers/ConsoleDisplay.cxx
 
-MAINSRC = $(PICOMILLDIR)/picomill_main.cxx
-MODULE = $(CONFIG_PICOMILL)
+MAINSRC = $(PowerFeedDIR)/main.cxx
+MODULE = $(CONFIG_PowerFeed)
 
 include $(APPDIR)/Application.mk
