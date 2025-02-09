@@ -57,7 +57,7 @@
     {
       "name": "ESP32S3 (DevContainer)",
       "cwd": "${workspaceRoot}",
-      "executable": "/workspace/nuttx/nuttx.bin",
+      "executable": "/workspace/nuttx/nuttx",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
@@ -83,15 +83,15 @@
       ],
       "postLaunchCommands": [
         //"monitor arm semihosting enable",
-        "target remote :3333",
-        "set remote hardware-watchpoint-limit 2",
-        "mon reset halt",
-        "flushregs",
-        "monitor reset halt",
-        "thb nsh_main",
-        "c"
+        // "target remote :3333",
+        // "set remote hardware-watchpoint-limit 2",
+        // "mon reset halt",
+        // "flushregs",
+        // "monitor reset halt",
+        // "thb nsh_main",
+        // "c"
       ],
-      "preLaunchTask": "build",
+      // "preLaunchTask": "build",
       "rttConfig": {
         "enabled": true,
         "address": "auto",
@@ -114,8 +114,8 @@
       //"runToEntryPoint": "main",
       "postRestartCommands": [
         "continue"
-      ] //,
-            //"loadFiles": []
+      ] ,
+            "loadFiles": []
     },
     {
       "type": "cppdbg",
