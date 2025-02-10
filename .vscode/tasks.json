@@ -34,7 +34,7 @@
             "args": [
                 "${workspaceFolder}/build/src/PicoApp.elf"
             ],
-            "hide": true,
+            "hide": false,
             "problemMatcher": []
         }
     ]

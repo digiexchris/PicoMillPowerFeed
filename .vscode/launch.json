@@ -28,17 +28,17 @@
             "postLaunchCommands": [
               "monitor arm semihosting enable",
             ],
-            "rttConfig": {
-              "enabled": true,
-              "address": "auto",
-              "decoders": [
-                {
-                  "label": "",
-                  "port": 0,
-                  "type": "console"
-                }
-              ]
-            },
+            // "rttConfig": {
+            //   "enabled": true,
+            //   "address": "auto",
+            //   "decoders": [
+            //     {
+            //       "label": "",
+            //       "port": 0,
+            //       "type": "console"
+            //     }
+            //   ]
+            // },
             "rtos": "FreeRTOS",
             "device": "RP2040",
             "configFiles": [

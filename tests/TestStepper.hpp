@@ -4,7 +4,7 @@
 #include "../src/StepperState.hpp"
 
 #include <gmock/gmock.h>
-namespace PicoMill
+namespace
 {
 
 	namespace Drivers

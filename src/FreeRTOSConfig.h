@@ -28,11 +28,6 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-// #include <hardware/timer.h>
-
-/*#pragma GCC diagnostic ignored "-Wmissing-parameter-type"
-#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"*/
-
 /*-----------------------------------------------------------
  * Application specific definitions.
  *
@@ -49,10 +44,10 @@
 #define configUSE_PREEMPTION 1
 #define configUSE_TICKLESS_IDLE 0
 #define configUSE_IDLE_HOOK 0
-#define configUSE_TICK_HOOK 0
-#define configTICK_RATE_HZ ((TickType_t)1000) //((TickType_t)1000)
+#define configUSE_TICK_HOOK 1
+#define configTICK_RATE_HZ ((TickType_t)1000)
 #define configMAX_PRIORITIES 32
-#define configMINIMAL_STACK_SIZE (configSTACK_DEPTH_TYPE)1024
+#define configMINIMAL_STACK_SIZE (configSTACK_DEPTH_TYPE)256
 #define configUSE_16_BIT_TICKS 0
 
 #define configIDLE_SHOULD_YIELD 1
@@ -76,9 +71,8 @@
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION 0
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
-#define configTOTAL_HEAP_SIZE (64 * 1024 * 2)
+#define configTOTAL_HEAP_SIZE (128 * 1024)
 #define configAPPLICATION_ALLOCATED_HEAP 0
-#define configENABLE_HEAP_PROTECTOR 0
 
 /* Hook function related definitions. */
 #define configCHECK_FOR_STACK_OVERFLOW 2
@@ -88,7 +82,7 @@
 /* Run time and task stats gathering related definitions. */
 #define configGENERATE_RUN_TIME_STATS 0
 #define configUSE_TRACE_FACILITY 1
-#define configUSE_STATS_FORMATTING_FUNCTIONS 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS 0
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES 0
@@ -109,21 +103,17 @@
 
 /* SMP port only */
 #define configNUM_CORES 2
-#define configTICK_CORE 1
+#define configTICK_CORE 0
 #define configRUN_MULTIPLE_PRIORITIES 1
-
-// extern void TaskStatsTaskSwitchedIn(void);
-// extern void TaskStatsTaskSwitchedOut(void);
-
-// #define traceTASK_SWITCHED_IN() TaskStatsTaskSwitchedIn()
-// #define traceTASK_SWITCHED_OUT() TaskStatsTaskSwitchedOut()
+#define configUSE_CORE_AFFINITY 1
 
 /* RP2040 specific */
 #define configSUPPORT_PICO_SYNC_INTEROP 1
 #define configSUPPORT_PICO_TIME_INTEROP 1
 
+#include <assert.h>
 /* Define to trap errors during development. */
-#define configASSERT(x) hard_assert(x)
+#define configASSERT(x) assert(x)
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
@@ -145,10 +135,5 @@ to exclude the API function. */
 #define INCLUDE_xQueueGetMutexHolder 1
 
 /* A header file that defines trace macro can be included here. */
-
-// #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
-// extern uint64_t time_us_64(void);														  // "hardware/timer.h"
-// #define RUN_TIME_STAT_time_us_64Divider 1000											  // stat granularity is mS
-// #define portGET_RUN_TIME_COUNTER_VALUE() (time_us_64() / RUN_TIME_STAT_time_us_64Divider) // runtime counter in mS
 
 #endif /* FREERTOS_CONFIG_H */

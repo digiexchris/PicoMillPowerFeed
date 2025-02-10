@@ -6,30 +6,30 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-using namespace PicoMill;
+using namespace;
 
 class MachineStateTest : public ::testing::Test
 {
 protected:
 	void SetUp() override
 	{
-		display = std::make_shared<PicoMill::TestDisplay>();
-		stepper = std::make_shared<PicoMill::Drivers::TestStepper>();
+		display = std::make_shared<::TestDisplay>();
+		stepper = std::make_shared<::Drivers::TestStepper>();
 		time = std::make_shared<TestTime>();
-		stepperState = std::make_shared<PicoMill::TestStepperState>(stepper, time);
+		stepperState = std::make_shared<::TestStepperState>(stepper, time);
 		state = std::make_unique<Machine>(display, stepperState, 100, 200);
 	}
 
-	std::shared_ptr<PicoMill::TestDisplay> display;
-	std::shared_ptr<PicoMill::Drivers::TestStepper> stepper;
+	std::shared_ptr<::TestDisplay> display;
+	std::shared_ptr<::Drivers::TestStepper> stepper;
 	std::shared_ptr<TestTime> time;
-	std::shared_ptr<PicoMill::TestStepperState> stepperState;
+	std::shared_ptr<::TestStepperState> stepperState;
 	std::shared_ptr<Machine> state;
 };
 
-bool compareCommands(std::shared_ptr<PicoMill::Command> cmd)
+bool compareCommands(std::shared_ptr<::Command> cmd)
 {
-	auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+	auto startCmd = std::static_pointer_cast<::Start>(cmd);
 	return startCmd->direction == leftDir &&
 		   startCmd->speed == 100;
 }
@@ -40,9 +40,9 @@ TEST_F(MachineStateTest, Left_Normal_Speed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingLeft()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == leftDir && startCmd->speed == 100; })))
 		.Times(1);
 
@@ -58,9 +58,9 @@ TEST_F(MachineStateTest, Right_Normal_Speed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 
@@ -81,9 +81,9 @@ TEST_F(MachineStateTest, Left_Rapid_Speed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidLeft()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == leftDir && startCmd->speed == 200; })))
 		.Times(1);
 
@@ -105,9 +105,9 @@ TEST_F(MachineStateTest, Right_Rapid_Speed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 200; })))
 		.Times(1);
 
@@ -122,9 +122,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 			return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -133,9 +133,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200; })))
 		.Times(1);
 	// Set up expectation for right movement at rapid speed
@@ -145,9 +145,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100; })))
 		.Times(1);
 	stateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
@@ -156,10 +156,10 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto stopCmd = std::static_pointer_cast<PicoMill::Stop>(cmd);
-		return stopCmd->type == PicoMill::Command::Type::STOP ; })))
+		auto stopCmd = std::static_pointer_cast<::Stop>(cmd);
+		return stopCmd->type == ::Command::Type::STOP ; })))
 		.Times(1);
 	stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_LOW);
 	state->OnValueChange(stateChange);
@@ -171,9 +171,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -183,9 +183,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
 	auto speedChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
@@ -200,9 +200,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		.Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -213,9 +213,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		.Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200; })))
 		.Times(1);
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
@@ -225,9 +225,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
 	auto encoderStateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
@@ -237,9 +237,9 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100; })))
 		.Times(1);
 	auto normalStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
@@ -252,9 +252,9 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -264,9 +264,9 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(ACCELERATION_JERK)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == ACCELERATION_JERK; })))
 		.Times(1);
 
@@ -288,9 +288,9 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto startCmd = std::static_pointer_cast<PicoMill::Start>(cmd);
+		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == rightDir && startCmd->speed == 200; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -300,9 +300,9 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*display, Clear()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(ACCELERATION_JERK)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
-	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<PicoMill::Command> cmd)
+	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
-		auto speedCmd = std::static_pointer_cast<PicoMill::ChangeSpeed>(cmd);
+		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == ACCELERATION_JERK; })))
 		.Times(1);
 

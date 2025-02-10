@@ -43,6 +43,8 @@ ${app_sources}
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
   PICO_PLATFORM=${PICO_PLATFORM_VALUE}
+  mainRUN_FREE_RTOS_ON_CORE=1
+  # PICO_STACK_SIZE=0x1000
 )
 
 # target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="Usb/tusb_config.h")
@@ -122,4 +124,4 @@ add_dependencies(PicoApp copy_compile_commands_src)
 
 # Use USB uart
 pico_enable_stdio_usb(PicoApp 1)
-# pico_enable_stdio_uart(StepperPowerFeed 0)
+pico_enable_stdio_uart(PicoApp 1)
