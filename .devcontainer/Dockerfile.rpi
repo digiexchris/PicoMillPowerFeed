@@ -12,7 +12,7 @@ ENV TOOLCHAINDIR="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
-    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev gperf gawk make bison g++ gcc xz-utils patch curl unzip \
+    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev gperf gawk make bison g++ gcc xz-utils patch curl unzip gdb-multiarch \
     avr-libc \
   ccache \
   clang \
@@ -71,9 +71,9 @@ WORKDIR /tools
 
 ###########################################
 # Download the latest ARM clang toolchain prebuilt by ARM
-RUN mkdir -p clang-arm-none-eabi && \
-  curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
-  | tar -C clang-arm-none-eabi --strip-components 1 -xJ
+# RUN mkdir -p clang-arm-none-eabi && \
+#   curl -s -L  "https://github.com/ARM-software/LLVM-embedded-toolchain-for-Arm/releases/download/release-17.0.1/LLVMEmbeddedToolchainForArm-17.0.1-Linux-x86_64.tar.xz" \
+#   | tar -C clang-arm-none-eabi --strip-components 1 -xJ
 
 # Download the latest ARM GCC toolchain prebuilt by ARM
 RUN mkdir -p gcc-arm-none-eabi && \
@@ -96,10 +96,10 @@ RUN cd nuttx-tools/kconfig-frontends \
 && ./configure --enable-mconf --disable-gconf --disable-qconf --enable-static --prefix=/tools/kconfig-frontends \
 && make install && cd /tools && rm -rf nuttx-tools
 
-RUN mkdir -p cmake && \
-  curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
-  | tar -C cmake --strip-components=1 -xz \
-  && cd cmake && ./bootstrap && make && make install && rm -rf cmake
+# RUN mkdir -p cmake && \
+#   curl -s -L https://cmake.org/files/v3.26/cmake-3.26.0.tar.gz \
+#   | tar -C cmake --strip-components=1 -xz \
+#   && cd cmake && ./bootstrap && make && make install && rm -rf cmake
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=true
 RUN pip3 install cxxfilt

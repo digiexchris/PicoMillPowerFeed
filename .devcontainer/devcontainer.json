@@ -4,7 +4,7 @@
     "name": "C++ Raspberry Pi Pico",
     "build": {
         // "dockerfile": "Dockerfile.nuttx.rp2040"
-        "dockerfile": "Dockerfile.esp32"
+        "dockerfile": "Dockerfile.rpi"
     },
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh",

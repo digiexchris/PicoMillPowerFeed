@@ -55,10 +55,11 @@ namespace PowerFeed
 		int8_t value;
 	};
 
+	template <typename DISPLAY>
 	class Machine
 	{
 	public:
-		Machine(Display &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed = ACCELERATION_JERK, uint32_t aRapidSpeed = ACCELERATION_JERK * 2);
+		Machine(Display<DISPLAY> &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed = ACCELERATION_JERK, uint32_t aRapidSpeed = ACCELERATION_JERK * 2);
 		Machine(const Machine &) = delete;
 		Machine &operator=(const Machine &) = delete;
 
@@ -69,10 +70,10 @@ namespace PowerFeed
 			return (myState & static_cast<uint8_t>(state)) != 0;
 		}
 
-		Display &GetDisplay() const { return myDisplay; }
+		Display<DISPLAY> &GetDisplay() const { return myDisplay; }
 
 	private:
-		Display &myDisplay;
+		Display<DISPLAY> &myDisplay;
 		StepperState &myStepperState;
 		uint32_t myNormalSpeed = ACCELERATION_JERK;
 		uint32_t myRapidSpeed = ACCELERATION_JERK;

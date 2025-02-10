@@ -8,49 +8,82 @@
 
 #include "../Helpers.hxx"
 #include "../config.hxx"
-// #include <hardware/gpio.h>
-// #include <hardware/timer.h>
-// #include <pico/time.h>
+#include <graphics/curses.h>
+#include <nuttx/config.h>
+#include <system/termcurses.h>
 
 namespace PowerFeed::Drivers
 {
 
-	ConsoleDisplay::ConsoleDisplay() : Display()
+	ConsoleDisplay::ConsoleDisplay()
+	{
+	}
+
+	void ConsoleDisplay::Init()
 	{
 
 		printf("Creating ConsoleDisplay\n");
-		// Initialize the display
+		// 		int width;
+		// 		int height;
+		// #ifdef CONFIG_PDCURSES_MULTITHREAD
+		// 		FAR struct pdc_context_s *ctx = PDC_ctx();
+		// #endif
 
-		// Init i2c0 controller
-		// i2c_init(I2C_MASTER_NUM, 100000);
-		// Set up pins 12 and 13
-		// gpio_set_function(I2C_MASTER_SDA_IO, GPIO_FUNC_I2C);
-		// gpio_set_function(I2C_MASTER_SCL_IO, GPIO_FUNC_I2C);
-		// gpio_pull_up(I2C_MASTER_SDA_IO);
-		// gpio_pull_up(I2C_MASTER_SCL_IO);
+		// 		// termcurses_initterm();
 
-		// sleep_us(250);
+		// 		// 		traceon();
+		// 		initscr();
 
-		// If you don't do anything before initializing a display pi pico is too fast and starts sending
-		// commands before the screen controller had time to set itself up, so we add an artificial delay for
-		// ssd1306 to set itself up. This gets checked before each write to see if enough time has passed.
-		// myInitTime = time_us_64();
+		// 		// 		start_color();
+		// 		// #if defined(NCURSES_VERSION) || (defined(PDC_BUILD) && PDC_BUILD > 3000)
+		// 		// 		use_default_colors();
+		// 		// #endif
+		// 		cbreak();
+		// 		noecho();
 
-		// auto display = pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64);
+		// 		// 		// curs_set(0);
+		// 		// 		noecho();
 
-		// Create a new display object at address 0x3D and size of 128x32
-		// mySSD1306 = new pico_ssd1306::SSD1306(pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64));
+		// 		/* Refresh stdscr so that reading from it will not cause it to overwrite
+		// 		 * the other windows that are being created.
+		// 		 */
 
-		// Here we rotate the display by 180 degrees, so that it's not upside down from my perspective
-		// If your screen is upside down try setting it to 1 or 0
-		// myDisplay->setOrientation(0);
+		// 		refresh();
 
-		// mySSD1306->turnOn();
+		// 		/* Create a drawing window */
+
+		// 		width = static_cast<uint32_t>(132 / 6.0);
+		// 		height = static_cast<uint32_t>(64 / 10.0);
+
+		// 		myDefaultWindow = newwin(height, width, 0, 0);
+
+		// 		assert(myDefaultWindow == nullptr);
+
+		// 		// for (;;)
+		// 		// {
+		// 		// init_pair(1, COLOR_BLACK, COLOR_WHITE);
+		// 		// wbkgd(myDefaultWindow, COLOR_BLACK);
+		// 		werase(myDefaultWindow);
+
+		// 		// init_pair(2, COLOR_RED, COLOR_RED);
+		// 		// wattrset(myDefaultWindow, COLOR_WHITE);
+		// 		// box(myDefaultWindow, ' ', ' ');
+		// 		wrefresh(myDefaultWindow);
+
+		// 		wattrset(myDefaultWindow, 0);
+
+		// 		/* Do random output of a character */
+
+		// 		// nodelay(stdscr, true);
+
+		// 		mvwaddstr(myDefaultWindow, 1, 1, "POWER");
+		// 		mvwaddstr(myDefaultWindow, 1, 16, "FEED");
+		// 		wrefresh(myDefaultWindow);
 	}
 
 	void ConsoleDisplay::WriteBuffer()
 	{
-		// mySSD1306->sendBuffer();
+		wrefresh(myDefaultWindow);
 	}
 
 	void ConsoleDisplay::DrawText(const char *text, const NXHANDLE &aFont, uint16_t x, uint16_t y)
@@ -65,8 +98,7 @@ namespace PowerFeed::Drivers
 
 	void ConsoleDisplay::ClearBuffer()
 	{
-		printf("Clearing buffer\n");
-		// mySSD1306->clear();
+		werase(myDefaultWindow);
 	}
 
 } // namespace PowerFeed

@@ -7,10 +7,11 @@
 
 namespace PowerFeed
 {
+	template <typename DISPLAY>
+	Machine<DISPLAY>::Machine(Display<DISPLAY> &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
-	Machine::Machine(Display &aDisplay, StepperState &aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
-
-	void Machine::OnValueChange(StateChange &aStateChange)
+	template <typename DISPLAY>
+	void Machine<DISPLAY>::OnValueChange(StateChange &aStateChange)
 	{
 		printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange.type);
 		if (aStateChange.type == DeviceState::LEFT_HIGH || aStateChange.type == DeviceState::RIGHT_HIGH)
@@ -174,7 +175,8 @@ namespace PowerFeed
 		printf("Machine::OnValueChange: Display Updated\n");
 	}
 
-	void Machine::UpdateDisplay()
+	template <typename DISPLAY>
+	void Machine<DISPLAY>::UpdateDisplay()
 	{
 		myDisplay.ClearBuffer();
 		myDisplay.WriteBuffer();

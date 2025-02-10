@@ -23,7 +23,7 @@
 
 // std::unique_ptr<PowerFeed::Drivers::RP2040_HAL> hal;
 
-static PowerFeed::Drivers::ConsoleDisplay display = PowerFeed::Drivers::ConsoleDisplay();
+PowerFeed::Display<PowerFeed::Drivers::ConsoleDisplay> display;
 
 // void stepperUpdateTask(void *pvParameters)
 // {
@@ -46,6 +46,7 @@ extern "C"
 		// syslog_initialize();
 		usleep(MS_TO_US(2000));
 		printf("Starting PowerFeed\n");
+		display.Init();
 		display.DrawStart();
 		display.WriteBuffer();
 		usleep(MS_TO_US(500));

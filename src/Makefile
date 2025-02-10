@@ -3,9 +3,9 @@ include $(APPDIR)/Make.defs
 PowerFeedDIR = $(APPDIR)/Machine/PowerFeed
 
 # Application info
-PROGNAME = PowerFeed
-PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 2048
+PROGNAME = powerfeed
+PRIORITY = CONFIG_PowerFeed_PRIORITY
+STACKSIZE = 4096
 
 VPATH += $(PowerFeedDIR)/drivers
 DEPPATH += --dep-path $(PowerFeedDIR)/drivers
