@@ -4,6 +4,7 @@
 #include "../src/StepperState.hxx"
 
 #include <gmock/gmock.h>
+#include <memory>
 namespace PowerFeed
 {
 
@@ -31,7 +32,7 @@ namespace PowerFeed
 	class TestStepperState : public StepperState
 	{
 	public:
-		TestStepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : StepperState(aStepper, aTime){};
+		TestStepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : StepperState(aSettings, aStepper, aTime){};
 
 		MOCK_METHOD(void, ProcessCommand, (std::shared_ptr<Command> command), (override));
 		MOCK_METHOD(States, GetState, (), (override));

@@ -29,12 +29,14 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+include_directories(PUBLIC ${rapidjson_SOURCE_DIR}/include)
+
 # Include the directories
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/pico-ssd1306)
 
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cxx ../src/MachineState.cxx ../src/Display.cxx)
+add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cxx ../src/MachineState.cxx ../src/Display.cxx ../src/Settings.cxx)
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 

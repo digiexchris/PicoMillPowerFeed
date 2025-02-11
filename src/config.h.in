@@ -1,3 +1,5 @@
+#pragma once
+
 namespace PicoMill
 {
 	constexpr char CONFIG_JSON[] = R"json(@CONFIG_CONTENT@)json";

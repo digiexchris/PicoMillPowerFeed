@@ -59,7 +59,7 @@
             "name": "Launch Program",
             "program": "${workspaceFolder}/${input:executableName}.elf",
             "cwd": "${workspaceFolder}",
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "preLaunchTask": "build"
         },
         {

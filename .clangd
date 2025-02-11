@@ -1,0 +1,27 @@
+CompileFlags:
+  CompilationDatabase: build
+  Add:
+    - "-isystem/toolchain/gcc-arm-none/arm-none-eabi/include/c++/13.3.1"
+    - "-isystem/toolchain/gcc-arm-none/arm-none-eabi/include/c++/13.3.1/arm-none-eabi"
+    - "-isystem/toolchain/gcc-arm-none/arm-none-eabi/include/c++/13.3.1/backward"
+    - "-isystem/toolchain/gcc-arm-none/arm-none-eabi/include/c++/13.3.1/bits"
+    - "-isystem/toolchain/gcc-arm-none/lib/gcc/arm-none-eabi/13.3.1/include"
+    - "-isystem/toolchain/gcc-arm-none/lib/gcc/arm-none-eabi/13.3.1/include-fixed"
+    - "-isystem/toolchain/gcc-arm-none/arm-none-eabi/include"
+    - "-isystem../pico/pico-sdk/src/common/pico_base/include"
+    - "-isystem../pico/pico-sdk/src/common/pico_base/include/pico"
+    - "-isystem../pico/pico-sdk/src/common/pico_stdlib/include/pico"
+    - "-isystem../pico/pico-sdk/include"
+    - "-isystem../FreeRTOS-Kernel-smp/include"
+    - "-nostdinc"
+    - "-Wno-deprecated-declarations"
+
+Index:
+  Background: true
+Diagnostics:
+  Suppress: '*'  # Suppresses ALL diagnostics
+  ClangTidy:
+      Add: ['*']
+      Remove: [
+        'llvmlibc-callee-namespace'
+        ]

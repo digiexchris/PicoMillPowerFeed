@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Settings.hxx"
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace PowerFeed
@@ -15,6 +17,7 @@ namespace PowerFeed
 	class Display
 	{
 	public:
+		Display(std::shared_ptr<SettingsManager> settings);
 		virtual void DrawStart();
 		virtual void DrawMovingLeft();
 		virtual void DrawMovingRight();
@@ -51,6 +54,8 @@ namespace PowerFeed
 		const uint8_t topY = 0;
 		const uint8_t bottomY = 0;
 		const uint8_t middleX = 64 - 16;
+
+		std::shared_ptr<SettingsManager> mySettings;
 	};
 
 } // namespace PowerFeed

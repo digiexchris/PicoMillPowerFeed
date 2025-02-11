@@ -1,6 +1,6 @@
 #include "Display.hxx"
 #include "Helpers.hxx"
-#include "config.h"
+#include "Settings.hxx"
 #include "icons.hxx"
 #include "textRenderer/12x16_font.h"
 #include <cstring>
@@ -10,6 +10,10 @@ namespace PowerFeed
 
 	const char *IPM = "ipm";
 	const char *MMPM = "mm ";
+
+	Display::Display(std::shared_ptr<SettingsManager> settings) : mySettings(settings)
+	{
+	}
 
 	void Display::DrawStart()
 	{
@@ -61,7 +65,7 @@ namespace PowerFeed
 
 	void Display::DrawSpeed(uint32_t aSpeed)
 	{
-		float speedPerMin = (static_cast<float>(aSpeed) / stepsPerMm) * 60.0;
+		float speedPerMin = (static_cast<float>(aSpeed) / mySettings->Get()->mechanical.stepsPerMm) * 60.0;
 		char speed[14];
 
 		if (myUnits == Units::Millimeter)

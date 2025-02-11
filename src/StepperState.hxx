@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.hxx"
+#include "Settings.hxx"
 #include "Stepper.hxx"
 #include <memory>
 
@@ -58,7 +59,7 @@ namespace PowerFeed
 	class StepperState
 	{
 	public:
-		StepperState(std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : myStepper(aStepper), myTime(aTime)
+		StepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : mySettings(aSettings), myStepper(aStepper), myTime(aTime)
 		{
 			myState = States::STOPPED;
 			myStoppedAt = 0;
@@ -82,6 +83,8 @@ namespace PowerFeed
 		std::shared_ptr<IStepper> myStepper;
 
 		std::shared_ptr<ITime> myTime;
+
+		std::shared_ptr<SettingsManager> mySettings;
 	};
 
 } // namespace Stepper

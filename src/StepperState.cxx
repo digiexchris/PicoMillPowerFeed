@@ -1,6 +1,6 @@
 #include "StepperState.hxx"
 #include "Common.hxx"
-#include "config.h"
+#include "Settings.hxx"
 #include <cstdlib>
 #include <memory>
 #include <sys/stat.h>
@@ -300,13 +300,15 @@ namespace PowerFeed
 			if (myTargetSpeed == 0)
 			{
 
-				if (DRIVER_DISABLE_TIMEOUT >= 0)
+				auto driverDisableTimeout = mySettings->Get()->driver.driverDisableTimeout;
+
+				if (driverDisableTimeout >= 0)
 				{
 
 					if (myStepper->IsEnabled())
 					{
 						const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
-						if (DRIVER_DISABLE_TIMEOUT > 0 && myStoppedAt + DRIVER_DISABLE_TIMEOUT < currentTime)
+						if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
 						{
 							myStepper->Disable();
 							myStoppedAt = 0;

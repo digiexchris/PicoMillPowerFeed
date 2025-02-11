@@ -51,18 +51,6 @@ add_executable(PicoApp
 ${app_sources}
         )
 
-# Read the JSON file content
-file(READ "${CMAKE_SOURCE_DIR}/config.json" CONFIG_CONTENT)
-
-# Configure the header template
-configure_file(
-    "${CMAKE_SOURCE_DIR}/src/config.h.in"
-    "${CMAKE_BINARY_DIR}/include/config.h"
-    @ONLY
-)
-
-# Add include directory
-target_include_directories(PicoApp PRIVATE "${CMAKE_BINARY_DIR}/include")
 
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
@@ -90,24 +78,6 @@ add_compile_options(
     ### C++ Specific
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-volatile>
 )
-
-include(FetchContent)
-
-set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson tests" FORCE)
-set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples" FORCE)
-set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation" FORCE)
-
-FetchContent_Declare(
-    rapidjson
-    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-    GIT_TAG v1.1.0
-)
-FetchContent_GetProperties(rapidjson)
-if(NOT rapidjson_POPULATED)
-    FetchContent_Populate(rapidjson)
-endif()
-
-target_include_directories(PicoApp PRIVATE ${rapidjson_SOURCE_DIR}/include)
 
 
 if (WIN32)

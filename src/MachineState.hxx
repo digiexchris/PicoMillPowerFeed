@@ -2,8 +2,8 @@
 
 #include "Display.hxx"
 #include "Event.hxx"
+#include "Settings.hxx"
 #include "StepperState.hxx"
-#include "config.h"
 #include <cstdint>
 #include <memory>
 
@@ -65,7 +65,7 @@ namespace PowerFeed
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = ACCELERATION_JERK, uint32_t aRapidSpeed = ACCELERATION_JERK * 2);
+		Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 1, uint32_t aRapidSpeed = 2);
 
 		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 
@@ -79,11 +79,13 @@ namespace PowerFeed
 	private:
 		std::shared_ptr<Display> myDisplay;
 		std::shared_ptr<StepperState> myStepperState;
-		uint32_t myNormalSpeed = ACCELERATION_JERK;
+		uint32_t myNormalSpeed = 1;
 		uint32_t myRapidSpeed = 20000;
 		uint32_t myAcceleration;
 		uint8_t myState = 0;
 		Units myUnits = Units::Millimeter;
+
+		std::shared_ptr<SettingsManager> mySettings;
 
 		void UpdateDisplay();
 

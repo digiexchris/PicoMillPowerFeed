@@ -2,7 +2,12 @@
 
 #include <stdint.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Weverything"
+#pragma clang diagnostic ignored "-Wall"
+// NOLINT(misc-include)
 #include <chrono>
+#pragma clang diagnostic pop
 
 namespace PowerFeed
 {

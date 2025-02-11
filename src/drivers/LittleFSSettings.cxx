@@ -37,10 +37,10 @@ namespace PowerFeed::Drivers
 			lfs_format(&myFs, &myFlashConfig);
 			lfs_mount(&myFs, &myFlashConfig);
 
-			lfs_file_t f;
-			lfs_file_open(&myFs, &f, "README.TXT", LFS_O_RDWR | LFS_O_CREAT);
-			lfs_file_write(&myFs, &f, README_TXT, strlen(README_TXT));
-			lfs_file_close(&myFs, &f);
+			lfs_file_t file;
+			lfs_file_open(&myFs, &file, "README.TXT", LFS_O_RDWR | LFS_O_CREAT);
+			lfs_file_write(&myFs, &file, README_TXT, strlen(README_TXT));
+			lfs_file_close(&myFs, &file);
 
 			if (mimic_fat_usb_device_is_enabled())
 			{
@@ -53,59 +53,59 @@ namespace PowerFeed::Drivers
 	 * Log clicks on the BOOTSEL button to a log file.
 	 * Press and hold the button for 10 seconds to initialize the file system.
 	 */
-	static void sensor_logging_task(void)
+	static void sensorLoggingTask(void)
 	{
-		static bool last_status = false;
-		static int count = 0;
-		bool button = bb_get_bootsel_button();
-		static uint64_t long_push = 0;
+		// static bool lastStatus = false;
+		// static int count = 0;
+		// bool button = bb_get_bootsel_button();
+		// static uint64_t longPush = 0;
 
-		if (last_status != button && button)
-		{ // Push BOOTSEL button
-			count += 1;
-			printf("Update %s\n", FILENAME);
+		// if (lastStatus != button && button)
+		// { // Push BOOTSEL button
+		// 	count += 1;
+		// 	printf("Update %s\n", FILENAME);
 
-			lfs_file_t f;
-			lfs_file_open(&myFs, &f, FILENAME, LFS_O_RDWR | LFS_O_APPEND | LFS_O_CREAT);
-			uint8_t buffer[512];
-			snprintf((char *)buffer, sizeof(buffer), "click=%d\n", count);
-			lfs_file_write(&myFs, &f, buffer, strlen((char *)buffer));
-			printf((char *)buffer);
-			lfs_file_close(&myFs, &f);
-		}
-		last_status = button;
+		// 	lfs_file_t file;
+		// 	lfs_file_open(&myFs, &file, FILENAME, LFS_O_RDWR | LFS_O_APPEND | LFS_O_CREAT);
+		// 	uint8_t buffer[512];
+		// 	snprintf((char *)buffer, sizeof(buffer), "click=%d\n", count);
+		// 	lfs_file_write(&myFs, &file, buffer, strlen((char *)buffer));
+		// 	printf((char *)buffer);
+		// 	lfs_file_close(&myFs, &file);
+		// }
+		// lastStatus = button;
 
-		if (button)
-		{
-			long_push++;
-		}
-		else
-		{
-			long_push = 0;
-		}
-		if (long_push > 35000)
-		{ // Long-push BOOTSEL button
-			CheckFS();
-			count = 0;
-			long_push = 0;
-		}
+		// if (button)
+		// {
+		// 	longPush++;
+		// }
+		// else
+		// {
+		// 	longPush = 0;
+		// }
+		// if (longPush > 35000)
+		// { // Long-push BOOTSEL button
+		// 	CheckFS();
+		// 	count = 0;
+		// 	longPush = 0;
+		// }
 	}
 
-	int main(void)
-	{
-		// set_sys_clock_khz(250000, false);
+	// int main(void)
+	// {
+	// 	// set_sys_clock_khz(250000, false);
 
-		board_init();
+	// 	board_init();
 
-		stdio_init_all();
+	// 	stdio_init_all();
 
-		test_filesystem_and_format_if_necessary(false);
-		while (true)
-		{
-			sensor_logging_task();
-			tud_task();
-		}
-	}
+	// 	test_filesystem_and_format_if_necessary(false);
+	// 	while (true)
+	// 	{
+	// 		sensorLoggingTask();
+	// 		tud_task();
+	// 	}
+	// }
 
 	LittleFSSettings::LittleFSSettings()
 	{
@@ -132,21 +132,20 @@ namespace PowerFeed::Drivers
 
 	void LittleFSSettings::Save(std::shared_ptr<Settings> settings)
 	{
-		static bool last_status = false;
+		static bool lastStatus = false;
 		static int count = 0;
 		bool button = bb_get_bootsel_button();
 
 		count += 1;
 		printf("Update %s\n", FILENAME);
 
-		lfs_file_t f;
-		lfs_file_open(&myFs, &f, FILENAME, LFS_O_RDWR | LFS_O_APPEND | LFS_O_CREAT);
+		lfs_file_t file;
+		lfs_file_open(&myFs, &file, FILENAME, LFS_O_RDWR | LFS_O_APPEND | LFS_O_CREAT);
 		uint8_t buffer[512];
 		snprintf((char *)buffer, sizeof(buffer), "click=%d\n", count);
-		lfs_file_write(&myFs, &f, buffer, strlen((char *)buffer));
+		lfs_file_write(&myFs, &file, buffer, strlen((char *)buffer));
 		printf((char *)buffer);
-		lfs_file_close(&myFs, &f);
+		lfs_file_close(&myFs, &file);
 	}
-	last_status = button;
-}
+	lastStatus = button;
 }

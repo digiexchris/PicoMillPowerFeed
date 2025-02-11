@@ -1,4 +1,4 @@
-#include "../src/config.h"
+#include "../src/Settings.hxx"
 #include "TestDisplay.hpp"
 #include "textRenderer/12x16_font.h"
 #include "gmock/gmock.h"
@@ -14,12 +14,13 @@ namespace PowerFeed
 	protected:
 		DisplayTest()
 		{
-			myDisplay = std::make_shared<MockDisplayHal>();
+			mySettings = std::make_shared<SettingsManager>();
+			myDisplay = std::make_shared<MockDisplayHal>(mySettings);
 		}
 
 		void SetUp() override
 		{
-			myDisplay = std::make_shared<MockDisplayHal>();
+			myDisplay = std::make_shared<MockDisplayHal>(mySettings);
 		}
 
 		void TearDown() override
@@ -28,6 +29,7 @@ namespace PowerFeed
 		}
 
 		std::shared_ptr<MockDisplayHal> myDisplay;
+		std::shared_ptr<SettingsManager> mySettings;
 	};
 
 	TEST_F(DisplayTest, DrawSpeedDefaultUnits)

@@ -6,10 +6,14 @@
 namespace PowerFeed
 {
 
-	Machine::Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+	Machine::Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : mySettings(aSettings), myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 	void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
 	{
+		std::shared_ptr<Settings> settings = mySettings->Get();
+		Settings::Mechanical mechanical = settings->mechanical;
+		Settings::Controls controls = settings->controls;
+
 		// printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange->type);
 		if (aStateChange->type == DeviceState::LEFT_HIGH || aStateChange->type == DeviceState::RIGHT_HIGH)
 		{
@@ -30,7 +34,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_LEFT_DIRECTION, myRapidSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveLeftDirection, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -38,7 +42,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_LEFT_DIRECTION, myNormalSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveLeftDirection, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -57,7 +61,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_RIGHT_DIRECTION, myRapidSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveRightDirection, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -65,7 +69,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_RIGHT_DIRECTION, myNormalSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveRightDirection, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -118,11 +122,15 @@ namespace PowerFeed
 
 			if (IsStateSet(MachineState::RAPID))
 			{
-				int32_t speed = static_cast<int32_t>(myRapidSpeed) + (increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND);
+				int32_t speed = static_cast<int32_t>(myRapidSpeed) + (increment * controls.encoderCountsToStepsPerSecond);
 
-				if (speed < ACCELERATION_JERK)
+				if (speed < mechanical.accelerationJerk)
 				{
-					myRapidSpeed = ACCELERATION_JERK;
+					myRapidSpeed = mechanical.accelerationJerk;
+				}
+				else if (speed > mechanical.maxStepsPerSecond)
+				{
+					myRapidSpeed = mechanical.maxStepsPerSecond;
 				}
 				else
 				{
@@ -137,17 +145,21 @@ namespace PowerFeed
 			}
 			else if (IsStateSet(MachineState::ACCELERATION_HIGH))
 			{
-				myAcceleration += ENCODER_COUNTS_TO_ACCELERATION;
+				myAcceleration += controls.encoderCountsToStepsPerSecond;
 				std::shared_ptr<Command> command = std::make_shared<ChangeAcceleration>(myAcceleration, myAcceleration);
 				myStepperState->ProcessCommand(command);
 			}
 			else
 			{
-				int32_t speed = static_cast<int32_t>(myNormalSpeed) + (increment * ENCODER_COUNTS_TO_STEPS_PER_SECOND);
+				int32_t speed = static_cast<int32_t>(myNormalSpeed) + (increment * controls.encoderCountsToStepsPerSecond);
 
-				if (speed < ACCELERATION_JERK)
+				if (speed < mechanical.accelerationJerk)
 				{
-					myNormalSpeed = ACCELERATION_JERK;
+					myNormalSpeed = mechanical.accelerationJerk;
+				}
+				else if (speed > mechanical.maxStepsPerSecond)
+				{
+					myNormalSpeed = mechanical.maxStepsPerSecond;
 				}
 				else
 				{

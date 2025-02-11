@@ -8,6 +8,7 @@ namespace PowerFeed
 	class TestDisplay : public Display
 	{
 	public:
+		TestDisplay(std::shared_ptr<SettingsManager> settings) : Display(settings) {}
 		MOCK_METHOD(void, ClearBuffer, (), (override));
 		MOCK_METHOD(void, Refresh, (), (override));
 		MOCK_METHOD(void, WriteBuffer, (), (override));
@@ -30,6 +31,9 @@ namespace PowerFeed
 	class MockDisplayHal : public Display
 	{
 	public:
+		MockDisplayHal(std::shared_ptr<SettingsManager> settings) : Display(settings)
+		{
+		}
 		MOCK_METHOD(void, ClearBuffer, (), (override));
 		MOCK_METHOD(void, Refresh, (), (override));
 		MOCK_METHOD(void, WriteBuffer, (), (override));

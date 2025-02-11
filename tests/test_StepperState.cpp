@@ -12,9 +12,10 @@ class StateTest : public ::testing::Test
 protected:
 	void SetUp() override
 	{
+		mySettings = std::make_shared<SettingsManager>();
 		stepper = std::make_shared<Drivers::TestStepper>();
 		time = std::make_shared<TestTime>();
-		state = std::make_unique<StepperState>(stepper, time);
+		state = std::make_unique<StepperState>(mySettings, stepper, time);
 	}
 
 	void TearDown() override
@@ -22,11 +23,13 @@ protected:
 		stepper.reset();
 		time.reset();
 		state.reset();
+		mySettings.reset();
 	}
 
 	std::shared_ptr<Drivers::TestStepper> stepper;
 	std::shared_ptr<TestTime> time;
 	std::unique_ptr<StepperState> state;
+	std::shared_ptr<SettingsManager> mySettings;
 };
 
 TEST_F(StateTest, Start)
