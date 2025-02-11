@@ -32,7 +32,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/pico-ssd
 
 # Add test executable
 file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cpp ../src/MachineState.cpp ../src/Display.cpp)
+add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cxx ../src/MachineState.cxx ../src/Display.cxx)
 
 # add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
 

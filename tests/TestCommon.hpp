@@ -1,8 +1,14 @@
-#include "../src/Common.hpp"
+#include "../src/Common.hxx"
 #include <chrono>
 #include <gmock/gmock.h>
 
-using namespace;
+using namespace PowerFeed;
+
+inline void panic(const char *msg)
+{
+	printf("Panic: %s\n", msg);
+	assert(false);
+}
 
 class TestTime : public ITime
 {

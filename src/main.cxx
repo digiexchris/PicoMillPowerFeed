@@ -1,4 +1,5 @@
 #include "MachineState.hxx"
+#include "bsp/board_api.h"
 #include "drivers/Switches.hxx"
 #include <iostream>
 #include <memory>
@@ -92,6 +93,7 @@ extern "C" void isr_hardfault(void)
 
 int main()
 {
+	board_init();
 	stdio_init_all();
 	printf("Starting PowerFeed\n");
 

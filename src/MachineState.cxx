@@ -1,19 +1,12 @@
 #include "MachineState.hxx"
 #include "StepperState.hxx"
 #include "config.h"
-#include "pico/stdio.h"
 #include <memory>
 
 namespace PowerFeed
 {
 
-	Machine::Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed)
-	{
-		if (myDisplay == nullptr)
-		{
-			panic("Machine init without a valid Display object");
-		}
-	};
+	Machine::Machine(std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 	void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
 	{
@@ -111,7 +104,7 @@ namespace PowerFeed
 		{
 			auto state = std::static_pointer_cast<ValueChange<int16_t>>(aStateChange);
 			bool moving = IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT);
-			int8_t increment = state->value;
+			int16_t increment = state->value;
 
 			// Apply acceleration curve to encoder input
 			if (abs(increment) > 16)
@@ -191,11 +184,6 @@ namespace PowerFeed
 
 	void Machine::UpdateDisplay()
 	{
-		if (myDisplay == nullptr)
-		{
-			panic("myDisplay is nullptr\n");
-		}
-
 		myDisplay->ClearBuffer();
 
 		auto speed = IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed;

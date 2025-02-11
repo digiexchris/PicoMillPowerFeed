@@ -1,12 +1,12 @@
-#include "../src/MachineState.hpp"
-#include "../src/config.hpp"
+#include "../src/MachineState.hxx"
+#include "../src/config.h"
 #include "TestCommon.hpp"
 #include "TestDisplay.hpp"
 #include "TestStepper.hpp"
 #include <gtest/gtest.h>
 #include <memory>
 
-using namespace;
+using namespace PowerFeed;
 
 class MachineStateTest : public ::testing::Test
 {
@@ -37,7 +37,7 @@ bool compareCommands(std::shared_ptr<::Command> cmd)
 TEST_F(MachineStateTest, Left_Normal_Speed)
 {
 	// Set up expectation before executing the action
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingLeft()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -55,7 +55,7 @@ TEST_F(MachineStateTest, Right_Normal_Speed)
 {
 
 	// Set up expectation before executing the action
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -71,14 +71,14 @@ TEST_F(MachineStateTest, Right_Normal_Speed)
 TEST_F(MachineStateTest, Left_Rapid_Speed)
 {
 	// Set rapid speed first
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for left movement at rapid speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidLeft()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -95,14 +95,14 @@ TEST_F(MachineStateTest, Right_Rapid_Speed)
 {
 
 	// Set rapid speed first
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for right movement at rapid speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -119,7 +119,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 {
 
 	// Set up expectation for right movement at normal speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -130,7 +130,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -142,7 +142,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -153,7 +153,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	stateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
 	state->OnValueChange(stateChange);
 
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -168,7 +168,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 {
 	// Start right movement at normal speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -180,7 +180,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 	state->OnValueChange(stateChange);
 
 	// Change normal speed while moving
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -188,7 +188,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
-	auto speedChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+	auto speedChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, 1);
 	state->OnValueChange(speedChange);
 }
 
@@ -196,7 +196,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 {
 
 	// Start right movement at normal speed
-	EXPECT_CALL(*display, Clear())
+	EXPECT_CALL(*display, ClearBuffer())
 		.Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
@@ -209,7 +209,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 	state->OnValueChange(stateChange);
 
 	// Switch to rapid speed
-	EXPECT_CALL(*display, Clear())
+	EXPECT_CALL(*display, ClearBuffer())
 		.Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
@@ -222,7 +222,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 	state->OnValueChange(rapidStateChange);
 
 	// Change rapid speed while in rapid mode
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -230,11 +230,11 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
-	auto encoderStateChange = std::make_shared<Int8StateChange>(DeviceState::ENCODER_CHANGED, 1);
+	auto encoderStateChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, 1);
 	state->OnValueChange(encoderStateChange);
 
 	// Switch to normal speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -249,7 +249,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 {
 	// Start right movement at normal speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(100)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -261,7 +261,7 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 	state->OnValueChange(stateChange);
 
 	// Decrease speed to minimum jerk
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(ACCELERATION_JERK)).Times(1);
 	EXPECT_CALL(*display, DrawMovingRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -278,14 +278,14 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 {
 	// Set rapid speed first
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
 	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Start right movement at rapid speed
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
@@ -297,7 +297,7 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 	state->OnValueChange(stateChange);
 
 	// Decrease rapid speed to minimum jerk
-	EXPECT_CALL(*display, Clear()).Times(1);
+	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(ACCELERATION_JERK)).Times(1);
 	EXPECT_CALL(*display, DrawRapidRight()).Times(1);
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)

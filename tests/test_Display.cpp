@@ -1,4 +1,4 @@
-#include "../src/config.hpp"
+#include "../src/config.h"
 #include "TestDisplay.hpp"
 #include "textRenderer/12x16_font.h"
 #include "gmock/gmock.h"
@@ -7,7 +7,7 @@
 using ::testing::_;
 using ::testing::Eq;
 
-namespace
+namespace PowerFeed
 {
 	class DisplayTest : public ::testing::Test
 	{

@@ -1,11 +1,11 @@
-#include "../src/StepperState.hpp"
+#include "../src/StepperState.hxx"
 #include "TestCommon.hpp"
 #include "TestStepper.hpp"
 #include <gtest/gtest.h>
 #include <memory>
 
 using ::testing::Return;
-using namespace;
+using namespace PowerFeed;
 
 class StateTest : public ::testing::Test
 {
