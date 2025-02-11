@@ -2,13 +2,14 @@
 
 #include "Display.hxx"
 #include "config.h"
-#include <boost/json.hpp>
 #include <cstdint>
 #include <memory>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace PowerFeed
 {
-
 	struct Settings
 	{
 		struct DriverSettings
@@ -20,27 +21,33 @@ namespace PowerFeed
 			bool driver_enable_value;
 			uint16_t driver_disable_timeout;
 
-			boost::json::object to_json() const
+			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 			{
-				boost::json::object obj;
-				obj["DRIVER_DIRECTION_CHANGE_DELAY_MS"] = driver_direction_change_delay_ms;
-				obj["DRIVER_DIR_PIN"] = driver_dir_pin;
-				obj["DRIVER_EN_PIN"] = driver_en_pin;
-				obj["DRIVER_STEP_PIN"] = driver_step_pin;
-				obj["DRIVER_ENABLE_VALUE"] = driver_enable_value;
-				obj["DRIVER_DISABLE_TIMEOUT"] = driver_disable_timeout;
-				return obj;
+				writer.StartObject();
+				writer.String("DRIVER_DIRECTION_CHANGE_DELAY_MS");
+				writer.Uint(driver_direction_change_delay_ms);
+				writer.String("DRIVER_DIR_PIN");
+				writer.Uint(driver_dir_pin);
+				writer.String("DRIVER_EN_PIN");
+				writer.Uint(driver_en_pin);
+				writer.String("DRIVER_STEP_PIN");
+				writer.Uint(driver_step_pin);
+				writer.String("DRIVER_ENABLE_VALUE");
+				writer.Bool(driver_enable_value);
+				writer.String("DRIVER_DISABLE_TIMEOUT");
+				writer.Uint(driver_disable_timeout);
+				writer.EndObject();
 			}
 
-			static DriverSettings from_json(const boost::json::object &obj)
+			static DriverSettings from_json(const rapidjson::Value &obj)
 			{
 				DriverSettings s;
-				s.driver_direction_change_delay_ms = obj["DRIVER_DIRECTION_CHANGE_DELAY_MS"].as_int64();
-				s.driver_dir_pin = obj["DRIVER_DIR_PIN"].as_int64();
-				s.driver_en_pin = obj["DRIVER_EN_PIN"].as_int64();
-				s.driver_step_pin = obj["DRIVER_STEP_PIN"].as_int64();
-				s.driver_enable_value = obj["DRIVER_ENABLE_VALUE"].as_bool();
-				s.driver_disable_timeout = obj["DRIVER_DISABLE_TIMEOUT"].as_int64();
+				s.driver_direction_change_delay_ms = obj["DRIVER_DIRECTION_CHANGE_DELAY_MS"].GetUint();
+				s.driver_dir_pin = obj["DRIVER_DIR_PIN"].GetUint();
+				s.driver_en_pin = obj["DRIVER_EN_PIN"].GetUint();
+				s.driver_step_pin = obj["DRIVER_STEP_PIN"].GetUint();
+				s.driver_enable_value = obj["DRIVER_ENABLE_VALUE"].GetBool();
+				s.driver_disable_timeout = obj["DRIVER_DISABLE_TIMEOUT"].GetUint();
 				return s;
 			}
 		};
@@ -53,25 +60,30 @@ namespace PowerFeed
 			uint8_t i2c_master_scl_io;
 			uint8_t i2c_master_num;
 
-			boost::json::object to_json() const
+			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 			{
-				boost::json::object obj;
-				obj["USE_SSD1306"] = use_ssd1306;
-				obj["SSD1306_ADDRESS"] = ssd1306_address;
-				obj["I2C_MASTER_SDA_IO"] = i2c_master_sda_io;
-				obj["I2C_MASTER_SCL_IO"] = i2c_master_scl_io;
-				obj["I2C_MASTER_NUM"] = i2c_master_num;
-				return obj;
+				writer.StartObject();
+				writer.String("USE_SSD1306");
+				writer.Bool(use_ssd1306);
+				writer.String("SSD1306_ADDRESS");
+				writer.Uint(ssd1306_address);
+				writer.String("I2C_MASTER_SDA_IO");
+				writer.Uint(i2c_master_sda_io);
+				writer.String("I2C_MASTER_SCL_IO");
+				writer.Uint(i2c_master_scl_io);
+				writer.String("I2C_MASTER_NUM");
+				writer.Uint(i2c_master_num);
+				writer.EndObject();
 			}
 
-			static DisplaySettings from_json(const boost::json::object &obj)
+			static DisplaySettings from_json(const rapidjson::Value &obj)
 			{
 				DisplaySettings s;
-				s.use_ssd1306 = obj["USE_SSD1306"].as_bool();
-				s.ssd1306_address = obj["SSD1306_ADDRESS"].as_int64();
-				s.i2c_master_sda_io = obj["I2C_MASTER_SDA_IO"].as_int64();
-				s.i2c_master_scl_io = obj["I2C_MASTER_SCL_IO"].as_int64();
-				s.i2c_master_num = obj["I2C_MASTER_NUM"].as_int64();
+				s.use_ssd1306 = obj["USE_SSD1306"].GetBool();
+				s.ssd1306_address = obj["SSD1306_ADDRESS"].GetUint();
+				s.i2c_master_sda_io = obj["I2C_MASTER_SDA_IO"].GetUint();
+				s.i2c_master_scl_io = obj["I2C_MASTER_SCL_IO"].GetUint();
+				s.i2c_master_num = obj["I2C_MASTER_NUM"].GetUint();
 				return s;
 			}
 		};
@@ -89,35 +101,45 @@ namespace PowerFeed
 			uint16_t encoder_counts_to_steps_per_second;
 			bool encoder_invert;
 
-			boost::json::object to_json() const
+			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 			{
-				boost::json::object obj;
-				obj["LEFTPIN"] = left_pin;
-				obj["RIGHTPIN"] = right_pin;
-				obj["RAPIDPIN"] = rapid_pin;
-				obj["ENCODER_A_PIN"] = encoder_a_pin;
-				obj["ENCODER_B_PIN"] = encoder_b_pin;
-				obj["ENCODER_BUTTON_PIN"] = encoder_button_pin;
-				obj["UNITS_SWITCH_DELAY_MS"] = units_switch_delay_ms;
-				obj["DEBOUNCE_DELAY_US"] = debounce_delay_us;
-				obj["ENCODER_COUNTS_TO_STEPS_PER_SECOND"] = encoder_counts_to_steps_per_second;
-				obj["ENCODER_INVERT"] = encoder_invert;
-				return obj;
+				writer.StartObject();
+				writer.String("LEFTPIN");
+				writer.Uint(left_pin);
+				writer.String("RIGHTPIN");
+				writer.Uint(right_pin);
+				writer.String("RAPIDPIN");
+				writer.Uint(rapid_pin);
+				writer.String("ENCODER_A_PIN");
+				writer.Uint(encoder_a_pin);
+				writer.String("ENCODER_B_PIN");
+				writer.Uint(encoder_b_pin);
+				writer.String("ENCODER_BUTTON_PIN");
+				writer.Uint(encoder_button_pin);
+				writer.String("UNITS_SWITCH_DELAY_MS");
+				writer.Uint(units_switch_delay_ms);
+				writer.String("DEBOUNCE_DELAY_US");
+				writer.Uint(debounce_delay_us);
+				writer.String("ENCODER_COUNTS_TO_STEPS_PER_SECOND");
+				writer.Uint(encoder_counts_to_steps_per_second);
+				writer.String("ENCODER_INVERT");
+				writer.Bool(encoder_invert);
+				writer.EndObject();
 			}
 
-			static Controls from_json(const boost::json::object &obj)
+			static Controls from_json(const rapidjson::Value &obj)
 			{
 				Controls s;
-				s.left_pin = obj["LEFTPIN"].as_int64();
-				s.right_pin = obj["RIGHTPIN"].as_int64();
-				s.rapid_pin = obj["RAPIDPIN"].as_int64();
-				s.encoder_a_pin = obj["ENCODER_A_PIN"].as_int64();
-				s.encoder_b_pin = obj["ENCODER_B_PIN"].as_int64();
-				s.encoder_button_pin = obj["ENCODER_BUTTON_PIN"].as_int64();
-				s.units_switch_delay_ms = obj["UNITS_SWITCH_DELAY_MS"].as_int64();
-				s.debounce_delay_us = obj["DEBOUNCE_DELAY_US"].as_int64();
-				s.encoder_counts_to_steps_per_second = obj["ENCODER_COUNTS_TO_STEPS_PER_SECOND"].as_int64();
-				s.encoder_invert = obj["ENCODER_INVERT"].as_bool();
+				s.left_pin = obj["LEFTPIN"].GetUint();
+				s.right_pin = obj["RIGHTPIN"].GetUint();
+				s.rapid_pin = obj["RAPIDPIN"].GetUint();
+				s.encoder_a_pin = obj["ENCODER_A_PIN"].GetUint();
+				s.encoder_b_pin = obj["ENCODER_B_PIN"].GetUint();
+				s.encoder_button_pin = obj["ENCODER_BUTTON_PIN"].GetUint();
+				s.units_switch_delay_ms = obj["UNITS_SWITCH_DELAY_MS"].GetUint();
+				s.debounce_delay_us = obj["DEBOUNCE_DELAY_US"].GetUint();
+				s.encoder_counts_to_steps_per_second = obj["ENCODER_COUNTS_TO_STEPS_PER_SECOND"].GetUint();
+				s.encoder_invert = obj["ENCODER_INVERT"].GetBool();
 				return s;
 			}
 		};
@@ -133,31 +155,39 @@ namespace PowerFeed
 			uint8_t acceleration_jerk;
 			bool move_left_direction;
 
-			boost::json::object to_json() const
+			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 			{
-				boost::json::object obj;
-				obj["MAX_LEADSCREW_RPM"] = max_leadscrew_rpm;
-				obj["MAX_DRIVER_STEPS_PER_SECOND"] = max_driver_steps_per_second;
-				obj["STEPS_PER_MOTOR_REV"] = steps_per_motor_rev;
-				obj["STEPS_PER_LEADSCREW_REV"] = steps_per_leadscrew_rev;
-				obj["ACCELERATION"] = acceleration;
-				obj["DECELERATION_MULTIPLIER"] = deceleration_multiplier;
-				obj["ACCELERATION_JERK"] = acceleration_jerk;
-				obj["MOVE_LEFT_DIRECTION"] = move_left_direction;
-				return obj;
+				writer.StartObject();
+				writer.String("MAX_LEADSCREW_RPM");
+				writer.Uint(max_leadscrew_rpm);
+				writer.String("MAX_DRIVER_STEPS_PER_SECOND");
+				writer.Uint(max_driver_steps_per_second);
+				writer.String("STEPS_PER_MOTOR_REV");
+				writer.Uint(steps_per_motor_rev);
+				writer.String("STEPS_PER_LEADSCREW_REV");
+				writer.Double(steps_per_leadscrew_rev);
+				writer.String("ACCELERATION");
+				writer.Uint(acceleration);
+				writer.String("DECELERATION_MULTIPLIER");
+				writer.Uint(deceleration_multiplier);
+				writer.String("ACCELERATION_JERK");
+				writer.Uint(acceleration_jerk);
+				writer.String("MOVE_LEFT_DIRECTION");
+				writer.Bool(move_left_direction);
+				writer.EndObject();
 			}
 
-			static MechanicalParameters from_json(const boost::json::object &obj)
+			static MechanicalParameters from_json(const rapidjson::Value &obj)
 			{
 				MechanicalParameters s;
-				s.max_leadscrew_rpm = obj["MAX_LEADSCREW_RPM"].as_int64();
-				s.max_driver_steps_per_second = obj["MAX_DRIVER_STEPS_PER_SECOND"].as_int64();
-				s.steps_per_motor_rev = obj["STEPS_PER_MOTOR_REV"].as_int64();
-				s.steps_per_leadscrew_rev = obj["STEPS_PER_LEADSCREW_REV"].as_double();
-				s.acceleration = obj["ACCELERATION"].as_int64();
-				s.deceleration_multiplier = obj["DECELERATION_MULTIPLIER"].as_int64();
-				s.acceleration_jerk = obj["ACCELERATION_JERK"].as_int64();
-				s.move_left_direction = obj["MOVE_LEFT_DIRECTION"].as_bool();
+				s.max_leadscrew_rpm = obj["MAX_LEADSCREW_RPM"].GetUint();
+				s.max_driver_steps_per_second = obj["MAX_DRIVER_STEPS_PER_SECOND"].GetUint();
+				s.steps_per_motor_rev = obj["STEPS_PER_MOTOR_REV"].GetUint();
+				s.steps_per_leadscrew_rev = obj["STEPS_PER_LEADSCREW_REV"].GetDouble();
+				s.acceleration = obj["ACCELERATION"].GetUint();
+				s.deceleration_multiplier = obj["DECELERATION_MULTIPLIER"].GetUint();
+				s.acceleration_jerk = obj["ACCELERATION_JERK"].GetUint();
+				s.move_left_direction = obj["MOVE_LEFT_DIRECTION"].GetBool();
 				return s;
 			}
 		};
@@ -168,21 +198,24 @@ namespace PowerFeed
 			uint32_t rapid_speed;
 			bool inch_units;
 
-			boost::json::object to_json() const
+			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 			{
-				boost::json::object obj;
-				obj["NORMAL_SPEED"] = normal_speed;
-				obj["RAPID_SPEED"] = rapid_speed;
-				obj["INCH_UNITS"] = inch_units;
-				return obj;
+				writer.StartObject();
+				writer.String("NORMAL_SPEED");
+				writer.Uint(normal_speed);
+				writer.String("RAPID_SPEED");
+				writer.Uint(rapid_speed);
+				writer.String("INCH_UNITS");
+				writer.Bool(inch_units);
+				writer.EndObject();
 			}
 
-			static SavedSettings from_json(const boost::json::object &obj)
+			static SavedSettings from_json(const rapidjson::Value &obj)
 			{
 				SavedSettings s;
-				s.normal_speed = obj["NORMAL_SPEED"].as_int64();
-				s.rapid_speed = obj["RAPID_SPEED"].as_int64();
-				s.inch_units = obj["INCH_UNITS"].as_bool();
+				s.normal_speed = obj["NORMAL_SPEED"].GetUint();
+				s.rapid_speed = obj["RAPID_SPEED"].GetUint();
+				s.inch_units = obj["INCH_UNITS"].GetBool();
 				return s;
 			}
 		};
@@ -193,26 +226,40 @@ namespace PowerFeed
 		MechanicalParameters mechanical_parameters;
 		SavedSettings saved_settings;
 
-		boost::json::object to_json() const
+		void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
 		{
-			boost::json::object obj;
-			obj["DRIVER_SETTINGS"] = driver.to_json();
-			obj["DISPLAY"] = display.to_json();
-			obj["CONTROLS"] = controls.to_json();
-			obj["MECHANICAL_PARAMETERS"] = mechanical_parameters.to_json();
-			obj["SAVED_SETTINGS"] = saved_settings.to_json();
-			return obj;
+			writer.StartObject();
+			writer.String("DRIVER_SETTINGS");
+			writer.StartObject();
+			driver.to_json(writer);
+			writer.EndObject();
+			writer.String("DISPLAY");
+			writer.StartObject();
+			display.to_json(writer);
+			writer.EndObject();
+			writer.String("CONTROLS");
+			writer.StartObject();
+			controls.to_json(writer);
+			writer.EndObject();
+			writer.String("MECHANICAL_PARAMETERS");
+			writer.StartObject();
+			mechanical_parameters.to_json(writer);
+			writer.EndObject();
+			writer.String("SAVED_SETTINGS");
+			writer.StartObject();
+			saved_settings.to_json(writer);
+			writer.EndObject();
+			writer.EndObject();
 		}
 
-		static Settings from_json(const boost::json::value &json)
+		static Settings from_json(const rapidjson::Document &doc)
 		{
 			Settings s;
-			auto obj = json.as_object();
-			s.driver = DriverSettings::from_json(obj["DRIVER_SETTINGS"].as_object());
-			s.display = DisplaySettings::from_json(obj["DISPLAY"].as_object());
-			s.controls = Controls::from_json(obj["CONTROLS"].as_object());
-			s.mechanical_parameters = MechanicalParameters::from_json(obj["MECHANICAL_PARAMETERS"].as_object());
-			s.saved_settings = SavedSettings::from_json(obj["SAVED_SETTINGS"].as_object());
+			s.driver = DriverSettings::from_json(doc["DRIVER_SETTINGS"]);
+			s.display = DisplaySettings::from_json(doc["DISPLAY"]);
+			s.controls = Controls::from_json(doc["CONTROLS"]);
+			s.mechanical_parameters = MechanicalParameters::from_json(doc["MECHANICAL_PARAMETERS"]);
+			s.saved_settings = SavedSettings::from_json(doc["SAVED_SETTINGS"]);
 			return s;
 		}
 	};
@@ -223,28 +270,27 @@ namespace PowerFeed
 		SettingsManager()
 		{
 			std::string defaultSettingsJson = PicoMill::CONFIG_JSON;
+			rapidjson::Document doc;
+			doc.Parse(defaultSettingsJson.c_str());
+
+			if (doc.HasParseError())
+			{
+				panic("JSON parse error: %u at offset %zu",
+					  doc.GetParseError(),
+					  doc.GetErrorOffset());
+			}
 
 			try
 			{
-				boost::json::value parsed parsed = boost::json::parse(defaultSettingsJson);
-				myDefaultSettings = std::make_shared<Settings>(Settings::from_json(parsed));
-			}
-			catch (const boost::json::system_error &e)
-			{
-				// Handle JSON parsing errors
-				panic("JSON parse error: %s", e.what());
+				myDefaultSettings = std::make_shared<Settings>(Settings::from_json(doc));
 			}
 			catch (const std::exception &e)
 			{
-				// Handle other errors
 				panic("Error loading settings: %s", e.what());
 			}
 		}
-		virtual std::shared_ptr<Settings> Load() = 0;
-		virtual void Save(std::shared_ptr<Settings> settings) = 0;
 
-	protected:
+	private:
 		std::shared_ptr<Settings> myDefaultSettings;
 	};
-
-} // namespace
+}

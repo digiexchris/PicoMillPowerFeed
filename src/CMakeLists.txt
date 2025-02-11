@@ -1,3 +1,5 @@
+set(CMAKE_MINIMUM_REQUIRED_VERSION 3.21)
+
 FILE(GLOB_RECURSE app_sources 
     #main app
     ./src/*.c*
@@ -91,14 +93,22 @@ add_compile_options(
 
 include(FetchContent)
 
-FetchContent_Declare(
-    Boost
-    URL https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.gz
-)
+set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson tests" FORCE)
+set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples" FORCE)
+set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation" FORCE)
 
-set(BOOST_INCLUDE_LIBRARIES json)
-set(BOOST_ENABLE_CMAKE ON)
-FetchContent_MakeAvailable(Boost)
+FetchContent_Declare(
+    rapidjson
+    GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+    GIT_TAG v1.1.0
+)
+FetchContent_GetProperties(rapidjson)
+if(NOT rapidjson_POPULATED)
+    FetchContent_Populate(rapidjson)
+endif()
+
+target_include_directories(PicoApp PRIVATE ${rapidjson_SOURCE_DIR}/include)
+
 
 if (WIN32)
 add_custom_command(TARGET PicoApp POST_BUILD
@@ -132,7 +142,6 @@ hardware_flash
   tinyusb_additions
   tinyusb_board
   tinyusb_device
-  Boost::json
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE
