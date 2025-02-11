@@ -45,7 +45,7 @@
 // int main()
 // {
 // 	display = std::make_shared<::Drivers::PicoSSD1306Display>();
-// 	stepper = std::make_shared<::Drivers::PIOStepper>(::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
+// 	stepper = std::make_shared<::Drivers::PIOStepper>(::Drivers::PIOStepper(DRIVER_STEP_PIN, DRIVER_DIR_PIN, DRIVER_EN_PIN, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
 // 	iTime = std::make_shared<::Time>();
 // 	stepperState = std::make_shared<::StepperState>(stepper, iTime);
 // 	machineState = std::make_shared<::Machine>(display, stepperState);

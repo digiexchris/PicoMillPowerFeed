@@ -27,21 +27,20 @@ namespace PowerFeed::Drivers
 		gpio_pull_up(I2C_MASTER_SDA_IO);
 		gpio_pull_up(I2C_MASTER_SCL_IO);
 
-		sleep_us(250);
-
 		// If you don't do anything before initializing a display pi pico is too fast and starts sending
 		// commands before the screen controller had time to set itself up, so we add an artificial delay for
 		// ssd1306 to set itself up. This gets checked before each write to see if enough time has passed.
-		myInitTime = time_us_64();
+		sleep_us(250);
 
-		// auto display = pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64);
-
-		// Create a new display object at address 0x3D and size of 128x32
+		// Create a new display object at address 0x3D and size of 128x64
 		mySSD1306 = new pico_ssd1306::SSD1306(pico_ssd1306::SSD1306(I2C_MASTER_NUM, SSD1306_ADDRESS, pico_ssd1306::Size::W128xH64));
 
 		// Here we rotate the display by 180 degrees, so that it's not upside down from my perspective
 		// If your screen is upside down try setting it to 1 or 0
-		// myDisplay->setOrientation(0);
+
+#if SSD1306_ROTATE_180_DEGREES
+		myDismySSD1306play->setOrientation(1);
+#endif
 
 		mySSD1306->turnOn();
 	}
@@ -49,6 +48,11 @@ namespace PowerFeed::Drivers
 	void SSD1306Display::WriteBuffer()
 	{
 		mySSD1306->sendBuffer();
+	}
+
+	void SSD1306Display::Refresh()
+	{
+		WriteBuffer();
 	}
 
 	void SSD1306Display::DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y)

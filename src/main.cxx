@@ -19,6 +19,7 @@ extern "C"
 #include "config.h"
 #include "drivers/ConsoleDisplay.hxx"
 #include "drivers/PIOStepper.hxx"
+#include "drivers/SSD1306Display.hxx"
 
 std::shared_ptr<PowerFeed::IStepper> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
@@ -30,6 +31,12 @@ std::shared_ptr<PowerFeed::Machine> machineState;
 std::unique_ptr<PowerFeed::Drivers::Switches> hal;
 
 std::shared_ptr<PowerFeed::Display> display;
+
+#if defined(USE_SSD1306)
+using DISPLAY = PowerFeed::Drivers::SSD1306Display;
+#else
+using DISPLAY = PowerFeed::Drivers::ConsoleDisplay;
+#endif
 
 void stepperUpdateTask(void *pvParameters)
 {
@@ -86,21 +93,13 @@ extern "C" void isr_hardfault(void)
 int main()
 {
 	stdio_init_all();
-	// sleep_ms(2000);
 	printf("Starting PowerFeed\n");
 
-	// // Start scheduler AFTER creating any timers
-	// if (xTimerCreateTimerTask() != pdPASS)
-	// {
-	// 	// Handle timer service task creation failure
-	// 	panic("Could not start timer service\n");
-	// }
-
-	display = std::make_shared<PowerFeed::Drivers::ConsoleDisplay>();
+	display = std::make_shared<DISPLAY>();
 	display->DrawStart();
 	display->WriteBuffer();
 	sleep_ms(500);
-	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(PowerFeed::Drivers::PIOStepper(stepPinStepper, dirPinStepper, enablePinStepper, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, stepsPerMotorRev));
+	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(PowerFeed::Drivers::PIOStepper(DRIVER_STEP_PIN, DRIVER_DIR_PIN, DRIVER_EN_PIN, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, STEPS_PER_MOTOR_REV));
 	iTime = std::make_shared<PowerFeed::Time>();
 	stepperState = std::make_shared<PowerFeed::StepperState>(stepper, iTime);
 	machineState = std::make_shared<PowerFeed::Machine>(display, stepperState);

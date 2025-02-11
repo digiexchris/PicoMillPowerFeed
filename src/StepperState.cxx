@@ -300,13 +300,13 @@ namespace PowerFeed
 			if (myTargetSpeed == 0)
 			{
 
-				if (disableIdleTimeout >= 0)
+				if (DRIVER_DISABLE_TIMEOUT >= 0)
 				{
 
 					if (myStepper->IsEnabled())
 					{
 						const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
-						if (disableIdleTimeout > 0 && myStoppedAt + disableIdleTimeout < currentTime)
+						if (DRIVER_DISABLE_TIMEOUT > 0 && myStoppedAt + DRIVER_DISABLE_TIMEOUT < currentTime)
 						{
 							myStepper->Disable();
 							myStoppedAt = 0;

@@ -64,7 +64,7 @@ namespace PowerFeed::Drivers
 
 	void PIOStepper::DirectionChangedWait()
 	{
-		vTaskDelay(MS_TO_TICKS(STEPPER_DIRECTION_CHANGE_DELAY_MS));
+		vTaskDelay(MS_TO_TICKS(DRIVER_DIRECTION_CHANGE_DELAY_MS));
 	}
 
 	void PIOStepper::WriteToStepper(uint32_t aDelay)
@@ -117,14 +117,14 @@ namespace PowerFeed::Drivers
 
 	void PIOStepper::Enable()
 	{
-		gpio_put(enPin, enableValue);
+		gpio_put(enPin, DRIVER_ENABLE_VALUE);
 		enabled = true;
 		DirectionChangedWait();
 	}
 
 	void PIOStepper::Disable()
 	{
-		gpio_put(enPin, disableValue);
+		gpio_put(enPin, DRIVER_DISABLE_VALUE);
 		enabled = false;
 		DirectionChangedWait();
 	}
@@ -134,7 +134,7 @@ namespace PowerFeed::Drivers
 
 		if (!IsEnabled())
 		{
-			vTaskDelay(MS_TO_TICKS(STEPPER_DIRECTION_CHANGE_DELAY_MS));
+			vTaskDelay(MS_TO_TICKS(DRIVER_DIRECTION_CHANGE_DELAY_MS));
 			return;
 		}
 

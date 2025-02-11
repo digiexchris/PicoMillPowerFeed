@@ -16,6 +16,7 @@ namespace PowerFeed::Drivers
 		void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
 		void ClearBuffer() override;
 		void WriteBuffer() override;
+		void Refresh() override;
 
 	private:
 		void WaitForInit();

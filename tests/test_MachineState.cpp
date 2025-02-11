@@ -30,7 +30,7 @@ protected:
 bool compareCommands(std::shared_ptr<::Command> cmd)
 {
 	auto startCmd = std::static_pointer_cast<::Start>(cmd);
-	return startCmd->direction == leftDir &&
+	return startCmd->direction == MOVE_LEFT_DIRECTION &&
 		   startCmd->speed == 100;
 }
 
@@ -43,7 +43,7 @@ TEST_F(MachineStateTest, Left_Normal_Speed)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == leftDir && startCmd->speed == 100; })))
+		return startCmd->direction == MOVE_LEFT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 
 	// Execute the action after setting up expectations
@@ -61,7 +61,7 @@ TEST_F(MachineStateTest, Right_Normal_Speed)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 100; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 
 	// Execute the action after setting up expectations
@@ -84,7 +84,7 @@ TEST_F(MachineStateTest, Left_Rapid_Speed)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == leftDir && startCmd->speed == 200; })))
+		return startCmd->direction == MOVE_LEFT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
 
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::LEFT_HIGH);
@@ -108,7 +108,7 @@ TEST_F(MachineStateTest, Right_Rapid_Speed)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 200; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
 
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
@@ -125,7 +125,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-			return startCmd->direction == rightDir && startCmd->speed == 100; })))
+			return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
@@ -174,7 +174,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 100; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
@@ -203,7 +203,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 100; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
@@ -255,7 +255,7 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 100; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
@@ -291,7 +291,7 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*stepperState, ProcessCommand(::testing::Truly([](std::shared_ptr<::Command> cmd)
 															   {
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
-		return startCmd->direction == rightDir && startCmd->speed == 200; })))
+		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
 	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);

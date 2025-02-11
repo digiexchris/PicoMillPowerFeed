@@ -37,7 +37,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(leftDir, myRapidSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_LEFT_DIRECTION, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -45,7 +45,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(leftDir, myNormalSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_LEFT_DIRECTION, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -64,7 +64,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(rightDir, myRapidSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_RIGHT_DIRECTION, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -72,7 +72,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(rightDir, myNormalSpeed);
+					std::shared_ptr<Command> command = std::make_shared<Start>(MOVE_RIGHT_DIRECTION, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
