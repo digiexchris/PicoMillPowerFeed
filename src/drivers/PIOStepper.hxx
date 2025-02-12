@@ -1,7 +1,9 @@
 #pragma once
 
+#include "Settings.hxx"
 #include "Stepper.hxx"
 #include "hardware/pio.h" // Include the header file that defines PIO
+#include <memory>
 
 namespace PowerFeed::Drivers
 {
@@ -11,15 +13,11 @@ namespace PowerFeed::Drivers
 		/**
 		 * @brief Construct a new Stepper object
 		 *
-		 * @param stepPin The GPIO pin number for the step signal
-		 * @param dirPin The GPIO pin number for the direction signal
-		 * @param enPin The GPIO pin number for the enable signal
-		 * @param targetSpeed The initial target speed in steps per second
-		 * @param acceleration The acceleration in steps per second squared
 		 * @param pio The PIO instance to use
 		 * @param sm The PIO state machine to use
 		 */
-		PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, PIO pio, uint sm, uint16_t stepsPerRev);
+
+		PIOStepper(std::shared_ptr<SettingsManager> aSettings, PIO pio, uint sm);
 
 		void SetDirection(bool direction) override;
 		bool GetDirection() override;
@@ -43,9 +41,7 @@ namespace PowerFeed::Drivers
 
 		bool HandleDirection();
 
-		uint stepPin;
-		uint dirPin;
-		uint enPin;
+		std::shared_ptr<SettingsManager> mySettingsManager;
 
 		bool enabled = false;
 

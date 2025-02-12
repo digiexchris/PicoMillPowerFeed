@@ -1,5 +1,7 @@
+#include "Helpers.hxx"
 #include "MachineState.hxx"
-#include "bsp/board_api.h"
+#include "Settings.hxx"
+// #include "bsp/board_api.h" //todo TINYUSB
 #include "drivers/Switches.hxx"
 #include <iostream>
 #include <memory>
@@ -22,6 +24,7 @@ extern "C"
 #include "drivers/PIOStepper.hxx"
 #include "drivers/SSD1306Display.hxx"
 
+std::shared_ptr<PowerFeed::SettingsManager> settingsManager;
 std::shared_ptr<PowerFeed::IStepper> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
 
@@ -33,24 +36,24 @@ std::unique_ptr<PowerFeed::Drivers::Switches> hal;
 
 std::shared_ptr<PowerFeed::Display> display;
 
-#if defined(USE_SSD1306)
-using DISPLAY = PowerFeed::Drivers::SSD1306Display;
-#else
-using DISPLAY = PowerFeed::Drivers::ConsoleDisplay;
-#endif
-
 void stepperUpdateTask(void *pvParameters)
 {
 	while (true)
 	{
 		stepperState->Run();
+		vTaskDelay(MS_TO_TICKS(20));
 		taskYIELD();
 	}
 }
 
 void createStepperTask()
 {
-	xTaskCreate(stepperUpdateTask, "Stepper Task", 2048, NULL, 10, NULL);
+	auto result = xTaskCreate(stepperUpdateTask, "Stepper Task", 2048, NULL, 13, NULL);
+
+	if (result != pdPASS)
+	{
+		panic("Main: Failed to create stepper task\n");
+	}
 }
 
 // Forward declaration of the HardFault_Handler
@@ -91,24 +94,45 @@ extern "C" void isr_hardfault(void)
 		"B PrintStackTrace \n");
 }
 
+using namespace PowerFeed;
+using namespace PowerFeed::Drivers;
+
 int main()
 {
-	board_init();
+	// board_init(); //todo TINYUSB
 	stdio_init_all();
 	printf("Starting PowerFeed\n");
 
-	display = std::make_shared<DISPLAY>();
+	settingsManager = std::make_shared<SettingsManager>();
+	auto settings = settingsManager->Load();
+
+	if (settings == nullptr)
+	{
+		panic("Main: Failed to load settings\n");
+		return 1;
+	}
+
+	if (settings->display.useSsd1306)
+	{
+		display = std::make_shared<SSD1306Display>(settingsManager);
+	}
+	else
+	{
+		display = std::make_shared<Drivers::ConsoleDisplay>(settingsManager);
+	}
+
 	display->DrawStart();
 	display->WriteBuffer();
 	sleep_ms(500);
-	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(PowerFeed::Drivers::PIOStepper(DRIVER_STEP_PIN, DRIVER_DIR_PIN, DRIVER_EN_PIN, maxStepsPerSecond, ACCELERATION, DECELERATION_MULTIPLIER, pio0, 0, STEPS_PER_MOTOR_REV));
+
+	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(settingsManager, pio0, 0);
 	iTime = std::make_shared<PowerFeed::Time>();
-	stepperState = std::make_shared<PowerFeed::StepperState>(stepper, iTime);
-	machineState = std::make_shared<PowerFeed::Machine>(display, stepperState);
+	stepperState = std::make_shared<PowerFeed::StepperState>(settingsManager, stepper, iTime);
+	machineState = std::make_shared<PowerFeed::Machine>(settingsManager, display, stepperState);
 
 	// todo: load saved units and speed from eeprom
 
-	hal = std::make_unique<PowerFeed::Drivers::Switches>(machineState);
+	hal = std::make_unique<PowerFeed::Drivers::Switches>(settingsManager, machineState);
 
 	hal->Start();
 

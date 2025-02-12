@@ -39,7 +39,7 @@
             //     }
             //   ]
             // },
-            "rtos": "FreeRTOS",
+            "rtos": "auto",
             "device": "RP2040",
             "configFiles": [
               "interface/cmsis-dap.cfg",

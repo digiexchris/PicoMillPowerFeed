@@ -66,6 +66,11 @@ namespace PowerFeed
 		auto myTargetSpeed = myStepper->GetTargetSpeed();
 		auto myTargetDirection = myStepper->GetTargetDirection();
 
+		if (!myStepper->IsEnabled())
+		{
+			myStepper->Enable();
+		}
+
 		switch (myState)
 		{
 		case States::ACCELERATING:

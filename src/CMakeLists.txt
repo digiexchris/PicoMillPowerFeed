@@ -55,11 +55,11 @@ ${app_sources}
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
   PICO_PLATFORM=${PICO_PLATFORM_VALUE}
-  mainRUN_FREE_RTOS_ON_CORE=1
+  mainRUN_FREE_RTOS_ON_CORE=0
   # PICO_STACK_SIZE=0x1000
 )
 
-# target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="Usb/tusb_config.h")
+# target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="tusb_config.h")
 
 add_compile_options(
     ### Common Options
@@ -74,9 +74,11 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-variable>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-parameter>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-type-limits>
-    
+    $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-deprecated-declarations>
     ### C++ Specific
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-volatile>
+    $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wno-deprecated-declarations>
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-deprecated-declarations>
 )
 
 
@@ -99,19 +101,17 @@ pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
 
 add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
-# add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico/src no-OS-FatFS-SDIO-SPI-RPi-Pico)
+
 target_link_libraries(PicoApp
 pico_ssd1306
 pico_multicore
-# you will also need hardware i2c library for communication with the display
 hardware_i2c
-# no-OS-FatFS-SD-SDIO-SPI-RPi-Pico
 hardware_flash
   hardware_sync
   littlefs
-  tinyusb_additions
-  tinyusb_board
-  tinyusb_device
+  # tinyusb_additions
+  # tinyusb_board
+  # tinyusb_device
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE
@@ -119,11 +119,10 @@ target_include_directories(PicoApp PRIVATE
         ${header_dir_list}
         ${CMAKE_CURRENT_SOURCE_DIR})
 
-# add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
-
 target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
-# target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb )
 pico_add_extra_outputs(PicoApp)
+
+include_directories(PUBLIC ${rapidjson_SOURCE_DIR}/include)
 
 add_custom_command(
   OUTPUT ${CMAKE_SOURCE_DIR}/src/compile_commands.json

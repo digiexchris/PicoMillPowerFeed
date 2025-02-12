@@ -5,6 +5,46 @@ message(STATUS "BUILD_PICO_APP is ${BUILD_PICO_APP}")
 option(BUILD_PICO_APP "Build the Pico application" ON)
 option(BUILD_TESTS "Build the tests" OFF)
 
+
+include(FetchContent)
+
+set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson tests" FORCE)
+set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples" FORCE)
+set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation" FORCE)
+
+FetchContent_Declare(
+  rapidjson
+  GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+  GIT_TAG v1.1.0
+)
+FetchContent_GetProperties(rapidjson)
+if(NOT rapidjson_POPULATED)
+  FetchContent_Populate(rapidjson)
+endif()
+
+# Create an interface target for rapidjson
+add_library(rapidjson INTERFACE)
+target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
+
+# Disable -Wambiguous-reversed-operator for rapidjson
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  target_compile_options(rapidjson INTERFACE -Wno-ambiguous-reversed-operator)
+endif()
+
+
+# Read the JSON file content
+file(READ "${CMAKE_SOURCE_DIR}/config.json" CONFIG_CONTENT)
+
+# Configure the header template
+configure_file(
+    "${CMAKE_SOURCE_DIR}/src/config.h.in"
+    "${CMAKE_BINARY_DIR}/include/config.h"
+    @ONLY
+)
+
+# Add include directory
+include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
+
 if(BUILD_PICO_APP)
 
   include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)

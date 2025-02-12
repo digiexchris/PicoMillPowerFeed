@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": []
+        },
+        {
+            "name": "RP2040",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gcc",
+            "intelliSenseMode": "linux-gcc-arm",
+            "cStandard": "c99",
+            "cppStandard": "c++20",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}

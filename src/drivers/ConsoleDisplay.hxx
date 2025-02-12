@@ -8,7 +8,7 @@ namespace PowerFeed::Drivers
 	class ConsoleDisplay : public Display
 	{
 	public:
-		ConsoleDisplay();
+		ConsoleDisplay(std::shared_ptr<SettingsManager> aSettings);
 		virtual void ClearBuffer() override;
 		virtual void WriteBuffer() override;
 

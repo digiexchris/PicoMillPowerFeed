@@ -2,6 +2,7 @@
 #include "Switches.hxx"
 #include "Helpers.hxx"
 #include "MachineState.hxx"
+#include "Settings.hxx"
 #include "StepperState.hxx"
 #include "config.h"
 #include "portmacro.h"
@@ -21,44 +22,57 @@ namespace PowerFeed::Drivers
 {
 	std::shared_ptr<Switches> Switches::myInstance;
 
-	Switches::Switches(std::shared_ptr<Machine> aMachineState)
+	Switches::Switches(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Machine> aMachineState) : mySettingsManager(aSettings), myMachine(aMachineState)
 	{
-		myMachine = aMachineState;
 
+		PIN_STATES[0] = {mySettingsManager->Get()->controls.leftPin, DeviceState::LEFT_HIGH, DeviceState::LEFT_LOW};
+		PIN_STATES[1] = {mySettingsManager->Get()->controls.rightPin, DeviceState::RIGHT_HIGH, DeviceState::RIGHT_LOW};
+		PIN_STATES[2] = {mySettingsManager->Get()->controls.rapidPin, DeviceState::RAPID_HIGH, DeviceState::RAPID_LOW};
 		Switches::myInstance = std::shared_ptr<Switches>(this);
 
-		myGPIOEventQueue = xQueueCreate(1, sizeof(uint32_t));
+		myGPIOEventQueue = xQueueCreate(10, sizeof(uint32_t));
+
+		Settings::Controls controls = mySettingsManager->Get()->controls;
+
+		if (controls.encoderBPin != controls.encoderAPin + 1)
+		{
+			panic("Switches: Encoder pins must be adjacent");
+		}
 
 		// Configure GPIO pins as inputs with pull-ups
-		gpio_init(LEFTPIN);
-		gpio_init(RIGHTPIN);
-		gpio_init(RAPIDPIN);
-		gpio_init(ENCODER_A_PIN);
-		gpio_init(ENCODER_B_PIN);
-		gpio_init(ENCODER_BUTTON_PIN);
+		gpio_init(controls.leftPin);
+		gpio_init(controls.rightPin);
+		gpio_init(controls.rapidPin);
+		gpio_init(controls.encoderAPin);
+		gpio_init(controls.encoderBPin);
+		gpio_init(controls.encoderButtonPin);
 
-		gpio_set_dir(LEFTPIN, GPIO_IN);
-		gpio_set_dir(RIGHTPIN, GPIO_IN);
-		gpio_set_dir(RAPIDPIN, GPIO_IN);
-		gpio_set_dir(ENCODER_A_PIN, GPIO_IN);
-		gpio_set_dir(ENCODER_B_PIN, GPIO_IN);
-		gpio_set_dir(ENCODER_BUTTON_PIN, GPIO_IN);
+		gpio_set_dir(controls.leftPin, GPIO_IN);
+		gpio_set_dir(controls.rightPin, GPIO_IN);
+		gpio_set_dir(controls.rapidPin, GPIO_IN);
+		gpio_set_dir(controls.encoderAPin, GPIO_IN);
+		gpio_set_dir(controls.encoderBPin, GPIO_IN);
+		gpio_set_dir(controls.encoderButtonPin, GPIO_IN);
 
-		gpio_pull_up(LEFTPIN);
-		gpio_pull_up(RIGHTPIN);
-		gpio_pull_up(RAPIDPIN);
-		gpio_pull_up(ENCODER_A_PIN);
-		gpio_pull_up(ENCODER_B_PIN);
-		gpio_pull_up(ENCODER_BUTTON_PIN);
+		gpio_pull_up(controls.leftPin);
+		gpio_pull_up(controls.rightPin);
+		gpio_pull_up(controls.rapidPin);
+		gpio_pull_up(controls.encoderAPin);
+		gpio_pull_up(controls.encoderBPin);
+		gpio_pull_up(controls.encoderButtonPin);
 
 		// we don't really need to keep the offset, as this program must be loaded
 		// at offset 0
 		pio_add_program(myEncPio, &quadrature_encoder_program);
-		quadrature_encoder_program_init(myEncPio, myEncSm, ENCODER_A_PIN, 13300);
+		quadrature_encoder_program_init(myEncPio, myEncSm, controls.encoderAPin, 13300);
 	}
 
 	void Switches::Start()
 	{
+		assert(mySettingsManager != nullptr);
+
+		Settings::Controls controls = mySettingsManager->Get()->controls;
+
 		// Start the encoder update task
 		xTaskCreate(EncoderUpdateTask, "Encoder Task", 2048, NULL, 10, NULL);
 
@@ -66,10 +80,10 @@ namespace PowerFeed::Drivers
 		xTaskCreate(SwitchUpdateTask, "Switch Task", 2048, &myInstance, 10, NULL);
 
 		// Set up GPIO interrupts
-		gpio_set_irq_enabled_with_callback(LEFTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(RIGHTPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(RAPIDPIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(ENCODER_BUTTON_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.leftPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.rightPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.rapidPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.encoderButtonPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 
 		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 	}
@@ -88,6 +102,8 @@ namespace PowerFeed::Drivers
 	{
 		auto instance = *static_cast<std::shared_ptr<Switches> *>(anInstance);
 
+		Settings::Controls controls = instance->mySettingsManager->Get()->controls;
+
 		while (true)
 		{
 			// blocks until it gets a gpio event
@@ -96,20 +112,20 @@ namespace PowerFeed::Drivers
 
 			auto currentTime = time_us_32();
 
-			for (size_t i = 0; i < sizeof(PIN_STATES) / sizeof(PIN_STATES[0]); i++)
+			for (size_t i = 0; i < sizeof(instance->PIN_STATES) / sizeof(instance->PIN_STATES[0]); i++)
 			{
-				if (gpio == PIN_STATES[i].pin)
+				if (gpio == instance->PIN_STATES[i].pin)
 				{
 
 					// Check debounce window
-					if (currentTime - instance->myLastPinTimes[i] < DEBOUNCE_DELAY_US)
+					if (currentTime - instance->myLastPinTimes[i] < controls.debounceDelayUs)
 					{
 						return;
 					}
 
 					bool pinHigh = !gpio_get(gpio); // switches are active-low
 					auto stateChange = std::make_shared<StateChange>(
-						pinHigh ? PIN_STATES[i].highState : PIN_STATES[i].lowState);
+						pinHigh ? instance->PIN_STATES[i].highState : instance->PIN_STATES[i].lowState);
 
 					instance->myMachine->OnValueChange(stateChange);
 
@@ -118,15 +134,15 @@ namespace PowerFeed::Drivers
 				}
 			}
 
-			if (gpio == ENCODER_BUTTON_PIN)
+			if (gpio == controls.encoderButtonPin)
 			{
-				if (currentTime - instance->myEncoderButtonLastTime < DEBOUNCE_DELAY_US)
+				if (currentTime - instance->myEncoderButtonLastTime < controls.debounceDelayUs)
 				{
 					return;
 				}
 
 				bool pinHigh = !gpio_get(gpio);
-				if (!pinHigh && (currentTime - instance->myEncoderButtonLastTime > UNITS_SWITCH_DELAY_MS * 1000))
+				if (!pinHigh && (currentTime - instance->myEncoderButtonLastTime > controls.unitsSwitchDelayMs * 1000))
 				{
 					BaseType_t woken = false;
 					auto stateChange = std::make_shared<StateChange>(DeviceState::UNITS_TOGGLE);
@@ -135,6 +151,7 @@ namespace PowerFeed::Drivers
 				}
 				instance->myEncoderButtonLastTime = currentTime;
 			}
+			taskYIELD();
 		}
 	}
 
@@ -165,7 +182,7 @@ namespace PowerFeed::Drivers
 				auto stateChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, delta);
 				instance->myMachine->OnValueChange(stateChange);
 			}
-			sleep_ms(100);
+			vTaskDelay(MS_TO_TICKS(100));
 		}
 	}
 } // namespace PowerFeed::Drivers

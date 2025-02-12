@@ -17,23 +17,22 @@
 
 namespace PowerFeed::Drivers
 {
-
-	PIOStepper::PIOStepper(uint stepPin, uint dirPin, uint enPin, uint32_t maxSpeed, uint32_t acceleration, uint32_t decelerationMultiplier, PIO pio, uint sm, uint16_t stepsPerRev)
-		: stepPin(stepPin), dirPin(dirPin), enPin(enPin), myAcceleration(acceleration), myDecelerationMultiplier(decelerationMultiplier), pio(pio), sm(sm), myStepsPerRev(stepsPerRev) //, IStepper(maxSpeed, acceleration)
+	PIOStepper::PIOStepper(std::shared_ptr<SettingsManager> aSettings, PIO pio, uint sm) : mySettingsManager(aSettings)
 	{
-		gpio_init(dirPin);
-		gpio_set_dir(dirPin, GPIO_OUT);
-		gpio_init(enPin);
-		gpio_set_dir(enPin, GPIO_OUT);
+
+		Settings::Driver driver = mySettingsManager->Get()->driver;
+		gpio_init(driver.driverDirPin);
+		gpio_set_dir(driver.driverDirPin, GPIO_OUT);
+		gpio_init(driver.driverEnPin);
+		gpio_set_dir(driver.driverEnPin, GPIO_OUT);
 		uint offset = pio_add_program(pio, (const pio_program_t *)&simplestepper_program);
 		pio_sm_config c = simplestepper_program_get_default_config(offset);
-		sm_config_set_sideset_pins(&c, stepPin);				   // Configure the step pin for side-set operations
-		sm_config_set_set_pins(&c, stepPin, 1);					   // Configure the step pin for set operations
-		pio_gpio_init(pio, stepPin);							   // Initialize the GPIO pin
-		pio_sm_set_consecutive_pindirs(pio, sm, stepPin, 1, true); // Set the GPIO direction to output
+		sm_config_set_sideset_pins(&c, driver.driverStepPin);					// Configure the step pin for side-set operations
+		sm_config_set_set_pins(&c, driver.driverStepPin, 1);					// Configure the step pin for set operations
+		pio_gpio_init(pio, driver.driverStepPin);								// Initialize the GPIO pin
+		pio_sm_set_consecutive_pindirs(pio, sm, driver.driverStepPin, 1, true); // Set the GPIO direction to output
 
-		// Calculate the clock divider for 200 steps per second
-		float clockDiv = 125;				// 200 steps per second, each step has 2 phases (high and low)
+		float clockDiv = 125;
 		sm_config_set_clkdiv(&c, clockDiv); // Set the clock divider
 
 		pio_sm_init(pio, sm, offset, &c);  // Initialize the state machine
@@ -44,7 +43,9 @@ namespace PowerFeed::Drivers
 	{
 		Disable();
 
-		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 9, NULL);
+		xTaskCreate(PIOStepperUpdateStepperTask, "Stepper Task", 2048, this, 15, NULL);
+
+		Enable();
 	}
 
 	void PIOStepper::SetAcceleration(uint32_t acceleration)
@@ -64,11 +65,12 @@ namespace PowerFeed::Drivers
 
 	void PIOStepper::DirectionChangedWait()
 	{
-		vTaskDelay(MS_TO_TICKS(DRIVER_DIRECTION_CHANGE_DELAY_MS));
+		vTaskDelay(MS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
 	}
 
 	void PIOStepper::WriteToStepper(uint32_t aDelay)
 	{
+		// todo since this is speed based instead of position based, we should just update the delay, and have the pio program loop with the current delay until changed.
 		int stepsToAdd = 4; // Add up to 4 steps at a time
 		while (!pio_sm_is_tx_fifo_full(pio, sm) && stepsToAdd > 0)
 		{
@@ -117,14 +119,14 @@ namespace PowerFeed::Drivers
 
 	void PIOStepper::Enable()
 	{
-		gpio_put(enPin, DRIVER_ENABLE_VALUE);
+		gpio_put(mySettingsManager->Get()->driver.driverEnPin, mySettingsManager->Get()->driver.driverEnableValue);
 		enabled = true;
 		DirectionChangedWait();
 	}
 
 	void PIOStepper::Disable()
 	{
-		gpio_put(enPin, DRIVER_DISABLE_VALUE);
+		gpio_put(mySettingsManager->Get()->driver.driverEnPin, mySettingsManager->Get()->driver.driverDisableValue);
 		enabled = false;
 		DirectionChangedWait();
 	}
@@ -134,11 +136,19 @@ namespace PowerFeed::Drivers
 
 		if (!IsEnabled())
 		{
-			vTaskDelay(MS_TO_TICKS(DRIVER_DIRECTION_CHANGE_DELAY_MS));
+			vTaskDelay(MS_TO_TICKS(400));
 			return;
 		}
 
-		uint32_t delay = std::floor(1.0 / ((myCurrentSpeed ? myCurrentSpeed : ACCELERATION_JERK) / 1000000.0));
+		uint32_t delay = 0;
+		uint32_t speed = myCurrentSpeed;
+
+		if (myCurrentSpeed == 0)
+		{
+			speed = mySettingsManager->Get()->mechanical.accelerationJerk;
+		}
+
+		delay = std::floor(1.0 / (speed / 1000000.0));
 
 		if (myDirection != myTargetDirection)
 		{
@@ -148,7 +158,7 @@ namespace PowerFeed::Drivers
 			}
 			else
 			{
-				gpio_put(dirPin, myTargetDirection);
+				gpio_put(mySettingsManager->Get()->driver.driverDirPin, myTargetDirection);
 				myDirection = myTargetDirection;
 				DirectionChangedWait();
 				return;
@@ -176,6 +186,7 @@ namespace PowerFeed::Drivers
 		while (true)
 		{
 			stepper->Update();
+			vTaskDelay(MS_TO_TICKS(5));
 		}
 	}
 

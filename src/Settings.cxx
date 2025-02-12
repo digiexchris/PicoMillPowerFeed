@@ -45,6 +45,8 @@ namespace PowerFeed
 		writer.Bool(useSsd1306);
 		writer.String("SSD1306_ADDRESS");
 		writer.Uint(ssd1306Address);
+		writer.String("SSD1306_ROTATE_180");
+		writer.Bool(ssd1306Rotate180);
 		writer.String("I2C_MASTER_SDA_IO");
 		writer.Uint(i2cMasterSdaIo);
 		writer.String("I2C_MASTER_SCL_IO");
@@ -59,6 +61,7 @@ namespace PowerFeed
 		Display s;
 		s.useSsd1306 = obj["USE_SSD1306"].GetBool();
 		s.ssd1306Address = obj["SSD1306_ADDRESS"].GetUint();
+		s.ssd1306Rotate180 = obj["SSD1306_ROTATE_180"].GetBool();
 		s.i2cMasterSdaIo = obj["I2C_MASTER_SDA_IO"].GetUint();
 		s.i2cMasterSclIo = obj["I2C_MASTER_SCL_IO"].GetUint();
 		s.i2cMasterNum = obj["I2C_MASTER_NUM"].GetUint();
@@ -215,7 +218,6 @@ namespace PowerFeed
 
 	SettingsManager::SettingsManager()
 	{
-		Load();
 	}
 
 	std::shared_ptr<Settings> SettingsManager::GetDefaultSettings()

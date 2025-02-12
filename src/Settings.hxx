@@ -32,6 +32,7 @@ namespace PowerFeed
 			uint8_t i2cMasterSdaIo;
 			uint8_t i2cMasterSclIo;
 			uint8_t i2cMasterNum;
+			bool ssd1306Rotate180;
 
 			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
 			static Display from_json(const rapidjson::Value &obj);

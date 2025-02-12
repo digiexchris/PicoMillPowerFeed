@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../MachineState.hxx"
+#include "Settings.hxx"
 #include "config.h"
 #include <FreeRTOS.h>
 #include <cstdint>
@@ -23,9 +24,8 @@ namespace PowerFeed::Drivers
 	class Switches
 	{
 	public:
-		Switches(std::shared_ptr<Machine> aMachineState);
+		Switches(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Machine> aMachineState);
 
-		// start the task that polls the ADC values
 		static std::shared_ptr<Switches> GetInstance();
 
 		void Start();
@@ -33,6 +33,8 @@ namespace PowerFeed::Drivers
 	private:
 		static std::shared_ptr<Switches> myInstance;
 		std::shared_ptr<Machine> myMachine;
+		std::shared_ptr<SettingsManager> mySettingsManager;
+
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);
 		static void EncoderUpdateTask(void *instance);
 		static void SwitchUpdateTask(void *instance);
@@ -43,11 +45,7 @@ namespace PowerFeed::Drivers
 		const uint myEncSm = 0;
 		QueueHandle_t myGPIOEventQueue;
 
-		static constexpr PinStateMapping PIN_STATES[] = {
-			{LEFTPIN, DeviceState::LEFT_HIGH, DeviceState::LEFT_LOW},
-			{RIGHTPIN, DeviceState::RIGHT_HIGH, DeviceState::RIGHT_LOW},
-			{RAPIDPIN, DeviceState::RAPID_HIGH, DeviceState::RAPID_LOW},
-			{ACCELERATION_PIN, DeviceState::ACCELERATION_HIGH, DeviceState::ACCELERATION_LOW}};
+		PinStateMapping PIN_STATES[3];
 
 		std::array<uint32_t, sizeof(PIN_STATES) / sizeof(PIN_STATES[0])> myLastPinTimes = {0};
 
