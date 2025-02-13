@@ -1,0 +1,160 @@
+.program simple_stepper
+.side_set 1 opt                    ; Use sideset for step pin
+
+public start:                      ; Public label for restarting
+    pull block                    ; Get initial period
+    mov x, osr                    ; Save period to x
+.wrap_target
+    mov y, x                      ; Load period into counter
+count_loop:
+    jmp y--, count_loop          ; Count for period duration
+    nop             side 1       ; Step pin high
+    nop             side 0       ; Step pin low
+.wrap                            ; Repeat forever
+
+% c-sdk {
+#pragma once
+// Initialize with 200 steps/rotation and 1000 steps/s² acceleration
+//simple_stepper_init(pio, sm, offset, STEP_PIN, 125.0f, 200, 1000);
+
+// Start and accelerate to 100Hz
+//simple_stepper_start(pio, sm, offset, 100.0f);
+
+// Call this periodically to handle acceleration
+//simple_stepper_step(pio, sm);
+
+#include "hardware/gpio.h"
+#include "hardware/clocks.h"
+#include <cmath>
+
+// Store configuration and state
+static uint32_t _sys_clk;
+static float _configured_div;
+static int _steps_per_rotation;
+static int32_t _acceleration;
+static uint32_t _current_period;
+static float _target_hz;          // Added target speed storage
+static constexpr double PI = 3.14159265358979323846;
+
+static inline void simple_stepper_init(PIO pio, uint sm, uint offset, uint step_pin, 
+                                     float div, int steps_per_rotation, int32_t acceleration) {
+    pio_sm_config c = simple_stepper_program_get_default_config(offset);
+    
+    // Store configuration
+    _sys_clk = clock_get_hz(clk_sys);
+    _configured_div = div;
+    _steps_per_rotation = steps_per_rotation;
+    _acceleration = acceleration;
+    _current_period = 0;  // Will be set in start()
+    _target_hz = 0;      // Will be set in start()
+    
+    // Setup step pin
+    pio_gpio_init(pio, step_pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, step_pin, 1, true);
+    
+    // Configure sideset
+    sm_config_set_sideset_pins(&c, step_pin);
+    
+    // Set clock divider
+    sm_config_set_clkdiv(&c, div);
+    
+    // Load configuration
+    pio_sm_init(pio, sm, offset, &c);
+}
+
+static inline int32_t _calculate_next_period(uint32_t current_period) {
+    if (current_period <= 0) {
+        // First interval calculation
+        double alpha = 2 * PI / _steps_per_rotation;
+        if (_acceleration <= 0) return 0;  // Prevent divide by zero
+        return (_sys_clk / _configured_div) * std::sqrt(2 * alpha / _acceleration);
+    }
+
+    // Calculate current speed in Hz (protect against divide by zero)
+    if (current_period == 0) return 0;
+    double current_hz = (_sys_clk / _configured_div) / (2.0 * current_period);
+    
+    // Determine if we need to accelerate or decelerate
+    if (current_hz > _target_hz) {
+        // Need to decelerate - increase period
+        double alpha = 2 * PI / _steps_per_rotation;
+        double current_interval = current_period * _configured_div / _sys_clk;
+        double rads_per_second_squared = _acceleration * alpha;
+        
+        if (alpha == 0) return current_period;  // Prevent divide by zero
+        
+        double next_interval = current_interval + 
+            (2 * current_interval * current_interval * rads_per_second_squared) / alpha;
+            
+        // Check if we're stopping and would go below zero Hz
+        if (_target_hz == 0) {
+            if (next_interval <= 0) return current_period;  // Prevent divide by zero
+            double next_hz = _sys_clk / (_configured_div * next_interval * 2.0);
+            if (next_hz <= 0) {
+                _is_running = false;
+                return 0;
+            }
+        }
+        
+        return (_sys_clk / _configured_div) * next_interval;
+    } else if (current_hz < _target_hz) {
+        // Need to accelerate - decrease period
+        double alpha = 2 * PI / _steps_per_rotation;
+        if (alpha == 0) return current_period;  // Prevent divide by zero
+        
+        double current_interval = current_period * _configured_div / _sys_clk;
+        double rads_per_second_squared = _acceleration * alpha;
+        
+        double next_interval = current_interval - 
+            (2 * current_interval * current_interval * rads_per_second_squared) / alpha;
+            
+        return (_sys_clk / _configured_div) * next_interval;
+    }
+    
+    // At target speed - maintain current period
+    return current_period;
+}
+
+static inline void simple_stepper_start(PIO pio, uint sm, uint offset, float target_hz) {
+    _target_hz = target_hz;
+    
+    if (!_is_running) {
+        // Only do first-time initialization if not running
+        _current_period = _sys_clk / (_configured_div * 1.0 * 2);  // Start at 1Hz
+        pio_sm_put_blocking(pio, sm, _current_period);
+        pio_sm_exec(pio, sm, pio_encode_jmp(offset + simple_stepper_offset_start));
+        pio_sm_set_enabled(pio, sm, true);
+        _is_running = true;
+    }
+
+static inline void simple_stepper_stop(PIO pio, uint sm, uint step_pin) {
+    pio_sm_set_enabled(pio, sm, false);
+    gpio_put(step_pin, 0);
+    _is_running = false;
+}
+
+//returns true if stepper continues to run
+//returns false if stepper has stopped
+static inline bool simple_stepper_step(PIO pio, uint sm, uint step_pin) {
+    int32_t next_period = _calculate_next_period(_current_period);
+    
+    if (next_period <= 0 && _is_running) {
+        pio_sm_set_enabled(pio, sm, false);  // First disable SM
+        gpio_put(step_pin, 0);               // Then set pin low
+        _is_running = false;                 // Finally update state
+        return false;                              // Exit without updating period
+    }
+    
+    // Only update if running and period changed
+    if (_is_running && next_period != _current_period) {
+        pio_sm_put_blocking(pio, sm, next_period);
+        _current_period = next_period;
+    }
+
+    if(!_is_running) {
+        return false;
+    }
+
+    return true;
+}
+%}

@@ -181,10 +181,11 @@ add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
 target_link_libraries(PicoApp
 pico_ssd1306
 pico_multicore
+pico_async
 hardware_i2c
 hardware_flash
 hardware_pio
-  hardware_sync
+hardware_sync
   littlefs
   # tinyusb_additions
   # tinyusb_board

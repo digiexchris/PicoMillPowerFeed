@@ -24,7 +24,7 @@ extern "C"
 #include "drivers/ConsoleDisplay.hxx"
 #include "drivers/PIOStepper.hxx"
 #include "drivers/SSD1306Display.hxx"
-
+#include <pico/async_context.h>
 std::shared_ptr<PowerFeed::SettingsManager> settingsManager;
 std::shared_ptr<PowerFeed::IStepper> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
@@ -49,6 +49,7 @@ void stepperUpdateTask(void *pvParameters)
 
 void createStepperTask()
 {
+	
 	auto result = xTaskCreate(stepperUpdateTask, "Stepper Task", 2048, NULL, 13, NULL);
 
 	if (result != pdPASS)
