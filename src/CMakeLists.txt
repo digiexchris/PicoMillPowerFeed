@@ -1,24 +1,47 @@
-set(CMAKE_MINIMUM_REQUIRED_VERSION 3.21)
+cmake_minimum_required(VERSION 3.21)
 
-FILE(GLOB_RECURSE app_sources 
-    #main app
-    ./src/*.c*
-    )
 
-option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
-set(PICO_PLATFORM ${PICO_PLATFORM_VALUE} CACHE STRING "PICO_PLATFORM" FORCE)
-message(STATUS "PICO_PLATFORM: ${PICO_PLATFORM}")
-set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
-set(FAMILY "rp2040")
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.1.0)
+set(toolchainVersion 13_3_Rel1)
+set(picotoolVersion 2.1.0)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
+
+set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/FreeRTOS-Kernel)
+# option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
+# set(PICO_PLATFORM ${PICO_PLATFORM_VALUE} "rp2040")
+# message(STATUS "PICO_PLATFORM: ${PICO_PLATFORM}")
+# set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
+# set(FAMILY "rp2040")
+
+# Enable exception handling
+set(PICO_CXX_ENABLE_EXCEPTIONS 1)
+set(PICO_CXX_ENABLE_RTTI 1)
 
 # Disable auto-installing picotool
-set(PICO_SDK_FETCH_FROM_GIT_AUTO OFF)
+# set(PICO_SDK_FETCH_FROM_GIT_AUTO OFF)
 set(FREERTOS_PORT "GCC_RP2040" CACHE STRING "" FORCE)
+set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
 add_library(freertos_config INTERFACE)
 target_include_directories(freertos_config SYSTEM
 INTERFACE
-${CMAKE_CURRENT_LIST_DIR}
+./
 )
+target_compile_definitions(freertos_config
+INTERFACE
+    projCOVERAGE_TEST=0
+)
+
+
 
 add_library(littlefs INTERFACE)
 target_sources(littlefs INTERFACE
@@ -31,21 +54,86 @@ ${CMAKE_HOME_DIRECTORY}/lib/littlefs
 target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
 target_link_libraries(littlefs INTERFACE hardware_flash)
 
-target_compile_definitions(freertos_config
-INTERFACE
-    projCOVERAGE_TEST=0
-)
-set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
+
 
 # message( STATUS "FREERTOS_KERNEL_PATH: ${FREERTOS_KERNEL_PATH}" )
 
-FILE(GLOB_RECURSE app_sources 
+set(app_sources 
     #main app
-    ./*.c*
+    ${CMAKE_HOME_DIRECTORY}/Common.cxx
+    ${CMAKE_HOME_DIRECTORY}/Delay.cxx
+    ${CMAKE_HOME_DIRECTORY}/Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/FreeRTOS_Helpers.c
+    ${CMAKE_HOME_DIRECTORY}/MachineState.cxx
+    ${CMAKE_HOME_DIRECTORY}/main.cxx
+    ${CMAKE_HOME_DIRECTORY}/Settings.cxx
+    ${CMAKE_HOME_DIRECTORY}/StepperState.cxx
+
+    ${CMAKE_HOME_DIRECTORY}/drivers/ConsoleDisplay.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/SSD1306Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/PIOStepper.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/Switches.cxx
     )
 
+
+
+
+    include(FetchContent)
+
+    set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson tests" FORCE)
+    set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples" FORCE)
+    set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation" FORCE)
+    
+    FetchContent_Declare(
+      rapidjson
+      GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
+      GIT_TAG v1.1.0
+    )
+    FetchContent_GetProperties(rapidjson)
+    if(NOT rapidjson_POPULATED)
+      FetchContent_Populate(rapidjson)
+    endif()
+    
+    # Create an interface target for rapidjson
+    add_library(rapidjson INTERFACE)
+    target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
+    
+    # Disable -Wambiguous-reversed-operator for rapidjson
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      target_compile_options(rapidjson INTERFACE -Wno-ambiguous-reversed-operator)
+    endif()
+    
+    
+    # Read the JSON file content
+    file(READ "${CMAKE_SOURCE_DIR}/config/config.json" CONFIG_CONTENT)
+    
+    # Configure the header template
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/config/config.h.in"
+        "${CMAKE_BINARY_DIR}/include/config.h"
+        @ONLY
+    )
+    
+    # Add include directory
+    include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
+
+
+    
+
+include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
+
+
+
 # Pull in FreeRTOS
-include(${CMAKE_HOME_DIRECTORY}/FreeRTOS_Kernel_import.cmake)
+
+
+
+project(PicoProject C CXX ASM)
+pico_sdk_init()
+# add_subdirectory(${FREERTOS_KERNEL_PATH})
+# target_link_libraries(FreeRTOS-Kernel INTERFACE freertos_config)
+add_subdirectory(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040 FreeRTOS-Kernel)
+
 
 add_executable(PicoApp
 ${app_sources}
@@ -81,22 +169,10 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-deprecated-declarations>
 )
 
-
-if (WIN32)
-add_custom_command(TARGET PicoApp POST_BUILD
- COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded! "
- COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/win64/flash.bat $<TARGET_FILE:PicoApp>
-)
-else()
-
-if(NOT BUILD_TESTS)
 add_custom_command(TARGET PicoApp POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
 # COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
 )
-endif()
-endif()
-
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
 
@@ -107,11 +183,14 @@ pico_ssd1306
 pico_multicore
 hardware_i2c
 hardware_flash
+hardware_pio
   hardware_sync
   littlefs
   # tinyusb_additions
   # tinyusb_board
   # tinyusb_device
+  FreeRTOS-Kernel
+  FreeRTOS-Kernel-Heap4 
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE
@@ -119,23 +198,23 @@ target_include_directories(PicoApp PRIVATE
         ${header_dir_list}
         ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(PicoApp pico_system_include_dirs pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
+target_link_libraries(PicoApp pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
 pico_add_extra_outputs(PicoApp)
 
 include_directories(PUBLIC ${rapidjson_SOURCE_DIR}/include)
 
 add_custom_command(
-  OUTPUT ${CMAKE_SOURCE_DIR}/src/compile_commands.json
+  OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   ${CMAKE_BINARY_DIR}/compile_commands.json
-  ${CMAKE_SOURCE_DIR}/src/compile_commands.json
+  ${CMAKE_SOURCE_DIR}/compile_commands.json
   DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
   COMMENT "Copying compile_commands.json to src root"
 )
 
 # Create a custom target that always runs the above command
 add_custom_target(copy_compile_commands_src ALL
-  DEPENDS ${CMAKE_SOURCE_DIR}/src/compile_commands.json
+  DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
 )
 
 add_dependencies(PicoApp copy_compile_commands_src)

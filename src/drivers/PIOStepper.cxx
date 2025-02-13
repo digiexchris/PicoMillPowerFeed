@@ -2,7 +2,7 @@
 
 #include "Delay.hxx"
 #include "Helpers.hxx"
-#include "build/src/stepper.pio.h"
+#include "stepper.pio.h"
 #include "config.h"
 #include "pico/time.h"
 #include "stepper.pio.h"

@@ -5,6 +5,7 @@
 #include "config.h"
 #include <FreeRTOS.h>
 #include <cstdint>
+#include <array>
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <memory>

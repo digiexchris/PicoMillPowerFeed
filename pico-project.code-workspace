@@ -4,10 +4,6 @@
 			"path": "."
 		},
 		{
-			"name": "PICO_SDK",
-			"path": "pico/pico-sdk"
-		},
-		{
 			"name": "PICO_EXTRA",
 			"path": "pico"
 		}
@@ -47,22 +43,11 @@
 		"[cpp]": {
 			"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
 		},
-		"cmake.cmakelistFile": "${workspaceFolder}/CMakeLists.txt",
-		"cmake.configureOnOpen": false,
-		"cmake.statusbar.advanced": {
-			"debug": {
-				"visibility": "hidden"
-			},
-			"launch": {
-				"visibility": "hidden"
-			},
-			"build": {
-				"visibility": "hidden"
-			},
-			"buildTarget": {
-				"visibility": "hidden"
-			}
-		},
+		"raspberry-pi-pico.cmakeAutoConfigure": true,
+		"raspberry-pi-pico.useCmakeTools": true,
+		"cmake.configureOnEdit": true,
+		"cmake.automaticReconfigure": true,
+		"cmake.configureOnOpen": true,
 		"editor.defaultFoldingRangeProvider": "ms-vscode.cpptools",
 		"editor.folding": false,
 		"[jsonc]": {
@@ -73,11 +58,10 @@
 		"cmake.deleteBuildDirOnCleanConfigure": true,
 		"cmake.enableAutomaticKitScan": false,
 		"cmake.generator": "ninja",
-		"cmake.ignoreKitEnv": true,
+		// "cmake.ignoreKitEnv": true,
 		"cmake.options.statusBarVisibility": "visible",
-		"cmake.showSystemKits": false,
-		"cmake.sourceDirectory": "${workspaceFolder}",
-		"cmake.useCMakePresets": "always",
-		"device-manager.manageAllDevices": true
+		// "cmake.showSystemKits": false,
+		"cmake.sourceDirectory": "${workspaceFolder}/src",
+		// "cmake.useCMakePresets": "always"
 	}
 }

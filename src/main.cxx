@@ -2,6 +2,7 @@
 #include "MachineState.hxx"
 #include "Settings.hxx"
 // #include "bsp/board_api.h" //todo TINYUSB
+#include <FreeRTOS.h>
 #include "drivers/Switches.hxx"
 #include <iostream>
 #include <memory>

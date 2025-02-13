@@ -11,19 +11,19 @@ ENV TOOLCHAINDIR="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"
 
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates \
-    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev
-RUN mkdir /toolchain
-WORKDIR /toolchain
+    && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates python3-pip \
+    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev libftdi1 libftdi1-2
+#RUN mkdir /toolchain
+#WORKDIR /toolchain
 
-RUN echo "$TOOLCHAINURL/$TOOLCHAINARCHIVE"
+#RUN echo "$TOOLCHAINURL/$TOOLCHAINARCHIVE"
 
-RUN wget $TOOLCHAINURL/$TOOLCHAINARCHIVE 
-RUN tar xf $TOOLCHAINARCHIVE
+#RUN wget $TOOLCHAINURL/$TOOLCHAINARCHIVE 
+#RUN tar xf $TOOLCHAINARCHIVE
 
-RUN mv $TOOLCHAINDIR gcc-arm-none && \
-    rm $TOOLCHAINARCHIVE
-ENV PATH=$PATH:/toolchain/gcc-arm-none/bin
+#RUN mv $TOOLCHAINDIR gcc-arm-none && \
+#    rm $TOOLCHAINARCHIVE
+#ENV PATH=$PATH:/toolchain/gcc-arm-none/bin
 
 RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncursesw.so.5 && \
     ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
@@ -36,8 +36,8 @@ RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncurse
 # RUN git clone -b master https://github.com/raspberrypi/debugprobe.git --depth=1
 
 
-RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
-    && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
+#RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
+#    && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
 
 # RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
 #     && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && cp picotool /usr/local/bin

@@ -3,7 +3,7 @@
 {
     "name": "C++ Raspberry Pi Pico",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "Dockerfile"
     },
     "containerEnv": {
         "FLASH_SCRIPT": "flash.sh"
@@ -17,7 +17,7 @@
         "--privileged",
         "-v",
         "/dev/bus/usb:/dev/bus/usb",
-        "--device=/dev/bus/usb",
+        "--device=/dev/bus/usb"
         // "--device=/dev/ttyACM0"
     ],
     "customizations": {
@@ -27,15 +27,14 @@
                     "bash": {
                         "path": "/usr/bin/bash"
                     }
-                },
-                "cortex-debug.armToolchainPath.linux": "/workspaces/gcc-arm-none/bin"
+                }
+                // "cortex-debug.armToolchainPath.linux": "/workspaces/gcc-arm-none/bin"
             },
             "extensions": [
                 "ms-vscode.cpptools",
                 "marus25.cortex-debug",
                 "ms-vscode.cmake-tools",
                 "twxs.cmake",
-                "eamodio.gitlens",
                 "xaver.clang-format",
                 "chris-hock.pioasm",
                 "IBM.output-colorizer",
@@ -44,16 +43,22 @@
                 "ms-vscode-remote.remote-containers",
                 "llvm-vs-code-extensions.vscode-clangd",
                 "vadimcn.vscode-lldb",
-                "matepek.vscode-catch2-test-adapter"
-            ],
+                "matepek.vscode-catch2-test-adapter",
+                "chris-hock.pioasm",
+                "raspberry-pi.raspberry-pi-pico",
+                "ms-vscode.vscode-serial-monitor"
+            ]
         }
+    },
+    "remoteEnv": {
+        "PICO_SDK_PATH": "/workspace/pico"
     },
     // Set *default* container specific settings.json values on container create.
     // Add the IDs of extensions you want installed when the container is created.
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "cd /workspace/pico/pico-sdk && git submodule update --init && cp /workspace/tools/linux/picotool /usr/local/bin/",
+"postCreateCommand": "cd /workspace/src && git submodule update --init",
     // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "vscode"
 }
