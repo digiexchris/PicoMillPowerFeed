@@ -62,7 +62,7 @@ namespace PowerFeed
 			uint32_t stepsPerMotorRev;
 			double stepsPerLeadscrewRev;
 			uint32_t acceleration;
-			uint8_t decelerationMultiplier;
+			uint32_t deceleration;
 			uint8_t accelerationJerk;
 			float motorToLeadscrewReduction;
 			bool moveLeftDirection;

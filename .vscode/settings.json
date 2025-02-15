@@ -37,5 +37,6 @@
     "raspberry-pi-pico.cmakePath": "${HOME}/.pico-sdk/cmake/v3.29.9/bin/cmake",
     "raspberry-pi-pico.ninjaPath": "${HOME}/.pico-sdk/ninja/v1.12.1/ninja",
     "C_Cpp.intelliSenseEngine": "disabled",
-    "editor.codeLens": false
+    "editor.codeLens": false,
+    "cmake.sourceDirectory": "/workspace/src"
 }

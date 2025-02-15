@@ -123,8 +123,8 @@ namespace PowerFeed
 		writer.Double(motorToLeadscrewReduction);
 		writer.String("ACCELERATION");
 		writer.Uint(acceleration);
-		writer.String("DECELERATION_MULTIPLIER");
-		writer.Uint(decelerationMultiplier);
+		writer.String("DECELERATION");
+		writer.Uint(deceleration);
 		writer.String("ACCELERATION_JERK");
 		writer.Uint(accelerationJerk);
 		writer.String("MOVE_LEFT_DIRECTION");
@@ -142,7 +142,7 @@ namespace PowerFeed
 		s.stepsPerMotorRev = obj["STEPS_PER_MOTOR_REV"].GetUint();
 		s.motorToLeadscrewReduction = obj["MOTOR_TO_LEADSCREW_REDUCTION"].GetDouble();
 		s.acceleration = obj["ACCELERATION"].GetUint();
-		s.decelerationMultiplier = obj["DECELERATION_MULTIPLIER"].GetUint();
+		s.deceleration = obj["DECELERATION"].GetUint();
 		s.accelerationJerk = obj["ACCELERATION_JERK"].GetUint();
 		s.moveLeftDirection = obj["MOVE_LEFT_DIRECTION"].GetBool();
 		s.mmPerLeadscrewRev = obj["MM_PER_LEADSCREW_REV"].GetDouble();
