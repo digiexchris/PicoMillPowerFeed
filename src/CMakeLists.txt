@@ -8,7 +8,7 @@ else()
     set(USERHOME $ENV{HOME})
 endif()
 set(sdkVersion 2.1.0)
-set(toolchainVersion 13_3_Rel1)
+set(toolchainVersion 14_2_Rel1)
 set(picotoolVersion 2.1.0)
 set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
 if (EXISTS ${picoVscode})
@@ -25,7 +25,9 @@ set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/FreeRTOS-Kernel)
 
 # Enable exception handling
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
-set(PICO_CXX_ENABLE_RTTI 1)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(PICO_CXX_ENABLE_RTTI 1)
 
 # Disable auto-installing picotool
 # set(PICO_SDK_FETCH_FROM_GIT_AUTO OFF)
@@ -61,17 +63,15 @@ target_link_libraries(littlefs INTERFACE hardware_flash)
 set(app_sources 
     #main app
     ${CMAKE_HOME_DIRECTORY}/Common.cxx
-    ${CMAKE_HOME_DIRECTORY}/Delay.cxx
     ${CMAKE_HOME_DIRECTORY}/Display.cxx
     ${CMAKE_HOME_DIRECTORY}/FreeRTOS_Helpers.c
     ${CMAKE_HOME_DIRECTORY}/MachineState.cxx
     ${CMAKE_HOME_DIRECTORY}/main.cxx
     ${CMAKE_HOME_DIRECTORY}/Settings.cxx
     ${CMAKE_HOME_DIRECTORY}/StepperState.cxx
-
-    ${CMAKE_HOME_DIRECTORY}/drivers/ConsoleDisplay.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/SSD1306Display.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/PIOStepper.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/display/ConsoleDisplay.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/display/SSD1306Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/drivers/stepper/PicoStepper.cxx
     ${CMAKE_HOME_DIRECTORY}/drivers/Switches.cxx
     )
 
@@ -80,28 +80,13 @@ set(app_sources
 
     include(FetchContent)
 
-    set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson tests" FORCE)
-    set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples" FORCE)
-    set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation" FORCE)
-    
     FetchContent_Declare(
-      rapidjson
-      GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
-      GIT_TAG v1.1.0
+        json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
     )
-    FetchContent_GetProperties(rapidjson)
-    if(NOT rapidjson_POPULATED)
-      FetchContent_Populate(rapidjson)
-    endif()
+    FetchContent_MakeAvailable(json)
     
-    # Create an interface target for rapidjson
-    add_library(rapidjson INTERFACE)
-    target_include_directories(rapidjson INTERFACE ${rapidjson_SOURCE_DIR}/include)
     
-    # Disable -Wambiguous-reversed-operator for rapidjson
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      target_compile_options(rapidjson INTERFACE -Wno-ambiguous-reversed-operator)
-    endif()
     
     
     # Read the JSON file content
@@ -173,10 +158,18 @@ add_custom_command(TARGET PicoApp POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
 # COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
 )
-pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/stepper.pio)
+
 pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
 
 add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
+
+include(FetchContent)
+FetchContent_Declare(
+    PIOStepperSpeedController
+    GIT_REPOSITORY https://github.com/digiexchris/PIOStepperSpeedController.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(PIOStepperSpeedController)
 
 target_link_libraries(PicoApp
 pico_ssd1306
@@ -186,12 +179,14 @@ hardware_i2c
 hardware_flash
 hardware_pio
 hardware_sync
-  littlefs
-  # tinyusb_additions
-  # tinyusb_board
-  # tinyusb_device
-  FreeRTOS-Kernel
-  FreeRTOS-Kernel-Heap4 
+PIOStepperSpeedController
+littlefs
+nlohmann_json::nlohmann_json
+# tinyusb_additions
+# tinyusb_board
+# tinyusb_device
+FreeRTOS-Kernel
+FreeRTOS-Kernel-Heap4 
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE

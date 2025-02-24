@@ -2,8 +2,8 @@
 #include "MachineState.hxx"
 #include "Settings.hxx"
 // #include "bsp/board_api.h" //todo TINYUSB
-#include <FreeRTOS.h>
 #include "drivers/Switches.hxx"
+#include <FreeRTOS.h>
 #include <iostream>
 #include <memory>
 #include <pico/stdio.h>
@@ -21,10 +21,9 @@ extern "C"
 #include "Stepper.hxx"
 #include "StepperState.hxx"
 #include "config.h"
-#include "drivers/ConsoleDisplay.hxx"
-#include "drivers/PIOStepper.hxx"
-#include "drivers/SSD1306Display.hxx"
-#include <pico/async_context.h>
+#include "drivers/display/ConsoleDisplay.hxx"
+#include "drivers/display/SSD1306Display.hxx"
+#include "drivers/stepper/PicoStepper.hxx"
 std::shared_ptr<PowerFeed::SettingsManager> settingsManager;
 std::shared_ptr<PowerFeed::IStepper> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
@@ -49,7 +48,7 @@ void stepperUpdateTask(void *pvParameters)
 
 void createStepperTask()
 {
-	
+
 	auto result = xTaskCreate(stepperUpdateTask, "Stepper Task", 2048, NULL, 13, NULL);
 
 	if (result != pdPASS)
@@ -102,6 +101,8 @@ using namespace PowerFeed::Drivers;
 int main()
 {
 	// board_init(); //todo TINYUSB
+
+	set_sys_clock_hz(133000000, true);
 	stdio_init_all();
 	printf("Starting PowerFeed\n");
 
@@ -127,7 +128,7 @@ int main()
 	display->WriteBuffer();
 	sleep_ms(500);
 
-	stepper = std::make_shared<PowerFeed::Drivers::PIOStepper>(settingsManager, pio0, 0);
+	stepper = std::make_shared<PowerFeed::Drivers::PicoStepper>(settingsManager, pio0, 0);
 	iTime = std::make_shared<PowerFeed::Time>();
 	stepperState = std::make_shared<PowerFeed::StepperState>(settingsManager, stepper, iTime);
 	machineState = std::make_shared<PowerFeed::Machine>(settingsManager, display, stepperState);

@@ -1,151 +1,114 @@
 #include "Settings.hxx"
 #include <memory>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 #include <stdexcept>
 
 namespace PowerFeed
 {
-	void Settings::Driver::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::Driver::to_json() const
 	{
-		writer.StartObject();
-		writer.String("DRIVER_DIRECTION_CHANGE_DELAY_MS");
-		writer.Uint(driverDirectionChangeDelayMs);
-		writer.String("DRIVER_DIR_PIN");
-		writer.Uint(driverDirPin);
-		writer.String("DRIVER_EN_PIN");
-		writer.Uint(driverEnPin);
-		writer.String("DRIVER_STEP_PIN");
-		writer.Uint(driverStepPin);
-		writer.String("DRIVER_ENABLE_VALUE");
-		writer.Bool(driverEnableValue);
-		writer.String("DRIVER_DISABLE_TIMEOUT");
-		writer.Uint(driverDisableTimeout);
-		writer.EndObject();
+		return {
+			{"DRIVER_DIRECTION_CHANGE_DELAY_MS", driverDirectionChangeDelayMs},
+			{"DRIVER_DIR_PIN", driverDirPin},
+			{"DRIVER_EN_PIN", driverEnPin},
+			{"DRIVER_STEP_PIN", driverStepPin},
+			{"DRIVER_ENABLE_VALUE", driverEnableValue},
+			{"DRIVER_DISABLE_TIMEOUT", driverDisableTimeout}};
 	}
 
-	Settings::Driver Settings::Driver::from_json(const rapidjson::Value &obj)
+	Settings::Driver Settings::Driver::from_json(const nlohmann::json &j)
 	{
 		Driver s;
-		s.driverDirectionChangeDelayMs = obj["DRIVER_DIRECTION_CHANGE_DELAY_MS"].GetUint();
-		s.driverDirPin = obj["DRIVER_DIR_PIN"].GetUint();
-		s.driverEnPin = obj["DRIVER_EN_PIN"].GetUint();
-		s.driverStepPin = obj["DRIVER_STEP_PIN"].GetUint();
-		s.driverEnableValue = obj["DRIVER_ENABLE_VALUE"].GetBool();
+		s.driverDirectionChangeDelayMs = j["DRIVER_DIRECTION_CHANGE_DELAY_MS"].get<uint32_t>();
+		s.driverDirPin = j["DRIVER_DIR_PIN"].get<uint16_t>();
+		s.driverEnPin = j["DRIVER_EN_PIN"].get<uint16_t>();
+		s.driverStepPin = j["DRIVER_STEP_PIN"].get<uint16_t>();
+		s.driverEnableValue = j["DRIVER_ENABLE_VALUE"].get<bool>();
 		s.driverDisableValue = !s.driverEnableValue;
-		s.driverDisableTimeout = obj["DRIVER_DISABLE_TIMEOUT"].GetUint();
+		s.driverDisableTimeout = j["DRIVER_DISABLE_TIMEOUT"].get<uint16_t>();
 		return s;
 	}
 
-	void Settings::Display::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::Display::to_json() const
 	{
-		writer.StartObject();
-		writer.String("USE_SSD1306");
-		writer.Bool(useSsd1306);
-		writer.String("SSD1306_ADDRESS");
-		writer.Uint(ssd1306Address);
-		writer.String("SSD1306_ROTATE_180");
-		writer.Bool(ssd1306Rotate180);
-		writer.String("I2C_MASTER_SDA_IO");
-		writer.Uint(i2cMasterSdaIo);
-		writer.String("I2C_MASTER_SCL_IO");
-		writer.Uint(i2cMasterSclIo);
-		writer.String("I2C_MASTER_NUM");
-		writer.Uint(i2cMasterNum);
-		writer.EndObject();
+		return {
+			{"USE_SSD1306", useSsd1306},
+			{"SSD1306_ADDRESS", ssd1306Address},
+			{"SSD1306_ROTATE_180", ssd1306Rotate180},
+			{"I2C_MASTER_SDA_IO", i2cMasterSdaIo},
+			{"I2C_MASTER_SCL_IO", i2cMasterSclIo},
+			{"I2C_MASTER_NUM", i2cMasterNum}};
 	}
 
-	Settings::Display Settings::Display::from_json(const rapidjson::Value &obj)
+	Settings::Display Settings::Display::from_json(const nlohmann::json &j)
 	{
 		Display s;
-		s.useSsd1306 = obj["USE_SSD1306"].GetBool();
-		s.ssd1306Address = obj["SSD1306_ADDRESS"].GetUint();
-		s.ssd1306Rotate180 = obj["SSD1306_ROTATE_180"].GetBool();
-		s.i2cMasterSdaIo = obj["I2C_MASTER_SDA_IO"].GetUint();
-		s.i2cMasterSclIo = obj["I2C_MASTER_SCL_IO"].GetUint();
-		s.i2cMasterNum = obj["I2C_MASTER_NUM"].GetUint();
+		s.useSsd1306 = j["USE_SSD1306"].get<bool>();
+		s.ssd1306Address = j["SSD1306_ADDRESS"].get<uint8_t>();
+		s.ssd1306Rotate180 = j["SSD1306_ROTATE_180"].get<bool>();
+		s.i2cMasterSdaIo = j["I2C_MASTER_SDA_IO"].get<uint8_t>();
+		s.i2cMasterSclIo = j["I2C_MASTER_SCL_IO"].get<uint8_t>();
+		s.i2cMasterNum = j["I2C_MASTER_NUM"].get<uint8_t>();
 		return s;
 	}
 
-	void Settings::Controls::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::Controls::to_json() const
 	{
-		writer.StartObject();
-		writer.String("LEFTPIN");
-		writer.Uint(leftPin);
-		writer.String("RIGHTPIN");
-		writer.Uint(rightPin);
-		writer.String("RAPIDPIN");
-		writer.Uint(rapidPin);
-		writer.String("ENCODER_A_PIN");
-		writer.Uint(encoderAPin);
-		writer.String("ENCODER_B_PIN");
-		writer.Uint(encoderBPin);
-		writer.String("ENCODER_BUTTON_PIN");
-		writer.Uint(encoderButtonPin);
-		writer.String("UNITS_SWITCH_DELAY_MS");
-		writer.Uint(unitsSwitchDelayMs);
-		writer.String("DEBOUNCE_DELAY_US");
-		writer.Uint(debounceDelayUs);
-		writer.String("ENCODER_COUNTS_TO_STEPS_PER_SECOND");
-		writer.Uint(encoderCountsToStepsPerSecond);
-		writer.String("ENCODER_INVERT");
-		writer.Bool(encoderInvert);
-		writer.EndObject();
+		return {
+			{"LEFTPIN", leftPin},
+			{"RIGHTPIN", rightPin},
+			{"RAPIDPIN", rapidPin},
+			{"ENCODER_A_PIN", encoderAPin},
+			{"ENCODER_B_PIN", encoderBPin},
+			{"ENCODER_BUTTON_PIN", encoderButtonPin},
+			{"UNITS_SWITCH_DELAY_MS", unitsSwitchDelayMs},
+			{"DEBOUNCE_DELAY_US", debounceDelayUs},
+			{"ENCODER_COUNTS_TO_STEPS_PER_SECOND", encoderCountsToStepsPerSecond},
+			{"ENCODER_INVERT", encoderInvert}};
 	}
 
-	Settings::Controls Settings::Controls::from_json(const rapidjson::Value &obj)
+	Settings::Controls Settings::Controls::from_json(const nlohmann::json &j)
 	{
 		Controls s;
-		s.leftPin = obj["LEFTPIN"].GetUint();
-		s.rightPin = obj["RIGHTPIN"].GetUint();
-		s.rapidPin = obj["RAPIDPIN"].GetUint();
-		s.encoderAPin = obj["ENCODER_A_PIN"].GetUint();
-		s.encoderBPin = obj["ENCODER_B_PIN"].GetUint();
-		s.encoderButtonPin = obj["ENCODER_BUTTON_PIN"].GetUint();
-		s.unitsSwitchDelayMs = obj["UNITS_SWITCH_DELAY_MS"].GetUint();
-		s.debounceDelayUs = obj["DEBOUNCE_DELAY_US"].GetUint();
-		s.encoderCountsToStepsPerSecond = obj["ENCODER_COUNTS_TO_STEPS_PER_SECOND"].GetUint();
-		s.encoderInvert = obj["ENCODER_INVERT"].GetBool();
+		s.leftPin = j["LEFTPIN"].get<uint16_t>();
+		s.rightPin = j["RIGHTPIN"].get<uint16_t>();
+		s.rapidPin = j["RAPIDPIN"].get<uint16_t>();
+		s.encoderAPin = j["ENCODER_A_PIN"].get<uint16_t>();
+		s.encoderBPin = j["ENCODER_B_PIN"].get<uint16_t>();
+		s.encoderButtonPin = j["ENCODER_BUTTON_PIN"].get<uint16_t>();
+		s.unitsSwitchDelayMs = j["UNITS_SWITCH_DELAY_MS"].get<uint32_t>();
+		s.debounceDelayUs = j["DEBOUNCE_DELAY_US"].get<uint32_t>();
+		s.encoderCountsToStepsPerSecond = j["ENCODER_COUNTS_TO_STEPS_PER_SECOND"].get<uint16_t>();
+		s.encoderInvert = j["ENCODER_INVERT"].get<bool>();
 		return s;
 	}
 
-	void Settings::Mechanical::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::Mechanical::to_json() const
 	{
-		writer.StartObject();
-		writer.String("MAX_LEADSCREW_RPM");
-		writer.Uint(maxLeadscrewRpm);
-		writer.String("MAX_DRIVER_STEPS_PER_SECOND");
-		writer.Uint(maxDriverStepsPerSecond);
-		writer.String("STEPS_PER_MOTOR_REV");
-		writer.Uint(stepsPerMotorRev);
-		writer.String("MOTOR_TO_LEADSCREW_REDUCTION");
-		writer.Double(motorToLeadscrewReduction);
-		writer.String("ACCELERATION");
-		writer.Uint(acceleration);
-		writer.String("DECELERATION");
-		writer.Uint(deceleration);
-		writer.String("ACCELERATION_JERK");
-		writer.Uint(accelerationJerk);
-		writer.String("MOVE_LEFT_DIRECTION");
-		writer.Bool(moveLeftDirection);
-		writer.String("MM_PER_LEADSCREW_REV");
-		writer.Double(mmPerLeadscrewRev);
-		writer.EndObject();
+		return {
+			{"MAX_LEADSCREW_RPM", maxLeadscrewRpm},
+			{"MAX_DRIVER_STEPS_PER_SECOND", maxDriverStepsPerSecond},
+			{"STEPS_PER_MOTOR_REV", stepsPerMotorRev},
+			{"MOTOR_TO_LEADSCREW_REDUCTION", motorToLeadscrewReduction},
+			{"ACCELERATION", acceleration},
+			{"DECELERATION", deceleration},
+			{"ACCELERATION_JERK", accelerationJerk},
+			{"MOVE_LEFT_DIRECTION", moveLeftDirection},
+			{"MM_PER_LEADSCREW_REV", mmPerLeadscrewRev}};
 	}
 
-	Settings::Mechanical Settings::Mechanical::from_json(const rapidjson::Value &obj)
+	Settings::Mechanical Settings::Mechanical::from_json(const nlohmann::json &j)
 	{
 		Mechanical s;
-		s.maxLeadscrewRpm = obj["MAX_LEADSCREW_RPM"].GetUint();
-		s.maxDriverStepsPerSecond = obj["MAX_DRIVER_STEPS_PER_SECOND"].GetUint();
-		s.stepsPerMotorRev = obj["STEPS_PER_MOTOR_REV"].GetUint();
-		s.motorToLeadscrewReduction = obj["MOTOR_TO_LEADSCREW_REDUCTION"].GetDouble();
-		s.acceleration = obj["ACCELERATION"].GetUint();
-		s.deceleration = obj["DECELERATION"].GetUint();
-		s.accelerationJerk = obj["ACCELERATION_JERK"].GetUint();
-		s.moveLeftDirection = obj["MOVE_LEFT_DIRECTION"].GetBool();
-		s.mmPerLeadscrewRev = obj["MM_PER_LEADSCREW_REV"].GetDouble();
+		s.maxLeadscrewRpm = j["MAX_LEADSCREW_RPM"].get<uint32_t>();
+		s.maxDriverStepsPerSecond = j["MAX_DRIVER_STEPS_PER_SECOND"].get<uint32_t>();
+		s.stepsPerMotorRev = j["STEPS_PER_MOTOR_REV"].get<uint32_t>();
+		s.motorToLeadscrewReduction = j["MOTOR_TO_LEADSCREW_REDUCTION"].get<double>();
+		s.acceleration = j["ACCELERATION"].get<uint32_t>();
+		s.deceleration = j["DECELERATION"].get<uint32_t>();
+		s.accelerationJerk = j["ACCELERATION_JERK"].get<uint8_t>();
+		s.moveLeftDirection = j["MOVE_LEFT_DIRECTION"].get<bool>();
+		s.mmPerLeadscrewRev = j["MM_PER_LEADSCREW_REV"].get<double>();
+
 		s.moveRightDirection = !s.moveLeftDirection;
 		s.maxStepsPerSecond = s.maxLeadscrewRpm * s.stepsPerMotorRev / 60;
 		if (s.maxStepsPerSecond > s.maxDriverStepsPerSecond)
@@ -153,66 +116,44 @@ namespace PowerFeed
 			s.maxStepsPerSecond = s.maxDriverStepsPerSecond;
 		}
 		s.stepsPerMm = (s.stepsPerMotorRev * 4.055555556) / s.mmPerLeadscrewRev;
-		s.moveRightDirection = !s.moveLeftDirection;
-
 		return s;
 	}
 
-	void Settings::SavedSettings::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::SavedSettings::to_json() const
 	{
-		writer.StartObject();
-		writer.String("NORMAL_SPEED");
-		writer.Uint(normalSpeed);
-		writer.String("RAPID_SPEED");
-		writer.Uint(rapidSpeed);
-		writer.String("INCH_UNITS");
-		writer.Bool(inchUnits);
-		writer.EndObject();
+		return {
+			{"NORMAL_SPEED", normalSpeed},
+			{"RAPID_SPEED", rapidSpeed},
+			{"INCH_UNITS", inchUnits}};
 	}
 
-	Settings::SavedSettings Settings::SavedSettings::from_json(const rapidjson::Value &obj)
+	Settings::SavedSettings Settings::SavedSettings::from_json(const nlohmann::json &j)
 	{
 		SavedSettings s;
-		s.normalSpeed = obj["NORMAL_SPEED"].GetUint();
-		s.rapidSpeed = obj["RAPID_SPEED"].GetUint();
-		s.inchUnits = obj["INCH_UNITS"].GetBool();
+		s.normalSpeed = j["NORMAL_SPEED"].get<uint32_t>();
+		s.rapidSpeed = j["RAPID_SPEED"].get<uint32_t>();
+		s.inchUnits = j["INCH_UNITS"].get<bool>();
 		return s;
 	}
 
-	void Settings::to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const
+	nlohmann::json Settings::to_json() const
 	{
-		writer.StartObject();
-		writer.String("DRIVER");
-		writer.StartObject();
-		driver.to_json(writer);
-		writer.EndObject();
-		writer.String("DISPLAY");
-		writer.StartObject();
-		display.to_json(writer);
-		writer.EndObject();
-		writer.String("CONTROLS");
-		writer.StartObject();
-		controls.to_json(writer);
-		writer.EndObject();
-		writer.String("MECHANICAL");
-		writer.StartObject();
-		mechanical.to_json(writer);
-		writer.EndObject();
-		writer.String("SAVED_SETTINGS");
-		writer.StartObject();
-		savedSettings.to_json(writer);
-		writer.EndObject();
-		writer.EndObject();
+		return {
+			{"DRIVER", driver.to_json()},
+			{"DISPLAY", display.to_json()},
+			{"CONTROLS", controls.to_json()},
+			{"MECHANICAL", mechanical.to_json()},
+			{"SAVED_SETTINGS", savedSettings.to_json()}};
 	}
 
-	Settings Settings::from_json(const rapidjson::Document &doc)
+	Settings Settings::from_json(const nlohmann::json &j)
 	{
 		Settings s;
-		s.driver = Driver::from_json(doc["DRIVER"]);
-		s.display = Display::from_json(doc["DISPLAY"]);
-		s.controls = Controls::from_json(doc["CONTROLS"]);
-		s.mechanical = Mechanical::from_json(doc["MECHANICAL"]);
-		s.savedSettings = SavedSettings::from_json(doc["SAVED_SETTINGS"]);
+		s.driver = Driver::from_json(j["DRIVER"]);
+		s.display = Display::from_json(j["DISPLAY"]);
+		s.controls = Controls::from_json(j["CONTROLS"]);
+		s.mechanical = Mechanical::from_json(j["MECHANICAL"]);
+		s.savedSettings = SavedSettings::from_json(j["SAVED_SETTINGS"]);
 		return s;
 	}
 
@@ -228,24 +169,15 @@ namespace PowerFeed
 	std::shared_ptr<Settings> SettingsManager::Load()
 	{
 		std::string defaultSettingsJson = PicoMill::CONFIG_JSON;
-		rapidjson::Document doc;
 
 		try
 		{
-
-			doc.Parse(defaultSettingsJson.c_str());
-
-			if (doc.HasParseError())
-			{
-				throw std::runtime_error("JSON parse error: " + std::to_string(doc.GetParseError()) +
-										 " at offset " + std::to_string(doc.GetErrorOffset()));
-			}
-
-			myDefaultSettings = std::make_shared<Settings>(Settings::from_json(doc));
+			auto j = nlohmann::json::parse(defaultSettingsJson);
+			myDefaultSettings = std::make_shared<Settings>(Settings::from_json(j));
 		}
-		catch (const std::exception &e)
+		catch (const nlohmann::json::parse_error &e)
 		{
-			throw e;
+			throw std::runtime_error("JSON parse error: " + std::string(e.what()));
 		}
 
 		return myDefaultSettings;

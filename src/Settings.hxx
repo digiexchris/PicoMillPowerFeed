@@ -3,9 +3,7 @@
 #include "config.h"
 #include <cstdint>
 #include <memory>
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+#include <nlohmann/json.hpp>
 
 namespace PowerFeed
 {
@@ -21,8 +19,8 @@ namespace PowerFeed
 			bool driverDisableValue;
 			uint16_t driverDisableTimeout;
 
-			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-			static Driver from_json(const rapidjson::Value &obj);
+			nlohmann::json to_json() const;
+			static Driver from_json(const nlohmann::json &j);
 		};
 
 		struct Display
@@ -34,8 +32,8 @@ namespace PowerFeed
 			uint8_t i2cMasterNum;
 			bool ssd1306Rotate180;
 
-			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-			static Display from_json(const rapidjson::Value &obj);
+			nlohmann::json to_json() const;
+			static Display from_json(const nlohmann::json &j);
 		};
 
 		struct Controls
@@ -51,8 +49,8 @@ namespace PowerFeed
 			uint16_t encoderCountsToStepsPerSecond;
 			bool encoderInvert;
 
-			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-			static Controls from_json(const rapidjson::Value &obj);
+			nlohmann::json to_json() const;
+			static Controls from_json(const nlohmann::json &j);
 		};
 
 		struct Mechanical
@@ -73,8 +71,8 @@ namespace PowerFeed
 			float mmPerLeadscrewRev;
 			float stepsPerMm;
 
-			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-			static Mechanical from_json(const rapidjson::Value &obj);
+			nlohmann::json to_json() const;
+			static Mechanical from_json(const nlohmann::json &j);
 		};
 
 		struct SavedSettings
@@ -83,8 +81,8 @@ namespace PowerFeed
 			uint32_t rapidSpeed;
 			bool inchUnits;
 
-			void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-			static SavedSettings from_json(const rapidjson::Value &obj);
+			nlohmann::json to_json() const;
+			static SavedSettings from_json(const nlohmann::json &j);
 		};
 
 		Driver driver;
@@ -93,8 +91,8 @@ namespace PowerFeed
 		Mechanical mechanical;
 		SavedSettings savedSettings;
 
-		void to_json(rapidjson::Writer<rapidjson::StringBuffer> &writer) const;
-		static Settings from_json(const rapidjson::Document &doc);
+		nlohmann::json to_json() const;
+		static Settings from_json(const nlohmann::json &j);
 	};
 
 	class SettingsManager
