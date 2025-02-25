@@ -20,7 +20,7 @@ namespace PowerFeed::Drivers
 
 	void PicoStepper::Init()
 	{
-		xTaskCreate(PrivUpdateTask, "StepperV2", 2048, this, 15, NULL);
+		xTaskCreate(PrivUpdateTask, "Stepper", 2048, this, 15, NULL);
 	}
 
 	void PicoStepper::SetSpeed(uint32_t speed)

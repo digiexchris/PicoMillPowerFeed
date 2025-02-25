@@ -1,27 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-
-# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
-if(WIN32)
-    set(USERHOME $ENV{USERPROFILE})
-else()
-    set(USERHOME $ENV{HOME})
-endif()
-set(sdkVersion 2.1.0)
-set(toolchainVersion 14_2_Rel1)
-set(picotoolVersion 2.1.0)
-set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
-if (EXISTS ${picoVscode})
-    include(${picoVscode})
-endif()
-# ====================================================================================
-
-set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/FreeRTOS-Kernel)
-# option(PICO_PLATFORM_VALUE "PICO_PLATFORM_VALUE" "rp2040")
-# set(PICO_PLATFORM ${PICO_PLATFORM_VALUE} "rp2040")
-# message(STATUS "PICO_PLATFORM: ${PICO_PLATFORM}")
-# set(BOARD "raspberry_pi_pico" CACHE STRING "" FORCE)
-# set(FAMILY "rp2040")
+set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS-Kernel)
 
 # Enable exception handling
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
@@ -29,8 +9,13 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(PICO_CXX_ENABLE_RTTI 1)
 
-# Disable auto-installing picotool
-# set(PICO_SDK_FETCH_FROM_GIT_AUTO OFF)
+include(${CMAKE_HOME_DIRECTORY}/pico-sdk/pico_sdk_init.cmake)
+project(PicoProject C CXX ASM)
+pico_sdk_init()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mcpu=cortex-m0plus -mthumb")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-m0plus -mthumb")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} -mcpu=cortex-m0plus -mthumb")
+
 set(FREERTOS_PORT "GCC_RP2040" CACHE STRING "" FORCE)
 set( FREERTOS_HEAP "4" CACHE STRING "" FORCE)
 add_library(freertos_config INTERFACE)
@@ -47,11 +32,11 @@ INTERFACE
 
 add_library(littlefs INTERFACE)
 target_sources(littlefs INTERFACE
-${CMAKE_HOME_DIRECTORY}/lib/littlefs/lfs.c
-${CMAKE_HOME_DIRECTORY}/lib/littlefs/lfs_util.c
+${CMAKE_HOME_DIRECTORY}/src/lib/littlefs/lfs.c
+${CMAKE_HOME_DIRECTORY}/src/lib/littlefs/lfs_util.c
 )
 target_include_directories(littlefs INTERFACE
-${CMAKE_HOME_DIRECTORY}/lib/littlefs
+${CMAKE_HOME_DIRECTORY}/src/lib/littlefs
 )
 target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
 target_link_libraries(littlefs INTERFACE hardware_flash)
@@ -62,39 +47,37 @@ target_link_libraries(littlefs INTERFACE hardware_flash)
 
 set(app_sources 
     #main app
-    ${CMAKE_HOME_DIRECTORY}/Common.cxx
-    ${CMAKE_HOME_DIRECTORY}/Display.cxx
-    ${CMAKE_HOME_DIRECTORY}/FreeRTOS_Helpers.c
-    ${CMAKE_HOME_DIRECTORY}/MachineState.cxx
-    ${CMAKE_HOME_DIRECTORY}/main.cxx
-    ${CMAKE_HOME_DIRECTORY}/Settings.cxx
-    ${CMAKE_HOME_DIRECTORY}/StepperState.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/display/ConsoleDisplay.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/display/SSD1306Display.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/stepper/PicoStepper.cxx
-    ${CMAKE_HOME_DIRECTORY}/drivers/Switches.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/Common.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS_Helpers.c
+    ${CMAKE_HOME_DIRECTORY}/src/MachineState.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/main.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/Settings.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/StepperState.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/display/ConsoleDisplay.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/display/SSD1306Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/stepper/PicoStepper.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/Switches.cxx
     )
 
 
 
 
-    include(FetchContent)
+    # include(FetchContent)
 
-    FetchContent_Declare(
-        json
-        URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
-    )
-    FetchContent_MakeAvailable(json)
+    # FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+    # FetchContent_MakeAvailable(json)
+
     
     
     
     
     # Read the JSON file content
-    file(READ "${CMAKE_SOURCE_DIR}/config/config.json" CONFIG_CONTENT)
+    file(READ "${CMAKE_SOURCE_DIR}/src/config/config.json" CONFIG_CONTENT)
     
     # Configure the header template
     configure_file(
-        "${CMAKE_SOURCE_DIR}/config/config.h.in"
+        "${CMAKE_SOURCE_DIR}/src/config/config.h.in"
         "${CMAKE_BINARY_DIR}/include/config.h"
         @ONLY
     )
@@ -105,16 +88,7 @@ set(app_sources
 
     
 
-include(${CMAKE_HOME_DIRECTORY}/pico_sdk_import.cmake)
 
-
-
-# Pull in FreeRTOS
-
-
-
-project(PicoProject C CXX ASM)
-pico_sdk_init()
 # add_subdirectory(${FREERTOS_KERNEL_PATH})
 # target_link_libraries(FreeRTOS-Kernel INTERFACE freertos_config)
 add_subdirectory(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040 FreeRTOS-Kernel)
@@ -159,9 +133,9 @@ COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
 # COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
 )
 
-pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/pio/quadrature_encoder.pio)
+pico_generate_pio_header(PicoApp ${CMAKE_HOME_DIRECTORY}/src/pio/quadrature_encoder.pio)
 
-add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/pico-ssd1306 pico-ssd1306)
+add_subdirectory(${CMAKE_HOME_DIRECTORY}/src/lib/pico-ssd1306 pico-ssd1306)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -174,19 +148,19 @@ FetchContent_MakeAvailable(PIOStepperSpeedController)
 target_link_libraries(PicoApp
 pico_ssd1306
 pico_multicore
-pico_async
 hardware_i2c
 hardware_flash
 hardware_pio
 hardware_sync
 PIOStepperSpeedController
 littlefs
-nlohmann_json::nlohmann_json
+# nlohmann_json::nlohmann_json
 # tinyusb_additions
 # tinyusb_board
 # tinyusb_device
 FreeRTOS-Kernel
-FreeRTOS-Kernel-Heap4 
+FreeRTOS-Kernel-Heap4
+pico_stdio_usb 
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE
@@ -194,10 +168,7 @@ target_include_directories(PicoApp PRIVATE
         ${header_dir_list}
         ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(PicoApp pico_stdio_usb  FreeRTOS-Kernel FreeRTOS-Kernel-Heap4)
 pico_add_extra_outputs(PicoApp)
-
-include_directories(PUBLIC ${rapidjson_SOURCE_DIR}/include)
 
 add_custom_command(
   OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json

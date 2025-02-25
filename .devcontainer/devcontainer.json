@@ -45,13 +45,13 @@
                 "vadimcn.vscode-lldb",
                 "matepek.vscode-catch2-test-adapter",
                 "chris-hock.pioasm",
-                "raspberry-pi.raspberry-pi-pico",
+                // "raspberry-pi.raspberry-pi-pico",
                 "ms-vscode.vscode-serial-monitor"
             ]
         }
     },
     "remoteEnv": {
-        "PICO_SDK_PATH": "/workspace/pico"
+        "PICO_SDK_PATH": "/workspace/pico-sdk"
     },
     // Set *default* container specific settings.json values on container create.
     // Add the IDs of extensions you want installed when the container is created.

@@ -2,10 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"name": "PICO_EXTRA",
-			"path": "pico"
 		}
 	],
 	"cmake.generator": "Ninja",
@@ -24,11 +20,13 @@
 			"GitHub.copilot",
 			"GitHub.copilot-chat",
 			"josetr.cmake-language-support-vscode",
-			"llvm-vs-code-extensions.vscode-clangd"
+			"llvm-vs-code-extensions.vscode-clangd",
+			"ms-vscode.cpptools-extension-pack",
+			"ms-vscode.cmake-tools",
 		]
 	},
 	"settings": {
-		"cortex-debug.gdbPath.linux": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gdb",
+		// "cortex-debug.gdbPath.linux": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gdb",
 		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
 		"C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
 		"files.associations": {
@@ -43,8 +41,6 @@
 		"[cpp]": {
 			"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
 		},
-		"raspberry-pi-pico.cmakeAutoConfigure": true,
-		"raspberry-pi-pico.useCmakeTools": true,
 		"cmake.configureOnEdit": true,
 		"cmake.automaticReconfigure": true,
 		"cmake.configureOnOpen": true,
@@ -58,10 +54,27 @@
 		"cmake.deleteBuildDirOnCleanConfigure": true,
 		"cmake.enableAutomaticKitScan": false,
 		"cmake.generator": "ninja",
-		// "cmake.ignoreKitEnv": true,
+		"cmake.ignoreKitEnv": true,
 		"cmake.options.statusBarVisibility": "visible",
-		// "cmake.showSystemKits": false,
+		"cmake.showSystemKits": false,
 		"cmake.sourceDirectory": "${workspaceFolder}/src",
-		// "cmake.useCMakePresets": "always"
+		"cmake.useCMakePresets": "always",
+		"terminal.integrated.env.windows": {
+        "PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/2.1.0",
+        "PICO_TOOLCHAIN_PATH": "${env:USERPROFILE}/.pico-sdk/toolchain/13_3_Rel1",
+        "Path": "${env:USERPROFILE}/.pico-sdk/toolchain/13_3_Rel1/bin;${env:USERPROFILE}/.pico-sdk/picotool/2.1.0/picotool;${env:USERPROFILE}/.pico-sdk/cmake/v3.29.9/bin;${env:USERPROFILE}/.pico-sdk/ninja/v1.12.1;${env:PATH}"
+    },
+    "terminal.integrated.env.osx": {
+        "PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/2.1.0",
+        "PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/13_3_Rel1",
+        "PATH": "${env:HOME}/.pico-sdk/toolchain/13_3_Rel1/bin:${env:HOME}/.pico-sdk/picotool/2.1.0/picotool:${env:HOME}/.pico-sdk/cmake/v3.29.9/bin:${env:HOME}/.pico-sdk/ninja/v1.12.1:${env:PATH}"
+    },
+    "terminal.integrated.env.linux": {
+        "PICO_SDK_PATH": "${env:HOME}/.pico-sdk/sdk/2.1.0",
+        "PICO_TOOLCHAIN_PATH": "${env:HOME}/.pico-sdk/toolchain/13_3_Rel1",
+        "PATH": "${env:HOME}/.pico-sdk/toolchain/13_3_Rel1/bin:${env:HOME}/.pico-sdk/picotool/2.1.0/picotool:${env:HOME}/.pico-sdk/cmake/v3.29.9/bin:${env:HOME}/.pico-sdk/ninja/v1.12.1:${env:PATH}"
+    },
+	"C_Cpp.intelliSenseEngine": "disabled",
+    "editor.codeLens": false,
 	}
 }
