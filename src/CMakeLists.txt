@@ -63,10 +63,10 @@ set(app_sources
 
 
 
-    # include(FetchContent)
+    include(FetchContent)
 
-    # FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
-    # FetchContent_MakeAvailable(json)
+    FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+    FetchContent_MakeAvailable(json)
 
     
     
@@ -154,7 +154,7 @@ hardware_pio
 hardware_sync
 PIOStepperSpeedController
 littlefs
-# nlohmann_json::nlohmann_json
+nlohmann_json::nlohmann_json
 # tinyusb_additions
 # tinyusb_board
 # tinyusb_device

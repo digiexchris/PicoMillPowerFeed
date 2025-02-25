@@ -25,7 +25,7 @@ extern "C"
 #include "drivers/display/SSD1306Display.hxx"
 #include "drivers/stepper/PicoStepper.hxx"
 std::shared_ptr<PowerFeed::SettingsManager> settingsManager;
-std::shared_ptr<PowerFeed::IStepper> stepper;
+std::shared_ptr<PowerFeed::Drivers::PicoStepper> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
 
 std::shared_ptr<PowerFeed::StepperState> stepperState;

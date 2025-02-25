@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "../icons.hxx"
+#include "icons.hxx"
 
 namespace PowerFeed::Drivers
 {

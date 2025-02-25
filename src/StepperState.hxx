@@ -59,7 +59,7 @@ namespace PowerFeed
 	class StepperState
 	{
 	public:
-		StepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : mySettings(aSettings), myStepper(aStepper), myTime(aTime)
+		StepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Stepper> aStepper, std::shared_ptr<ITime> aTime) : mySettings(aSettings), myStepper(aStepper), myTime(aTime)
 		{
 			myState = States::STOPPED;
 			myStoppedAt = 0;
@@ -80,7 +80,7 @@ namespace PowerFeed
 
 		uint64_t myStoppedAt;
 
-		std::shared_ptr<IStepper> myStepper;
+		std::shared_ptr<Stepper> myStepper;
 
 		std::shared_ptr<ITime> myTime;
 

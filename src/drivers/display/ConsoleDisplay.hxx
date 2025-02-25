@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Display.hxx"
+#include "Display.hxx"
 
 namespace PowerFeed::Drivers
 {

@@ -6,7 +6,7 @@
 namespace PowerFeed::Drivers
 {
 	PicoStepper::PicoStepper(std::shared_ptr<SettingsManager> aSettings, PIO pio, uint sm)
-		: mySettingsManager(aSettings), myIsRunning(false)
+		: mySettingsManager(aSettings)
 	{
 		Settings::Driver driver = mySettingsManager->Get()->driver;
 
@@ -36,15 +36,17 @@ namespace PowerFeed::Drivers
 		}
 	}
 
-	void PicoStepper::Disable()
+	void PicoStepper::Stop()
 	{
-		panic("Not implemented, needs to check that the PIOStepper isn't running first.");
+		panic("Not implemented, needs to check that the PIOStepper isn't running first. Maybe needs the Update() loop to check if it's stopped and then disable.");
 		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
 				 mySettingsManager->Get()->driver.driverDisableValue);
 	}
 
-	void PicoStepper::Enable()
+	void PicoStepper::Start()
 	{
+
+		panic("Not implemented, needs to check that the PIOStepper isn't running first. Maybe needs the Update() loop to check if it's stopped and then enable.");
 		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
 				 mySettingsManager->Get()->driver.driverEnableValue);
 		vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
@@ -83,7 +85,6 @@ namespace PowerFeed::Drivers
 		}
 		return myPIOStepper->GetCurrentFrequency();
 	}
-	bool PicoStepper::IsEnabled() { return myIsEnabled; }
 	void PicoStepper::SetDirection(bool direction)
 	{
 		panic("Not implemented, need to implement checking to make myPIOStepper is stopped before changing direction");
