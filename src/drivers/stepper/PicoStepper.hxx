@@ -1,27 +1,30 @@
 #pragma once
+#include "Common.hxx"
+#include "FreeRTOS.h"
 #include "Settings.hxx"
 #include "Stepper.hxx"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
+#include "task.h"
 #include <PIOStepperSpeedController/PIOStepper.hxx>
 #include <PIOStepperSpeedController/Stepper.hxx>
-#include <memory>
 
 namespace PowerFeed::Drivers
 {
-	using DefaultStepperType = PIOStepperSpeedController::PIOStepper;
+	class PicoStepper;
+	using DefaultStepperType = PicoStepper;
 
 	class PicoStepper : public Stepper<PicoStepper>
 	{
 	public:
-		PicoStepper(std::shared_ptr<SettingsManager> aSettings, PIO pio, uint sm);
+		PicoStepper(SettingsManager *aSettings, Time *aTime, PIO pio, uint sm);
+		~PicoStepper();
 
 		void SetDirection(bool direction);
 		bool GetDirection();
 		bool GetTargetDirection();
 		uint32_t GetTargetSpeed();
 		void SetSpeed(uint32_t speed);
-		void Init();
 		uint32_t GetCurrentSpeed();
 		void Start();
 		void Stop();
@@ -31,10 +34,13 @@ namespace PowerFeed::Drivers
 		void PrivUpdate();
 		static void PrivUpdateTask(void *pvParameters);
 
-		std::shared_ptr<SettingsManager> mySettingsManager;
-		std::unique_ptr<PIOStepperSpeedController::PIOStepper> myPIOStepper;
-
+		SettingsManager *mySettingsManager;
+		PIOStepperSpeedController::PIOStepper *myPIOStepper;
+		Time *myTime;
+		uint64_t myStoppedAt;
 		bool myDirection;
 		bool myTargetDirection;
+		bool myIsEnabled;
+		TaskHandle_t myTaskHandle;
 	};
 }

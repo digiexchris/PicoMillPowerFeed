@@ -9,7 +9,7 @@
 namespace PowerFeed::Drivers
 {
 
-	ConsoleDisplay::ConsoleDisplay(std::shared_ptr<SettingsManager> aSettings) : Display(aSettings)
+	ConsoleDisplay::ConsoleDisplay(SettingsManager *aSettings) : Display(aSettings, font_12x16)
 	{
 		// 33x4 characters approximately equals the ssd1306 display
 		// assuming the 12x16 font is used

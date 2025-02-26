@@ -28,16 +28,13 @@ extern "C"
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
-std::shared_ptr<SettingsManager> settingsManager;
-std::shared_ptr<DefaultStepperType> stepper;
-std::shared_ptr<PowerFeed::Time> iTime;
-std::shared_ptr<StepperState<DefaultStepperType>> stepperState;
-
-std::shared_ptr<Machine<DefaultStepperType>> machineState;
-
-std::unique_ptr<Drivers::Switches<DefaultStepperType>> switches;
-
-std::shared_ptr<Display> display;
+SettingsManager *settingsManager;
+DefaultStepperType *stepper;
+PowerFeed::Time *iTime;
+StepperState<DefaultStepperType> *stepperState;
+Machine<DefaultStepperType> *machineState;
+Drivers::Switches<DefaultStepperType> *switches;
+Display *display;
 
 void stepperUpdateTask(void *pvParameters)
 {
@@ -109,7 +106,7 @@ int main()
 	stdio_init_all();
 	printf("Starting PowerFeed\n");
 
-	settingsManager = std::make_shared<SettingsManager>();
+	settingsManager = new SettingsManager();
 	auto settings = settingsManager->Load();
 
 	if (settings == nullptr)
@@ -120,25 +117,34 @@ int main()
 
 	if (settings->display.useSsd1306)
 	{
-		display = std::make_shared<SSD1306Display>(settingsManager);
+		display = new SSD1306Display(settingsManager);
 	}
 	else
 	{
-		display = std::make_shared<ConsoleDisplay>(settingsManager);
+		display = new ConsoleDisplay(settingsManager);
 	}
 
 	display->DrawStart();
 	display->WriteBuffer();
 	sleep_ms(500);
 
-	stepper = std::make_shared<DefaultStepperType>(settingsManager, pio0, 0);
-	iTime = std::make_shared<Time>();
-	stepperState = std::make_shared<StepperState<DefaultStepperType>>(settingsManager, stepper, iTime);
-	machineState = std::make_shared<Machine<DefaultStepperType>>(settingsManager, display, stepperState);
+	stepper = new DefaultStepperType(settingsManager, iTime, pio0, 0);
+	iTime = new Time();
+
+	stepperState = new StepperState<DefaultStepperType>(
+		settingsManager,
+		stepper);
+
+	machineState = new Machine<DefaultStepperType>(
+		settingsManager,
+		display,
+		stepperState,
+		10,
+		settingsManager->Get()->mechanical.maxDriverStepsPerSecond);
 
 	// todo: load saved units and speed from eeprom
 
-	switches = std::make_unique<Switches<DefaultStepperType>>(settingsManager, machineState);
+	switches = new Switches<DefaultStepperType>(settingsManager, machineState);
 
 	switches->Start();
 

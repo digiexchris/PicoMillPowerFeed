@@ -16,7 +16,7 @@
 namespace PowerFeed::Drivers
 {
 
-	SSD1306Display::SSD1306Display(std::shared_ptr<SettingsManager> aSettings) : Display(aSettings)
+	SSD1306Display::SSD1306Display(SettingsManager *aSettings) : Display(aSettings, font_12x16)
 	{
 		// Initialize the display
 		auto settings = aSettings->Get();

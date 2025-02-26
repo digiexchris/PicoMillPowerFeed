@@ -2,7 +2,6 @@
 #include "Helpers.hxx"
 #include "Settings.hxx"
 #include "icons.hxx"
-#include "textRenderer/12x16_font.h"
 #include <cstring>
 
 namespace PowerFeed
@@ -11,7 +10,7 @@ namespace PowerFeed
 	const char *IPM = "ipm";
 	const char *MMPM = "mm ";
 
-	Display::Display(std::shared_ptr<SettingsManager> settings) : mySettings(settings)
+	Display::Display(SettingsManager *settings, const unsigned char *font) : mySettings(settings), myFont(font)
 	{
 	}
 
@@ -20,10 +19,10 @@ namespace PowerFeed
 		ClearBuffer();
 
 		const char *top = "POWER";
-		DrawCenteredText(top, font_12x16, 16);
+		DrawCenteredText(top, myFont, 16);
 
 		const char *bottom = "FEED";
-		DrawCenteredText(bottom, font_12x16, 32);
+		DrawCenteredText(bottom, myFont, 32);
 	}
 
 	void Display::ToggleUnits()
@@ -77,7 +76,7 @@ namespace PowerFeed
 			speedPerMin = speedPerMin * inchPerMm;
 			snprintf(speed, sizeof(speed), "%.1f %s", speedPerMin, IPM);
 		}
-		DrawCenteredText(speed, font_12x16, 0);
+		DrawCenteredText(speed, myFont, 0);
 	}
 
 	void Display::DrawCenteredText(const char *text, const unsigned char *font, uint16_t y)

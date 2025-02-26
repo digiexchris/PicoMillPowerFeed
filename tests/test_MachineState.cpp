@@ -4,7 +4,6 @@
 #include "TestDisplay.hpp"
 #include "TestStepper.hpp"
 #include <gtest/gtest.h>
-#include <memory>
 
 using namespace PowerFeed;
 
@@ -50,7 +49,7 @@ TEST_F(MachineStateTest, Left_Normal_Speed)
 		.Times(1);
 
 	// Execute the action after setting up expectations
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::LEFT_HIGH);
+	BoolStateChange stateChange(DeviceState::LEFT_HIGH);
 	state->OnValueChange(stateChange);
 }
 
@@ -68,7 +67,7 @@ TEST_F(MachineStateTest, Right_Normal_Speed)
 		.Times(1);
 
 	// Execute the action after setting up expectations
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 }
 TEST_F(MachineStateTest, Left_Rapid_Speed)
@@ -77,7 +76,7 @@ TEST_F(MachineStateTest, Left_Rapid_Speed)
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+	BoolStateChange rapidStateChange(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for left movement at rapid speed
@@ -90,7 +89,7 @@ TEST_F(MachineStateTest, Left_Rapid_Speed)
 		return startCmd->direction == MOVE_LEFT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
 
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::LEFT_HIGH);
+	BoolStateChange stateChange(DeviceState::LEFT_HIGH);
 	state->OnValueChange(stateChange);
 }
 
@@ -101,7 +100,7 @@ TEST_F(MachineStateTest, Right_Rapid_Speed)
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+	BoolStateChange rapidStateChange(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Set up expectation for right movement at rapid speed
@@ -114,7 +113,7 @@ TEST_F(MachineStateTest, Right_Rapid_Speed)
 		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
 
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 }
 
@@ -130,7 +129,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 			return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
@@ -142,7 +141,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		return speedCmd->speed == 200; })))
 		.Times(1);
 	// Set up expectation for right movement at rapid speed
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+	BoolStateChange rapidStateChange(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
@@ -153,7 +152,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100; })))
 		.Times(1);
-	stateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
+	stateChange = BoolStateChange(DeviceState::RAPID_LOW);
 	state->OnValueChange(stateChange);
 
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
@@ -164,7 +163,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Normal_Then_Stop)
 		auto stopCmd = std::static_pointer_cast<::Stop>(cmd);
 		return stopCmd->type == ::Command::Type::STOP ; })))
 		.Times(1);
-	stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_LOW);
+	stateChange = BoolStateChange(DeviceState::RIGHT_LOW);
 	state->OnValueChange(stateChange);
 }
 
@@ -179,7 +178,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
 	// Change normal speed while moving
@@ -191,7 +190,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_ChangeSpeed)
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
-	auto speedChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, 1);
+	ValueChange<int16_t> speedChange(DeviceState::ENCODER_CHANGED, 1);
 	state->OnValueChange(speedChange);
 }
 
@@ -208,7 +207,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
 	// Switch to rapid speed
@@ -221,7 +220,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200; })))
 		.Times(1);
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+	BoolStateChange rapidStateChange(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Change rapid speed while in rapid mode
@@ -233,7 +232,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 200 + ENCODER_COUNTS_TO_STEPS_PER_SECOND; })))
 		.Times(1);
-	auto encoderStateChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, 1);
+	ValueChange<int16_t> encoderStateChange(DeviceState::ENCODER_CHANGED, 1);
 	state->OnValueChange(encoderStateChange);
 
 	// Switch to normal speed
@@ -245,7 +244,7 @@ TEST_F(MachineStateTest, Right_Normal_Then_Rapid_Then_Change_rapid_speed_Changes
 		auto speedCmd = std::static_pointer_cast<::ChangeSpeed>(cmd);
 		return speedCmd->speed == 100; })))
 		.Times(1);
-	auto normalStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_LOW);
+	BoolStateChange normalStateChange(DeviceState::RAPID_LOW);
 	state->OnValueChange(normalStateChange);
 }
 
@@ -260,7 +259,7 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 100; })))
 		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
 	// Decrease speed to minimum jerk
@@ -274,7 +273,7 @@ TEST_F(MachineStateTest, NegativeSpeedChangeDoesntGoBelowMinimumJerk)
 		.Times(1);
 
 	// Change encoder by large negative value that would put speed below zero
-	auto speedChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, -10);
+	ValueChange<int16_t> speedChange(DeviceState::ENCODER_CHANGED, -10);
 	state->OnValueChange(speedChange);
 }
 
@@ -284,7 +283,7 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 	EXPECT_CALL(*display, ClearBuffer()).Times(1);
 	EXPECT_CALL(*display, DrawSpeed(200)).Times(1);
 	EXPECT_CALL(*display, DrawStopped()).Times(1);
-	auto rapidStateChange = std::make_shared<BoolStateChange>(DeviceState::RAPID_HIGH);
+	BoolStateChange rapidStateChange(DeviceState::RAPID_HIGH);
 	state->OnValueChange(rapidStateChange);
 
 	// Start right movement at rapid speed
@@ -296,7 +295,7 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 		auto startCmd = std::static_pointer_cast<::Start>(cmd);
 		return startCmd->direction == MOVE_RIGHT_DIRECTION && startCmd->speed == 200; })))
 		.Times(1);
-	auto stateChange = std::make_shared<BoolStateChange>(DeviceState::RIGHT_HIGH);
+	BoolStateChange stateChange(DeviceState::RIGHT_HIGH);
 	state->OnValueChange(stateChange);
 
 	// Decrease rapid speed to minimum jerk
@@ -310,6 +309,6 @@ TEST_F(MachineStateTest, NegativeRapidSpeedChangeDoesntGoBelowMinimumJerk)
 		.Times(1);
 
 	// Change encoder by large negative value that would put speed below minimum jerk
-	auto speedChange = std::make_shared<ValueChange<int16_t>>(DeviceState::ENCODER_CHANGED, -100);
+	ValueChange<int16_t> speedChange(DeviceState::ENCODER_CHANGED, -100);
 	state->OnValueChange(speedChange);
 }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "config.h"
 #include <cstdint>
 #include <memory>
 #include <nlohmann/json.hpp>

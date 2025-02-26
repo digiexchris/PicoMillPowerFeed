@@ -5,22 +5,38 @@
 
 namespace PowerFeed::Drivers
 {
-	PicoStepper::PicoStepper(std::shared_ptr<SettingsManager> aSettings, PIO pio, uint sm)
-		: mySettingsManager(aSettings)
+	PicoStepper::PicoStepper(SettingsManager *aSettings, Time *aTime, PIO pio, uint sm)
+		: mySettingsManager(aSettings), myTime(aTime), myStoppedAt(0), myDirection(false), myTargetDirection(false), myIsEnabled(false), myTaskHandle(nullptr)
 	{
-		Settings::Driver driver = mySettingsManager->Get()->driver;
-
 		uint sysclk = clock_get_hz(clk_sys);
-
-		// Initialize
+		Settings::Driver driver = mySettingsManager->Get()->driver;
 		Settings::Mechanical mech = mySettingsManager->Get()->mechanical;
 
-		myPIOStepper = std::make_unique<PIOStepperSpeedController::PIOStepper>(driver.driverStepPin, 10, mech.maxStepsPerSecond, mech.acceleration, mech.deceleration, sysclk, 125, nullptr, nullptr, nullptr, nullptr);
+		myPIOStepper = new PIOStepperSpeedController::PIOStepper(
+			driver.driverStepPin,
+			driver.driverDirPin,
+			mech.maxStepsPerSecond,
+			mech.acceleration,
+			mech.deceleration,
+			sysclk,
+			125,
+			nullptr,
+			nullptr,
+			nullptr,
+			nullptr);
+
+		xTaskCreate(PrivUpdateTask, "Stepper", 2048, this, 15, &myTaskHandle);
 	}
 
-	void PicoStepper::Init()
+	PicoStepper::~PicoStepper()
 	{
-		xTaskCreate(PrivUpdateTask, "Stepper", 2048, this, 15, NULL);
+		delete myPIOStepper;
+
+		if (myTaskHandle != nullptr)
+		{
+			vTaskDelete(myTaskHandle);
+			myTaskHandle = nullptr;
+		}
 	}
 
 	void PicoStepper::SetSpeed(uint32_t speed)
@@ -30,27 +46,63 @@ namespace PowerFeed::Drivers
 
 	void PicoStepper::PrivUpdate()
 	{
+		// if it returns false, it would have done no step output (ie. stopped or error)
 		if (!myPIOStepper->Update())
 		{
+			// Check if the stepper is stopped and disable the driver if it is
+			if (myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPED)
+			{
+
+				auto driverDisableTimeout = mySettingsManager->Get()->driver.driverDisableTimeout;
+
+				if (driverDisableTimeout >= 0)
+				{
+
+					if (myIsEnabled)
+					{
+						const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
+						if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
+						{
+							gpio_put(mySettingsManager->Get()->driver.driverEnPin,
+									 mySettingsManager->Get()->driver.driverDisableValue);
+							myStoppedAt = 0;
+							myIsEnabled = false;
+						}
+						else
+						{
+							myStoppedAt = currentTime;
+						}
+					}
+				}
+			}
 			vTaskDelay(pdMS_TO_TICKS(5));
 		}
 	}
 
 	void PicoStepper::Stop()
 	{
-		panic("Not implemented, needs to check that the PIOStepper isn't running first. Maybe needs the Update() loop to check if it's stopped and then disable.");
-		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-				 mySettingsManager->Get()->driver.driverDisableValue);
+		if (myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPED || myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPING)
+		{
+			return;
+		}
+		myPIOStepper->Stop();
 	}
 
 	void PicoStepper::Start()
 	{
+		if (!myIsEnabled)
+		{
+			gpio_put(mySettingsManager->Get()->driver.driverEnPin,
+					 mySettingsManager->Get()->driver.driverEnableValue);
+			vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
 
-		panic("Not implemented, needs to check that the PIOStepper isn't running first. Maybe needs the Update() loop to check if it's stopped and then enable.");
-		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-				 mySettingsManager->Get()->driver.driverEnableValue);
-		vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
-		myPIOStepper->Start();
+			myIsEnabled = true;
+		}
+
+		if (myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPED || myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPING)
+		{
+			myPIOStepper->Start();
+		}
 	}
 
 	void PicoStepper::PrivUpdateTask(void *pvParameters)
@@ -71,10 +123,8 @@ namespace PowerFeed::Drivers
 		{
 			return 0;
 		}
-		{
-			return 0;
-		}
-		myPIOStepper->GetTargetFrequency();
+
+		return myPIOStepper->GetTargetFrequency(); // Fixed: Added return statement
 	}
 	uint32_t PicoStepper::GetCurrentSpeed()
 	{

@@ -17,8 +17,8 @@
 			"SanaAjani.taskrunnercode",
 			"ms-vscode.cmake-tools",
 			"EditorConfig.EditorConfig",
-			"GitHub.copilot",
-			"GitHub.copilot-chat",
+			// "GitHub.copilot",
+			// "GitHub.copilot-chat",
 			"josetr.cmake-language-support-vscode",
 			"llvm-vs-code-extensions.vscode-clangd",
 			"ms-vscode.cpptools-extension-pack",
@@ -26,9 +26,34 @@
 		]
 	},
 	"settings": {
-		// "cortex-debug.gdbPath.linux": "/toolchain/gcc-arm-none/bin/arm-none-eabi-gdb",
 		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
 		"C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
+		// "testMate.cpp.test.advancedExecutables": [
+		// 	"${workspaceFolder}/build/tests/PicoApp_Tests"
+		// ],
+		"testMate.cpp.debug.configTemplate": {
+			"type": "cppvsdbg",
+			"linux": {
+				"type": "cppdbg",
+				"MIMode": "gdb"
+			},
+			"darwin": {
+				"type": "cppdbg",
+				"MIMode": "lldb"
+			},
+			"win32": {
+				"type": "cppvsdbg"
+			},
+			"program": "${exec}",
+			"args": "${argsArray}",
+			"cwd": "${cwd}",
+			"env": "${envObj}",
+			"environment": "${envObjArray}",
+			"sourceFileMap": "${sourceFileMapObj}",
+			"testMate.cpp.debug.setEnv": {
+				"GTEST_CATCH_EXCEPTIONS": "0"
+			}
+		},
 		"files.associations": {
 			"optional": "cpp",
 			"format": "cpp",

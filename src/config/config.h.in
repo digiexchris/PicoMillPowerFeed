@@ -1,6 +1,6 @@
 #pragma once
 
-namespace PicoMill
+namespace PowerFeed
 {
 	constexpr char CONFIG_JSON[] = R"json(@CONFIG_CONTENT@)json";
 }

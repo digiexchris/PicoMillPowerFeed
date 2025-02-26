@@ -66,31 +66,31 @@ namespace PowerFeed
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<SettingsManager> aSettings,
-				std::shared_ptr<Display> aDisplay,
-				std::shared_ptr<StepperState<DerivedStepper>> aStepperState,
+		Machine(SettingsManager *aSettings,
+				Display *aDisplay,
+				StepperState<DerivedStepper> *aStepperState,
 				uint32_t aNormalSpeed = 1,
 				uint32_t aRapidSpeed = 2);
 
-		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
+		void OnValueChange(const StateChange &aStateChange);
 
 		bool IsStateSet(MachineState state) const
 		{
 			return (myState & static_cast<uint8_t>(state)) != 0;
 		}
 
-		std::shared_ptr<Display> GetDisplay() const { return myDisplay; }
+		Display *GetDisplay() const { return myDisplay; }
 
 	private:
-		std::shared_ptr<Display> myDisplay;
-		std::shared_ptr<StepperState<DerivedStepper>> myStepperState;
+		Display *myDisplay;
+		StepperState<DerivedStepper> *myStepperState;
 		uint32_t myNormalSpeed = 1;
 		uint32_t myRapidSpeed = 20000;
 		uint32_t myAcceleration;
 		uint8_t myState = 0;
 		Units myUnits = Units::Millimeter;
 
-		std::shared_ptr<SettingsManager> mySettings;
+		SettingsManager *mySettings;
 
 		void UpdateDisplay();
 

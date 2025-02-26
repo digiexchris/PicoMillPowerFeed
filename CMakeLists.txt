@@ -10,10 +10,12 @@ if(BUILD_PICO_APP)
   # Add subdirectories
   add_subdirectory(src)
 else()
-  project(PicoProject C CXX ASM)
+  
 endif()
 
 if (BUILD_TESTS)
+    enable_testing()
+    project(PicoProject C CXX ASM)
     add_subdirectory(tests)
 endif()
 

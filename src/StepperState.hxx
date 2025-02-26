@@ -60,18 +60,16 @@ namespace PowerFeed
 	class StepperState
 	{
 	public:
-		StepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Stepper<DerivedStepper>> aStepper, std::shared_ptr<ITime> aTime)
+		StepperState(SettingsManager *aSettings, StepperType<DerivedStepper> *aStepper)
 		{
 			mySettings = aSettings;
 			myStepper = aStepper;
-			myTime = aTime;
 			myState = States::STOPPED;
-			myStoppedAt = 0;
 		}
 
-		virtual void ProcessCommand(Command &command);
-		virtual States GetState() { return myState; }
-		virtual void Run();
+		void ProcessCommand(const Command &aCommand);
+		States GetState() { return myState; }
+		void Run();
 
 	private:
 		void ProcessStop();
@@ -79,16 +77,9 @@ namespace PowerFeed
 		void ProcessStart(bool direction, uint32_t speed);
 
 		States myState;
-
 		uint32_t myRequestedSpeed;
-
-		uint64_t myStoppedAt;
-
-		std::shared_ptr<StepperType<DerivedStepper>> myStepper;
-
-		std::shared_ptr<ITime> myTime;
-
-		std::shared_ptr<SettingsManager> mySettings;
+		StepperType<DerivedStepper> *myStepper;
+		SettingsManager *mySettings;
 	};
 
-} // namespace Stepper
+} // namespace PowerFeed

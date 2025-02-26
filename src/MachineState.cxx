@@ -1,23 +1,22 @@
 #include "MachineState.hxx"
 #include "StepperState.hxx"
-#include "config.h"
-#include <memory>
+// #include "drivers/stepper/PicoStepper.hxx"
 
 namespace PowerFeed
 {
 	template <typename DerivedStepper>
-	Machine<DerivedStepper>::Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState<DerivedStepper>> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed)
+	Machine<DerivedStepper>::Machine(SettingsManager *aSettings, Display *aDisplay, StepperState<DerivedStepper> *aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed)
 		: mySettings(aSettings), myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 	template <typename DerivedStepper>
-	void Machine<DerivedStepper>::OnValueChange(std::shared_ptr<StateChange> aStateChange)
+	void Machine<DerivedStepper>::OnValueChange(const StateChange &aStateChange)
 	{
 		std::shared_ptr<Settings> settings = mySettings->Get();
 		Settings::Mechanical mechanical = settings->mechanical;
 		Settings::Controls controls = settings->controls;
 
-		// printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange->type);
-		if (aStateChange->type == DeviceState::LEFT_HIGH || aStateChange->type == DeviceState::RIGHT_HIGH)
+		// printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange.type);
+		if (aStateChange.type == DeviceState::LEFT_HIGH || aStateChange.type == DeviceState::RIGHT_HIGH)
 		{
 			// Clear invalid states and ignore updates related to them
 			if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RIGHT))
@@ -28,7 +27,7 @@ namespace PowerFeed
 			}
 		}
 
-		switch (aStateChange->type)
+		switch (aStateChange.type)
 		{
 		case DeviceState::LEFT_HIGH:
 			SetState(MachineState::LEFT);
@@ -109,9 +108,9 @@ namespace PowerFeed
 			break;
 		case DeviceState::ENCODER_CHANGED:
 		{
-			auto state = std::static_pointer_cast<ValueChange<int16_t>>(aStateChange);
+			const ValueChange<int16_t> &state = static_cast<const ValueChange<int16_t> &>(aStateChange);
 			bool moving = IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT);
-			int16_t increment = state->value;
+			int16_t increment = state.value;
 
 			// Apply acceleration curve to encoder input
 			if (abs(increment) > 16)
@@ -229,8 +228,6 @@ namespace PowerFeed
 		myDisplay->Refresh();
 	}
 
-// Explicit instantiation for the template class
-#include "drivers/stepper/PicoStepper.hxx"
-	template class Machine<PowerFeed::Drivers::PicoStepper>;
+	// template class Machine<PowerFeed::Drivers::PicoStepper>;
 
 } // namespace PowerFeed

@@ -2,7 +2,6 @@
 #include "Common.hxx"
 #include "Settings.hxx"
 #include <cstdlib>
-#include <memory>
 #include <sys/stat.h>
 
 namespace PowerFeed
@@ -10,7 +9,7 @@ namespace PowerFeed
 	template <typename DerivedStepper>
 	void StepperState<DerivedStepper>::ProcessStop()
 	{
-		myStepper->SetSpeed(0);
+		myStepper->Stop();
 
 		switch (myState)
 		{
@@ -29,7 +28,7 @@ namespace PowerFeed
 	}
 
 	template <typename DerivedStepper>
-	void StepperState<DerivedStepper>::ProcessCommand(Command &aCommand)
+	void StepperState<DerivedStepper>::ProcessCommand(const Command &aCommand)
 	{
 		switch (aCommand.type)
 		{
@@ -47,7 +46,7 @@ namespace PowerFeed
 		case Command::Type::CHANGE_ACCELERATION:
 		{
 			const ChangeAcceleration &changeAcceleration = static_cast<const ChangeAcceleration &>(aCommand);
-			panic("Not implemented");
+			assert("Not implemented");
 		}
 		break;
 
@@ -67,11 +66,6 @@ namespace PowerFeed
 		auto myDirection = myStepper->GetDirection();
 		auto myTargetSpeed = myStepper->GetTargetSpeed();
 		auto myTargetDirection = myStepper->GetTargetDirection();
-
-		if (!myStepper->IsRunning())
-		{
-			myStepper->Start();
-		}
 
 		switch (myState)
 		{
@@ -190,6 +184,11 @@ namespace PowerFeed
 			}
 			break;
 		}
+
+		if (!myStepper->IsRunning())
+		{
+			myStepper->Start();
+		}
 	}
 
 	template <typename DerivedStepper>
@@ -260,8 +259,6 @@ namespace PowerFeed
 	template <typename DerivedStepper>
 	void StepperState<DerivedStepper>::Run()
 	{
-
-		// due to precaching this, it will only be accurate to speeds within 4 steps or whatever the stepper's steps per update is
 		auto mySpeed = myStepper->GetCurrentSpeed();
 		auto myDirection = myStepper->GetDirection();
 		auto myTargetSpeed = myStepper->GetTargetSpeed();
@@ -305,39 +302,10 @@ namespace PowerFeed
 			}
 			break;
 		case States::STOPPED:
-
-			// todo this logic no longer works with PIOStepper handling enabling/disabling through the Start() and Stop() functions. Move disable timeout logic into that class.
-			//  if (myTargetSpeed == 0)
-			//  {
-
-			// 	auto driverDisableTimeout = mySettings->Get()->driver.driverDisableTimeout;
-
-			// 	if (driverDisableTimeout >= 0)
-			// 	{
-
-			// 		if (myStepper->IsRunning())
-			// 		{
-			// 			const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
-			// 			if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
-			// 			{
-			// 				myStepper->Disable();
-			// 				myStoppedAt = 0;
-			// 			}
-			// 			else
-			// 			{
-			// 				myStoppedAt = currentTime;
-			// 			}
-			// 		}
-			// 	}
-			// }
-
-			return;
+			break;
 		}
 	}
 
-// Explicit instantiations for the template class
-// Add other stepper implementations as needed
-#include "drivers/stepper/PicoStepper.hxx"
-	template class StepperState<PowerFeed::Drivers::PicoStepper>;
+	// template class StepperState<PowerFeed::Drivers::PicoStepper>;
 
 } // namespace PowerFeed

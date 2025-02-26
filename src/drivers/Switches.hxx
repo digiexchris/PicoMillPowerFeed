@@ -23,20 +23,18 @@ namespace PowerFeed::Drivers
 		DeviceState lowState;
 	};
 
-	template <typename DerivedStepper = PowerFeed::Drivers::PicoStepper>
+	template <typename DerivedStepper>
 	class Switches
 	{
 	public:
-		Switches(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Machine<DerivedStepper>> aMachineState);
-
-		static std::shared_ptr<Switches<DerivedStepper>> GetInstance();
-
+		Switches(SettingsManager *aSettings, Machine<DerivedStepper> *aMachineState);
 		void Start();
 
 	private:
-		static std::shared_ptr<Switches<DerivedStepper>> myInstance;
-		std::shared_ptr<Machine<DerivedStepper>> myMachine;
-		std::shared_ptr<SettingsManager> mySettingsManager;
+		// required by the ISR handler callback unfortunately
+		static Switches<DerivedStepper> *myInstance;
+		Machine<DerivedStepper> *myMachine;
+		SettingsManager *mySettingsManager;
 
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);
 		static void EncoderUpdateTask(void *instance);

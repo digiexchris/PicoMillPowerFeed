@@ -1,9 +1,7 @@
 #pragma once
 
-// Remove self-include to prevent circular inclusion
-#include <PIOStepperSpeedController/Stepper.hxx>
+#include <cassert>
 #include <cstdint>
-#include <pico/stdlib.h>
 #include <string>
 
 namespace PowerFeed
@@ -116,7 +114,7 @@ namespace PowerFeed
 		if (IsRunning())
 		{
 			// this is a panic because StepperState should prevent this situation
-			panic("Stepper: Cannot change direction while running\n");
+			assert("Stepper: Cannot change direction while running\n");
 		}
 
 		static_cast<Derived *>(this)->SetDirection(aDirection);

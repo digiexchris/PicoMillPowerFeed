@@ -4,6 +4,19 @@ set(CMAKE_MINIMUM_REQUIRED_VERSION 3.21)
 set(CMAKE_BUILD_TYPE Debug) 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 
+    # Read the JSON file content
+    file(READ "${CMAKE_SOURCE_DIR}/src/config/config.json" CONFIG_CONTENT)
+    
+    # Configure the header template
+    configure_file(
+        "${CMAKE_SOURCE_DIR}/src/config/config.h.in"
+        "${CMAKE_BINARY_DIR}/include/config.h"
+        @ONLY
+    )
+    
+    # Add include directory
+    include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
+
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
 
 # add_compile_options(
@@ -19,8 +32,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer")
 #     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-unused-parameter>
 #     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wno-type-limits>
 # )
-
 include(FetchContent)
+
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
@@ -29,16 +46,16 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-include_directories(PUBLIC ${rapidjson_SOURCE_DIR}/include)
+include(GoogleTest)
 
-# Include the directories
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/lib/pico-ssd1306)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Add test executable
-file(GLOB_RECURSE TEST_SOURCES "*.cpp")
-add_executable(PicoApp_Tests ${TEST_SOURCES} ../src/StepperState.cxx ../src/MachineState.cxx ../src/Display.cxx ../src/Settings.cxx)
-
-# add_subdirectory(${CMAKE_HOME_DIRECTORY}/lib/Simple3dStepperMovementPlanner StepTimingPlanner)
+add_executable(PicoApp_Tests ${TEST_SOURCES} 
+../src/StepperState.cxx 
+../src/MachineState.cxx 
+../src/Display.cxx
+../src/Settings.cxx
+)
 
 add_compile_options(
     ### Gnu/Clang C Options
@@ -50,9 +67,7 @@ target_compile_definitions(PicoApp_Tests PRIVATE UNIT_TEST)
 target_link_libraries(PicoApp_Tests
 GTest::gtest_main
 GTest::gmock_main
-# StepTimingPlanner
-# tcmalloc
-# profiler
+nlohmann_json::nlohmann_json
 )
 
 add_custom_command(
@@ -64,14 +79,12 @@ add_custom_command(
   COMMENT "Copying compile_commands.json to tests root"
 )
 
-# Create a custom target that always runs the above command
 add_custom_target(copy_compile_commands_tests ALL
   DEPENDS ${CMAKE_SOURCE_DIR}/tests/compile_commands.json
 )
 
 add_dependencies(PicoApp_Tests copy_compile_commands_tests)
 
-include(GoogleTest)
+
 gtest_discover_tests(PicoApp_Tests)
 
-# set_tests_properties(StepTimingPlanner_Tests PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
