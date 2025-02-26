@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../MachineState.hxx"
+#include "../drivers/stepper/PicoStepper.hxx"
 #include "Settings.hxx"
 #include "config.h"
 #include <FreeRTOS.h>
-#include <cstdint>
 #include <array>
+#include <cstdint>
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <memory>
@@ -22,18 +23,19 @@ namespace PowerFeed::Drivers
 		DeviceState lowState;
 	};
 
+	template <typename DerivedStepper = PowerFeed::Drivers::PicoStepper>
 	class Switches
 	{
 	public:
-		Switches(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Machine> aMachineState);
+		Switches(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Machine<DerivedStepper>> aMachineState);
 
-		static std::shared_ptr<Switches> GetInstance();
+		static std::shared_ptr<Switches<DerivedStepper>> GetInstance();
 
 		void Start();
 
 	private:
-		static std::shared_ptr<Switches> myInstance;
-		std::shared_ptr<Machine> myMachine;
+		static std::shared_ptr<Switches<DerivedStepper>> myInstance;
+		std::shared_ptr<Machine<DerivedStepper>> myMachine;
 		std::shared_ptr<SettingsManager> mySettingsManager;
 
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);

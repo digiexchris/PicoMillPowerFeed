@@ -62,10 +62,15 @@ namespace PowerFeed
 		T value;
 	};
 
+	template <typename DerivedStepper>
 	class Machine
 	{
 	public:
-		Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed = 1, uint32_t aRapidSpeed = 2);
+		Machine(std::shared_ptr<SettingsManager> aSettings,
+				std::shared_ptr<Display> aDisplay,
+				std::shared_ptr<StepperState<DerivedStepper>> aStepperState,
+				uint32_t aNormalSpeed = 1,
+				uint32_t aRapidSpeed = 2);
 
 		void OnValueChange(std::shared_ptr<StateChange> anStateChange);
 
@@ -78,7 +83,7 @@ namespace PowerFeed
 
 	private:
 		std::shared_ptr<Display> myDisplay;
-		std::shared_ptr<StepperState> myStepperState;
+		std::shared_ptr<StepperState<DerivedStepper>> myStepperState;
 		uint32_t myNormalSpeed = 1;
 		uint32_t myRapidSpeed = 20000;
 		uint32_t myAcceleration;

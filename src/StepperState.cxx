@@ -7,8 +7,8 @@
 
 namespace PowerFeed
 {
-
-	void StepperState::ProcessStop()
+	template <typename DerivedStepper>
+	void StepperState<DerivedStepper>::ProcessStop()
 	{
 		myStepper->SetSpeed(0);
 
@@ -28,9 +28,10 @@ namespace PowerFeed
 		}
 	}
 
-	void StepperState::ProcessCommand(std::shared_ptr<Command> aCommand)
+	template <typename DerivedStepper>
+	void StepperState<DerivedStepper>::ProcessCommand(Command &aCommand)
 	{
-		switch (aCommand->type)
+		switch (aCommand.type)
 		{
 		case Command::Type::STOP:
 
@@ -38,37 +39,38 @@ namespace PowerFeed
 			break;
 		case Command::Type::CHANGE_SPEED:
 		{
-			std::shared_ptr<ChangeSpeed> changeSpeed = std::static_pointer_cast<ChangeSpeed>(aCommand);
-			ProcessNewSpeed(changeSpeed->speed);
+			const ChangeSpeed &changeSpeed = static_cast<const ChangeSpeed &>(aCommand);
+			ProcessNewSpeed(changeSpeed.speed);
 		}
 		break;
 
 		case Command::Type::CHANGE_ACCELERATION:
 		{
-			std::shared_ptr<ChangeAcceleration> changeAcceleration = std::static_pointer_cast<ChangeAcceleration>(aCommand);
-			myStepper->SetAcceleration(changeAcceleration->acceleration);
+			const ChangeAcceleration &changeAcceleration = static_cast<const ChangeAcceleration &>(aCommand);
+			panic("Not implemented");
 		}
+		break;
 
 		case Command::Type::START:
 		{
-			std::shared_ptr<Start> start = std::static_pointer_cast<Start>(aCommand);
-			ProcessStart(start->direction, start->speed);
+			const Start &start = static_cast<const Start &>(aCommand);
+			ProcessStart(start.direction, start.speed);
 		}
-
 		break;
 		}
 	}
 
-	void StepperState::ProcessStart(bool direction, uint32_t speed)
+	template <typename DerivedStepper>
+	void StepperState<DerivedStepper>::ProcessStart(bool direction, uint32_t speed)
 	{
 		auto mySpeed = myStepper->GetCurrentSpeed();
 		auto myDirection = myStepper->GetDirection();
 		auto myTargetSpeed = myStepper->GetTargetSpeed();
 		auto myTargetDirection = myStepper->GetTargetDirection();
 
-		if (!myStepper->IsEnabled())
+		if (!myStepper->IsRunning())
 		{
-			myStepper->Enable();
+			myStepper->Start();
 		}
 
 		switch (myState)
@@ -190,7 +192,8 @@ namespace PowerFeed
 		}
 	}
 
-	void StepperState::ProcessNewSpeed(uint32_t speed)
+	template <typename DerivedStepper>
+	void StepperState<DerivedStepper>::ProcessNewSpeed(uint32_t speed)
 	{
 		auto mySpeed = myStepper->GetCurrentSpeed();
 		auto myDirection = myStepper->GetDirection();
@@ -254,7 +257,8 @@ namespace PowerFeed
 		}
 	}
 
-	void StepperState::Run()
+	template <typename DerivedStepper>
+	void StepperState<DerivedStepper>::Run()
 	{
 
 		// due to precaching this, it will only be accurate to speeds within 4 steps or whatever the stepper's steps per update is
@@ -302,32 +306,38 @@ namespace PowerFeed
 			break;
 		case States::STOPPED:
 
-			if (myTargetSpeed == 0)
-			{
+			// todo this logic no longer works with PIOStepper handling enabling/disabling through the Start() and Stop() functions. Move disable timeout logic into that class.
+			//  if (myTargetSpeed == 0)
+			//  {
 
-				auto driverDisableTimeout = mySettings->Get()->driver.driverDisableTimeout;
+			// 	auto driverDisableTimeout = mySettings->Get()->driver.driverDisableTimeout;
 
-				if (driverDisableTimeout >= 0)
-				{
+			// 	if (driverDisableTimeout >= 0)
+			// 	{
 
-					if (myStepper->IsEnabled())
-					{
-						const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
-						if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
-						{
-							myStepper->Disable();
-							myStoppedAt = 0;
-						}
-						else
-						{
-							myStoppedAt = currentTime;
-						}
-					}
-				}
-			}
+			// 		if (myStepper->IsRunning())
+			// 		{
+			// 			const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
+			// 			if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
+			// 			{
+			// 				myStepper->Disable();
+			// 				myStoppedAt = 0;
+			// 			}
+			// 			else
+			// 			{
+			// 				myStoppedAt = currentTime;
+			// 			}
+			// 		}
+			// 	}
+			// }
 
 			return;
 		}
 	}
 
-} // namespace Stepper
+// Explicit instantiations for the template class
+// Add other stepper implementations as needed
+#include "drivers/stepper/PicoStepper.hxx"
+	template class StepperState<PowerFeed::Drivers::PicoStepper>;
+
+} // namespace PowerFeed

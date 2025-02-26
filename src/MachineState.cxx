@@ -5,10 +5,12 @@
 
 namespace PowerFeed
 {
+	template <typename DerivedStepper>
+	Machine<DerivedStepper>::Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState<DerivedStepper>> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed)
+		: mySettings(aSettings), myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
-	Machine::Machine(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<Display> aDisplay, std::shared_ptr<StepperState> aStepperState, uint32_t aNormalSpeed, uint32_t aRapidSpeed) : mySettings(aSettings), myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
-
-	void Machine::OnValueChange(std::shared_ptr<StateChange> aStateChange)
+	template <typename DerivedStepper>
+	void Machine<DerivedStepper>::OnValueChange(std::shared_ptr<StateChange> aStateChange)
 	{
 		std::shared_ptr<Settings> settings = mySettings->Get();
 		Settings::Mechanical mechanical = settings->mechanical;
@@ -34,7 +36,8 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveLeftDirection, myRapidSpeed);
+					// Create command object on stack and pass by reference
+					Start command(mechanical.moveLeftDirection, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -42,7 +45,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveLeftDirection, myNormalSpeed);
+					Start command(mechanical.moveLeftDirection, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -51,7 +54,7 @@ namespace PowerFeed
 			ClearState(MachineState::LEFT);
 			if (!IsStateSet(MachineState::RIGHT))
 			{
-				std::shared_ptr<Command> command = std::make_shared<Stop>();
+				Stop command;
 				myStepperState->ProcessCommand(command);
 			}
 			break;
@@ -61,7 +64,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveRightDirection, myRapidSpeed);
+					Start command(mechanical.moveRightDirection, myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -69,7 +72,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<Start>(mechanical.moveRightDirection, myNormalSpeed);
+					Start command(mechanical.moveRightDirection, myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -78,7 +81,7 @@ namespace PowerFeed
 			ClearState(MachineState::RIGHT);
 			if (!IsStateSet(MachineState::LEFT))
 			{
-				std::shared_ptr<Command> command = std::make_shared<Stop>();
+				Stop command;
 				myStepperState->ProcessCommand(command);
 			}
 			break;
@@ -88,7 +91,7 @@ namespace PowerFeed
 			{
 				if (myRapidSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
+					ChangeSpeed command(myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -99,7 +102,7 @@ namespace PowerFeed
 			{
 				if (myNormalSpeed > 0)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
+					ChangeSpeed command(myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -139,14 +142,14 @@ namespace PowerFeed
 
 				if (moving)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myRapidSpeed);
+					ChangeSpeed command(myRapidSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
 			else if (IsStateSet(MachineState::ACCELERATION_HIGH))
 			{
 				myAcceleration += controls.encoderCountsToStepsPerSecond;
-				std::shared_ptr<Command> command = std::make_shared<ChangeAcceleration>(myAcceleration, myAcceleration);
+				ChangeAcceleration command(myAcceleration, myAcceleration);
 				myStepperState->ProcessCommand(command);
 			}
 			else
@@ -168,7 +171,7 @@ namespace PowerFeed
 
 				if (moving)
 				{
-					std::shared_ptr<Command> command = std::make_shared<ChangeSpeed>(myNormalSpeed);
+					ChangeSpeed command(myNormalSpeed);
 					myStepperState->ProcessCommand(command);
 				}
 			}
@@ -194,7 +197,8 @@ namespace PowerFeed
 		// printf("Machine::OnValueChange: Display Updated\n");
 	}
 
-	void Machine::UpdateDisplay()
+	template <typename DerivedStepper>
+	void Machine<DerivedStepper>::UpdateDisplay()
 	{
 		myDisplay->ClearBuffer();
 
@@ -224,5 +228,9 @@ namespace PowerFeed
 
 		myDisplay->Refresh();
 	}
+
+// Explicit instantiation for the template class
+#include "drivers/stepper/PicoStepper.hxx"
+	template class Machine<PowerFeed::Drivers::PicoStepper>;
 
 } // namespace PowerFeed

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Stepper.hxx"
+// Remove self-include to prevent circular inclusion
 #include <PIOStepperSpeedController/Stepper.hxx>
 #include <cstdint>
+#include <pico/stdlib.h>
 #include <string>
 
 namespace PowerFeed
@@ -32,16 +33,20 @@ namespace PowerFeed
 			} -> std::convertible_to<bool>;
 		{stepper.SetDirection(aDirection)};
 		{
-			stepper.GetState()
-			} -> std::convertible_to<PIOStepperSpeedController::StepperState>;
+			stepper.IsRunning()
+			} -> std::convertible_to<bool>;
 	}
 	&&std::derived_from<Derived, Stepper<Derived>>;
+
+	template <typename Derived>
+	using StepperType = Stepper<Derived>;
 
 	template <typename Derived>
 	class Stepper
 	{
 	public:
 		bool GetDirection();
+		bool GetTargetDirection();
 		void SetDirection(bool aDirection);
 		uint32_t GetTargetSpeed();
 		void Stop();
@@ -55,44 +60,58 @@ namespace PowerFeed
 		Stepper() = default;
 	};
 
-	<typename Derived> void Stepper::Stop()
+	template <typename Derived>
+	void Stepper<Derived>::Stop()
 	{
 		static_cast<Derived *>(this)->Stop();
 	}
 
-	<typename Derived> void Stepper::Start()
+	template <typename Derived>
+	void Stepper<Derived>::Start()
 	{
 		static_cast<Derived *>(this)->Start();
 	}
 
-	<typename Derived> void Stepper::SetSpeed(uint32_t speed)
+	template <typename Derived>
+	void Stepper<Derived>::SetSpeed(uint32_t speed)
 	{
-		static_cast<Derived *>(this)->SetTargetHz(speed);
+		static_cast<Derived *>(this)->SetSpeed(speed);
 	}
 
-	<typename Derived> void Stepper::Init()
+	template <typename Derived>
+	void Stepper<Derived>::Init()
 	{
 		static_cast<Derived *>(this)->Init();
 	}
 
-	<typename Derived> uint32_t Stepper::GetCurrentSpeed()
+	template <typename Derived>
+	uint32_t Stepper<Derived>::GetCurrentSpeed()
 	{
-		float aSpeed = static_cast<Derived *>(this)->GetCurrentFrequency();
+		float aSpeed = static_cast<Derived *>(this)->GetCurrentSpeed();
 		return static_cast<uint32_t>(aSpeed);
 	}
 
-	<typename Derived> uint32_t Stepper::GetTargetSpeed()
+	template <typename Derived>
+	uint32_t Stepper<Derived>::GetTargetSpeed()
 	{
-		float aSpeed = static_cast<Derived *>(this)->GetTargetFrequency();
+		float aSpeed = static_cast<Derived *>(this)->GetTargetSpeed();
 		return static_cast<uint32_t>(aSpeed);
 	}
 
-	<typename Derived> bool Stepper::GetDirection()
+	template <typename Derived>
+	bool Stepper<Derived>::GetDirection()
 	{
 		return static_cast<Derived *>(this)->GetDirection();
 	}
 
-	<typename Derived> void Stepper::SetDirection(bool aDirection)
+	template <typename Derived>
+	bool Stepper<Derived>::GetTargetDirection()
+	{
+		return static_cast<Derived *>(this)->GetTargetDirection();
+	}
+
+	template <typename Derived>
+	void Stepper<Derived>::SetDirection(bool aDirection)
 	{
 		if (IsRunning())
 		{
@@ -103,9 +122,17 @@ namespace PowerFeed
 		static_cast<Derived *>(this)->SetDirection(aDirection);
 	}
 
-	<typename Derived> bool Stepper::IsRunning()
+	template <typename Derived>
+	bool Stepper<Derived>::IsRunning()
 	{
 		// TODO Stepper::GetState needs to be atomic/thread safe
-		return static_cast<Derived *>(this)->GetState() != StepperState::STOPPED;
+		return static_cast<Derived *>(this)->IsRunning();
 	}
-}
+
+	template <typename Derived>
+	bool Stepper<Derived>::Update()
+	{
+		return static_cast<Derived *>(this)->Update();
+	}
+
+} // namespace PowerFeed

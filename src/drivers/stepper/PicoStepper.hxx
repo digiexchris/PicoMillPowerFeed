@@ -9,6 +9,8 @@
 
 namespace PowerFeed::Drivers
 {
+	using DefaultStepperType = PIOStepperSpeedController::PIOStepper;
+
 	class PicoStepper : public Stepper<PicoStepper>
 	{
 	public:
@@ -23,6 +25,7 @@ namespace PowerFeed::Drivers
 		uint32_t GetCurrentSpeed();
 		void Start();
 		void Stop();
+		bool IsRunning();
 
 	private:
 		void PrivUpdate();

@@ -93,4 +93,9 @@ namespace PowerFeed::Drivers
 		myDirection = direction;
 		vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
 	}
+
+	bool PicoStepper::IsRunning()
+	{
+		return myPIOStepper->GetState() != PIOStepperSpeedController::StepperState::STOPPED;
+	}
 }

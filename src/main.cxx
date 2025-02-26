@@ -24,17 +24,20 @@ extern "C"
 #include "drivers/display/ConsoleDisplay.hxx"
 #include "drivers/display/SSD1306Display.hxx"
 #include "drivers/stepper/PicoStepper.hxx"
-std::shared_ptr<PowerFeed::SettingsManager> settingsManager;
-std::shared_ptr<PowerFeed::Drivers::PicoStepper> stepper;
+
+using namespace PowerFeed;
+using namespace PowerFeed::Drivers;
+
+std::shared_ptr<SettingsManager> settingsManager;
+std::shared_ptr<DefaultStepperType> stepper;
 std::shared_ptr<PowerFeed::Time> iTime;
+std::shared_ptr<StepperState<DefaultStepperType>> stepperState;
 
-std::shared_ptr<PowerFeed::StepperState> stepperState;
+std::shared_ptr<Machine<DefaultStepperType>> machineState;
 
-std::shared_ptr<PowerFeed::Machine> machineState;
+std::unique_ptr<Drivers::Switches<DefaultStepperType>> switches;
 
-std::unique_ptr<PowerFeed::Drivers::Switches> hal;
-
-std::shared_ptr<PowerFeed::Display> display;
+std::shared_ptr<Display> display;
 
 void stepperUpdateTask(void *pvParameters)
 {
@@ -121,23 +124,23 @@ int main()
 	}
 	else
 	{
-		display = std::make_shared<Drivers::ConsoleDisplay>(settingsManager);
+		display = std::make_shared<ConsoleDisplay>(settingsManager);
 	}
 
 	display->DrawStart();
 	display->WriteBuffer();
 	sleep_ms(500);
 
-	stepper = std::make_shared<PowerFeed::Drivers::PicoStepper>(settingsManager, pio0, 0);
-	iTime = std::make_shared<PowerFeed::Time>();
-	stepperState = std::make_shared<PowerFeed::StepperState>(settingsManager, stepper, iTime);
-	machineState = std::make_shared<PowerFeed::Machine>(settingsManager, display, stepperState);
+	stepper = std::make_shared<DefaultStepperType>(settingsManager, pio0, 0);
+	iTime = std::make_shared<Time>();
+	stepperState = std::make_shared<StepperState<DefaultStepperType>>(settingsManager, stepper, iTime);
+	machineState = std::make_shared<Machine<DefaultStepperType>>(settingsManager, display, stepperState);
 
 	// todo: load saved units and speed from eeprom
 
-	hal = std::make_unique<PowerFeed::Drivers::Switches>(settingsManager, machineState);
+	switches = std::make_unique<Switches<DefaultStepperType>>(settingsManager, machineState);
 
-	hal->Start();
+	switches->Start();
 
 	printf("Started Subsystems\n");
 

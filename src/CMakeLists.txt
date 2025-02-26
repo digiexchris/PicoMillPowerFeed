@@ -1,6 +1,25 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
 
+# Check for ccache
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+  message(STATUS "Using ccache: ${CCACHE_PROGRAM}")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_PROGRAM}")
+
+  # Check if ccache supports the -Werror flag
+  check_c_compiler_flag("-Werror" CCACHE_WERROR_SUPPORTED)
+  check_cxx_compiler_flag("-Werror" CCACHE_WERROR_SUPPORTED)
+
+  if(CCACHE_WERROR_SUPPORTED)
+    message(STATUS "ccache supports -Werror")
+  else()
+    message(WARNING "ccache does not fully support -Werror, disabling it for ccache.")
+  endif()
+endif()
 set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS-Kernel)
 
 # Enable exception handling
