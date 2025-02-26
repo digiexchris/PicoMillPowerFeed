@@ -10,32 +10,31 @@ namespace PowerFeed
 
 	namespace Drivers
 	{
-		class TestStepper : public IStepper
+		class TestStepper : public Stepper<TestStepper>
 		{
 		public:
-			MOCK_METHOD(void, SetAcceleration, (uint32_t acceleration), (override));
-			MOCK_METHOD(uint32_t, GetCurrentSpeed, (), (override));
-			MOCK_METHOD(void, SetDirection, (bool direction), (override));
-			MOCK_METHOD(bool, GetDirection, (), (override));
-			MOCK_METHOD(bool, GetTargetDirection, (), (override));
-			MOCK_METHOD(uint32_t, GetTargetSpeed, (), (override));
-			MOCK_METHOD(void, SetSpeed, (uint32_t speed), (override));
-			MOCK_METHOD(uint32_t, GetSetSpeed, (), (override));
-			MOCK_METHOD(void, Enable, (), (override));
-			MOCK_METHOD(void, Disable, (), (override));
-			MOCK_METHOD(bool, IsEnabled, (), (override));
-			MOCK_METHOD(void, Start, (), (override));
+			MOCK_METHOD(bool, GetDirection, (), ());
+			MOCK_METHOD(bool, GetTargetDirection, (), ());
+			MOCK_METHOD(void, SetDirection, (bool aDirection), ());
+			MOCK_METHOD(uint32_t, GetTargetSpeed, (), ());
+			MOCK_METHOD(void, Stop, (), ());
+			MOCK_METHOD(void, Start, (), ());
+			MOCK_METHOD(void, SetSpeed, (uint32_t speed), ());
+			MOCK_METHOD(void, Init, (), ());
+			MOCK_METHOD(uint32_t, GetCurrentSpeed, (), ());
+			MOCK_METHOD(bool, IsRunning, (), ());
+			MOCK_METHOD(bool, Update, (), ());
 		};
 
 	}
 
-	class TestStepperState : public StepperState
+	class TestStepperState : public StepperState<Drivers::TestStepper>
 	{
 	public:
-		TestStepperState(std::shared_ptr<SettingsManager> aSettings, std::shared_ptr<IStepper> aStepper, std::shared_ptr<ITime> aTime) : StepperState(aSettings, aStepper, aTime){};
+		TestStepperState(SettingsManager *aSettings, Stepper<Drivers::TestStepper> *aStepper) : StepperState(aSettings, aStepper){};
 
-		MOCK_METHOD(void, ProcessCommand, (std::shared_ptr<Command> command), (override));
-		MOCK_METHOD(States, GetState, (), (override));
-		MOCK_METHOD(void, Run, (), (override));
+		MOCK_METHOD(void, ProcessCommand, (Command & command), ());
+		MOCK_METHOD(States, GetState, (), ());
+		MOCK_METHOD(void, Run, (), ());
 	};
 }

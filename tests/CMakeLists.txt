@@ -55,6 +55,10 @@ add_executable(PicoApp_Tests ${TEST_SOURCES}
 ../src/MachineState.cxx 
 ../src/Display.cxx
 ../src/Settings.cxx
+./test_Display.cpp
+./test_MachineState.cpp
+./test_StepperState.cpp
+./TestStatics.cxx
 )
 
 add_compile_options(

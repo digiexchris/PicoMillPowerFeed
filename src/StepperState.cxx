@@ -306,6 +306,4 @@ namespace PowerFeed
 		}
 	}
 
-	// template class StepperState<PowerFeed::Drivers::PicoStepper>;
-
 } // namespace PowerFeed

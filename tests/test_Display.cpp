@@ -14,12 +14,12 @@ namespace PowerFeed
 		DisplayTest()
 		{
 			mySettings = std::make_shared<SettingsManager>();
-			myDisplay = std::make_shared<MockDisplayHal>(mySettings);
+			myDisplay = std::make_shared<TestDisplay>(mySettings.get(), font_5x8);
 		}
 
 		void SetUp() override
 		{
-			myDisplay = std::make_shared<MockDisplayHal>(mySettings);
+			myDisplay = std::make_shared<TestDisplay>(mySettings.get(), font_5x8);
 		}
 
 		void TearDown() override
@@ -27,7 +27,7 @@ namespace PowerFeed
 			myDisplay.reset();
 		}
 
-		std::shared_ptr<MockDisplayHal> myDisplay;
+		std::shared_ptr<TestDisplay> myDisplay;
 		std::shared_ptr<SettingsManager> mySettings;
 	};
 
@@ -47,3 +47,8 @@ namespace PowerFeed
 	}
 
 } // namespace
+
+TEST(BasicTest, SimpleAssertion)
+{
+	EXPECT_EQ(2, 1 + 1);
+}

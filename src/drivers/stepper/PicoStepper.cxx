@@ -148,4 +148,6 @@ namespace PowerFeed::Drivers
 	{
 		return myPIOStepper->GetState() != PIOStepperSpeedController::StepperState::STOPPED;
 	}
+
+	template class StepperState<PowerFeed::Drivers::PicoStepper>;
 }

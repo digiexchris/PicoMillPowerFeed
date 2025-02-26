@@ -121,7 +121,11 @@
 			"streambuf": "cpp",
 			"cinttypes": "cpp",
 			"typeinfo": "cpp",
-			"valarray": "cpp"
+			"valarray": "cpp",
+			"condition_variable": "cpp",
+			"mutex": "cpp",
+			"stop_token": "cpp",
+			"thread": "cpp"
 		},
 		"[cpp]": {
 			"editor.defaultFormatter": "xaver.clang-format"
