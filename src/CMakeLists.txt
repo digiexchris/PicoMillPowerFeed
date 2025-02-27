@@ -69,10 +69,8 @@ set(app_sources
     ${CMAKE_HOME_DIRECTORY}/src/Common.cxx
     ${CMAKE_HOME_DIRECTORY}/src/Display.cxx
     ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS_Helpers.c
-    ${CMAKE_HOME_DIRECTORY}/src/MachineState.cxx
     ${CMAKE_HOME_DIRECTORY}/src/main.cxx
     ${CMAKE_HOME_DIRECTORY}/src/Settings.cxx
-    ${CMAKE_HOME_DIRECTORY}/src/StepperState.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/display/ConsoleDisplay.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/display/SSD1306Display.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/stepper/PicoStepper.cxx

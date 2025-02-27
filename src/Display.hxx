@@ -55,7 +55,7 @@ namespace PowerFeed
 		const uint8_t middleX = 64 - 16;
 		const unsigned char *myFont;
 
-		std::shared_ptr<SettingsManager> mySettings;
+		SettingsManager *mySettings;
 	};
 
 } // namespace PowerFeed

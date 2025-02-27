@@ -50,15 +50,12 @@ include(GoogleTest)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_executable(PicoApp_Tests ${TEST_SOURCES} 
-../src/StepperState.cxx 
-../src/MachineState.cxx 
+add_executable(PicoApp_Tests ${TEST_SOURCES}  
 ../src/Display.cxx
 ../src/Settings.cxx
 ./test_Display.cpp
 ./test_MachineState.cpp
 ./test_StepperState.cpp
-./TestStatics.cxx
 )
 
 add_compile_options(

@@ -14,12 +14,11 @@ namespace PowerFeed
 		DisplayTest()
 		{
 			mySettings = std::make_shared<SettingsManager>();
-			myDisplay = std::make_shared<TestDisplay>(mySettings.get(), font_5x8);
 		}
 
 		void SetUp() override
 		{
-			myDisplay = std::make_shared<TestDisplay>(mySettings.get(), font_5x8);
+			myDisplay = std::unique_ptr<TestDisplay>(new TestDisplay(mySettings.get(), font_5x8));
 		}
 
 		void TearDown() override
@@ -27,7 +26,7 @@ namespace PowerFeed
 			myDisplay.reset();
 		}
 
-		std::shared_ptr<TestDisplay> myDisplay;
+		std::unique_ptr<TestDisplay> myDisplay;
 		std::shared_ptr<SettingsManager> mySettings;
 	};
 
@@ -41,8 +40,13 @@ namespace PowerFeed
 	TEST_F(DisplayTest, DrawSpeedInchUnits)
 	{
 		uint32_t speed = 10000;
-		EXPECT_CALL(*myDisplay, DrawText(testing::StrEq("23.1 ipm"), _, _, _)).Times(1);
+		// Toggle units first
 		myDisplay->ToggleUnits();
+
+		// Then expect DrawText to be called with inch units
+		EXPECT_CALL(*myDisplay, DrawText(testing::StrEq("23.1 ipm"), font_5x8, _, _)).Times(1);
+
+		// Call the method we want to test
 		myDisplay->DrawSpeed(speed);
 	}
 

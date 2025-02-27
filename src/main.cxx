@@ -107,7 +107,7 @@ int main()
 	printf("Starting PowerFeed\n");
 
 	settingsManager = new SettingsManager();
-	auto settings = settingsManager->Load();
+	auto settings = settingsManager->Get();
 
 	if (settings == nullptr)
 	{

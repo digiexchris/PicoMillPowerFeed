@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "icons.hxx"
+#include "textRenderer/12x16_font.h"
 
 namespace PowerFeed::Drivers
 {

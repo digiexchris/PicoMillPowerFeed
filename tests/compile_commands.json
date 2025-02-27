@@ -1,16 +1,6 @@
 [
 {
   "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/PUBLIC -I/workspace/build/include -I/workspace/tests/PUBLIC -I/workspace/include -I/workspace/build/_deps/json-src/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/StepperState.cxx.o -c /workspace/src/StepperState.cxx",
-  "file": "/workspace/src/StepperState.cxx"
-},
-{
-  "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/PUBLIC -I/workspace/build/include -I/workspace/tests/PUBLIC -I/workspace/include -I/workspace/build/_deps/json-src/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/MachineState.cxx.o -c /workspace/src/MachineState.cxx",
-  "file": "/workspace/src/MachineState.cxx"
-},
-{
-  "directory": "/workspace/build",
   "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/PUBLIC -I/workspace/build/include -I/workspace/tests/PUBLIC -I/workspace/include -I/workspace/build/_deps/json-src/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/__/src/Display.cxx.o -c /workspace/src/Display.cxx",
   "file": "/workspace/src/Display.cxx"
 },
@@ -33,11 +23,6 @@
   "directory": "/workspace/build",
   "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/PUBLIC -I/workspace/build/include -I/workspace/tests/PUBLIC -I/workspace/include -I/workspace/build/_deps/json-src/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/test_StepperState.cpp.o -c /workspace/tests/test_StepperState.cpp",
   "file": "/workspace/tests/test_StepperState.cpp"
-},
-{
-  "directory": "/workspace/build",
-  "command": "/usr/bin/clang++ -DUNIT_TEST -I/workspace/PUBLIC -I/workspace/build/include -I/workspace/tests/PUBLIC -I/workspace/include -I/workspace/build/_deps/json-src/include -isystem /workspace/build/_deps/googletest-src/googletest/include -isystem /workspace/build/_deps/googletest-src/googletest -isystem /workspace/build/_deps/googletest-src/googlemock/include -isystem /workspace/build/_deps/googletest-src/googlemock  -O0 -fno-omit-frame-pointer -O0 -g -std=gnu++20 -o tests/CMakeFiles/PicoApp_Tests.dir/TestStatics.cxx.o -c /workspace/tests/TestStatics.cxx",
-  "file": "/workspace/tests/TestStatics.cxx"
 },
 {
   "directory": "/workspace/build",

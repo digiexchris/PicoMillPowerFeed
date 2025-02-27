@@ -160,6 +160,7 @@ namespace PowerFeed
 
 	SettingsManager::SettingsManager()
 	{
+		Load();
 	}
 
 	std::shared_ptr<Settings> SettingsManager::GetDefaultSettings()

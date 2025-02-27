@@ -33,8 +33,8 @@ namespace PowerFeed
 	public:
 		TestStepperState(SettingsManager *aSettings, Stepper<Drivers::TestStepper> *aStepper) : StepperState(aSettings, aStepper){};
 
-		MOCK_METHOD(void, ProcessCommand, (Command & command), ());
-		MOCK_METHOD(States, GetState, (), ());
-		MOCK_METHOD(void, Run, (), ());
+		MOCK_METHOD(void, ProcessCommand, (const Command &command), (override));
+		MOCK_METHOD(States, GetState, (), (override));
+		MOCK_METHOD(void, Run, (), (override));
 	};
 }

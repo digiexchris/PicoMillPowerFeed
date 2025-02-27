@@ -48,7 +48,7 @@ namespace PowerFeed
 		void SetDirection(bool aDirection);
 		uint32_t GetTargetSpeed();
 		void Stop();
-		void Start();
+		virtual void Start();
 		void SetSpeed(uint32_t speed);
 		void Init();
 		uint32_t GetCurrentSpeed();
