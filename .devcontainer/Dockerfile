@@ -36,8 +36,7 @@ RUN ln -s /lib/x86_64-linux-gnu/libncursesw.so.6 /lib/x86_64-linux-gnu/libncurse
 # RUN git clone -b master https://github.com/raspberrypi/debugprobe.git --depth=1
 
 
-#RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
-#    && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
+
 
 
 RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git --depth=1 && git -C pico-sdk submodule update --init
@@ -45,7 +44,8 @@ ENV PICO_SDK_PATH=/toolchain/pico-sdk
 RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
     && cd picotool && mkdir build && cd build && cmake ../ && make -j 8 && make install
     # cp picotool /usr/local/bin
-
+RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
+   && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install 
 # RUN git clone https://github.com/wtarreau/bootterm.git --depth=1 \
 #     && cd bootterm && make -j 8 install 
 
