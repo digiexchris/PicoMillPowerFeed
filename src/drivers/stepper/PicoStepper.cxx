@@ -137,7 +137,10 @@ namespace PowerFeed::Drivers
 	}
 	void PicoStepper::SetDirection(bool direction)
 	{
-		panic("Not implemented, need to implement checking to make myPIOStepper is stopped before changing direction");
+		if (myPIOStepper->GetState() != PIOStepperSpeedController::StepperState::STOPPED)
+		{
+			panic("PicoStepper::SetDirection: Stepper is running, cannot change direction\n");
+		}
 		myTargetDirection = direction;
 		gpio_put(mySettingsManager->Get()->driver.driverDirPin, direction);
 		myDirection = direction;

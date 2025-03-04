@@ -67,6 +67,8 @@ namespace PowerFeed
 			mySettings = aSettings;
 			myStepper = aStepper;
 			myState = States::STOPPED;
+			myTargetDirection = false;
+			myRequestedSpeed = 0;
 		}
 
 		virtual void ProcessCommand(const Command &aCommand);
@@ -80,6 +82,7 @@ namespace PowerFeed
 
 		States myState;
 		uint32_t myRequestedSpeed;
+		bool myTargetDirection;
 		StepperType<DerivedStepper> *myStepper;
 		SettingsManager *mySettings;
 	};
@@ -154,7 +157,9 @@ namespace PowerFeed
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myRequestedSpeed = speed;
+				// Don't set direction yet, just stop and wait for Run() to handle it
+				myStepper->Stop();
 			}
 			else if (speed > mySpeed)
 			{
@@ -178,7 +183,9 @@ namespace PowerFeed
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myRequestedSpeed = speed;
+				// Don't set direction yet, just stop and wait for Run() to handle it
+				myStepper->Stop();
 			}
 			else if (speed > mySpeed)
 			{
@@ -200,7 +207,9 @@ namespace PowerFeed
 			if (myDirection != direction)
 			{
 				myState = States::CHANGING_DIRECTION;
-				myStepper->SetDirection(direction);
+				myRequestedSpeed = speed;
+				// Don't set direction yet, just stop and wait for Run() to handle it
+				myStepper->Stop();
 			}
 			else if (speed > mySpeed)
 			{
@@ -238,7 +247,10 @@ namespace PowerFeed
 			bool willChangeDirection = false;
 			if (myDirection != direction)
 			{
-				myStepper->SetDirection(direction);
+				// Don't change direction while in CHANGING_DIRECTION state
+				// Just update the requested direction for when stepper stops
+				myRequestedSpeed = speed;
+				myTargetDirection = direction;
 				willChangeDirection = true;
 			}
 
@@ -347,15 +359,22 @@ namespace PowerFeed
 		switch (myState)
 		{
 		case States::CHANGING_DIRECTION:
-			if (myDirection == myTargetDirection && mySpeed > 0)
+			// Check if the stepper has completely stopped
+			if (mySpeed == 0)
 			{
-				if (mySpeed < myTargetSpeed)
+				// Now it's safe to change direction
+				myStepper->SetDirection(myTargetDirection);
+				
+				// Now start again with the requested speed
+				if (myRequestedSpeed > 0)
 				{
+					myStepper->SetSpeed(myRequestedSpeed);
+					myStepper->Start();
 					myState = States::ACCELERATING;
 				}
-				else if (mySpeed == myTargetSpeed)
+				else
 				{
-					myState = States::COASTING;
+					myState = States::STOPPED;
 				}
 			}
 			break;
