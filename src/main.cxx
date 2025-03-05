@@ -53,7 +53,7 @@ void createStepperTask()
 
 	if (result != pdPASS)
 	{
-		panic("Main: Failed to create stepper task\n");
+		BreakPanic("Main: Failed to create stepper task\n");
 	}
 }
 
@@ -73,6 +73,8 @@ void PrintStackTrace(uint32_t *stackPointer)
 	printf("LR  = %08x\n", stackPointer[5]);
 	printf("PC  = %08x\n", stackPointer[6]);
 	printf("PSR = %08x\n", stackPointer[7]);
+
+	fflush(stdout);
 
 	while (true)
 	{
@@ -104,14 +106,16 @@ int main()
 
 	set_sys_clock_hz(133000000, true);
 	stdio_init_all();
-	printf("Starting PowerFeed\n");
 
+	sleep_ms(500);
+	printf("Starting PowerFeed\n");
+	iTime = new Time();
 	settingsManager = new SettingsManager();
 	auto settings = settingsManager->Get();
 
 	if (settings == nullptr)
 	{
-		panic("Main: Failed to load settings\n");
+		BreakPanic("Main: Failed to load settings\n");
 		return 1;
 	}
 
@@ -129,7 +133,6 @@ int main()
 	sleep_ms(500);
 
 	stepper = new DefaultStepperType(settingsManager, iTime, pio0, 0);
-	iTime = new Time();
 
 	stepperState = new StepperState<DefaultStepperType>(
 		settingsManager,

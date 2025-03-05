@@ -15,6 +15,7 @@ namespace PowerFeed
 	enum class States
 	{
 		STOPPED,
+		STOPPING,
 		ACCELERATING,
 		COASTING,
 		DECELERATING,
@@ -298,6 +299,8 @@ namespace PowerFeed
 			{
 				myStepper->SetSpeed(speed);
 			}
+
+			break;
 		case States::ACCELERATING:
 			if (speed < mySpeed)
 			{
@@ -364,7 +367,7 @@ namespace PowerFeed
 			{
 				// Now it's safe to change direction
 				myStepper->SetDirection(myTargetDirection);
-				
+
 				// Now start again with the requested speed
 				if (myRequestedSpeed > 0)
 				{

@@ -11,12 +11,13 @@
             "serverpath": "openocd",
             "gdbPath": "gdb-multiarch",
             "device": "RP2040",
+            // "rtos": "FreeRTOS",
             "configFiles": [
                 "interface/cmsis-dap.cfg",
                 "target/rp2040.cfg"
             ],
             "svdFile": "/workspace/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
-            "runToEntryPoint": "main",
+            //"runToEntryPoint": "main",
             // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
             // Also works fine for flash binaries
             "overrideLaunchCommands": [

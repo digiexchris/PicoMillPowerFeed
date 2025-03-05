@@ -83,7 +83,7 @@ void vApplicationMallocFailedHook(void)
 	timers, and semaphores.  The size of the FreeRTOS heap is set by the
 	configTOTAL_HEAP_SIZE configuration constant in FreeRTOSConfig.h. */
 
-	panic("Malloc Failed\n");
+	BreakPanic("Malloc Failed\n");
 }
 /*-----------------------------------------------------------*/
 
@@ -96,7 +96,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 	configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
 	function is called if a stack overflow is detected. */
 
-	panic("Stack overflow in task %s\n", pcTaskName);
+	BreakPanic("Stack overflow in task %s\n", pcTaskName);
 }
 /*-----------------------------------------------------------*/
 

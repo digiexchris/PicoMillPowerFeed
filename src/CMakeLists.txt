@@ -47,8 +47,6 @@ INTERFACE
     projCOVERAGE_TEST=0
 )
 
-
-
 add_library(littlefs INTERFACE)
 target_sources(littlefs INTERFACE
 ${CMAKE_HOME_DIRECTORY}/src/lib/littlefs/lfs.c
@@ -59,10 +57,6 @@ ${CMAKE_HOME_DIRECTORY}/src/lib/littlefs
 )
 target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
 target_link_libraries(littlefs INTERFACE hardware_flash)
-
-
-
-# message( STATUS "FREERTOS_KERNEL_PATH: ${FREERTOS_KERNEL_PATH}" )
 
 set(app_sources 
     #main app
@@ -77,44 +71,46 @@ set(app_sources
     ${CMAKE_HOME_DIRECTORY}/src/drivers/Switches.cxx
     )
 
+include(FetchContent)
 
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
 
+# Create a config update script
+file(WRITE "${CMAKE_BINARY_DIR}/update_config.cmake" "
+file(READ \"${CMAKE_SOURCE_DIR}/src/config/config.json\" CONFIG_CONTENT)
+configure_file(
+    \"${CMAKE_SOURCE_DIR}/src/config/config.h.in\"
+    \"${CMAKE_BINARY_DIR}/include/config.h\"
+    @ONLY
+)
+")
 
-    include(FetchContent)
+# Create a custom command to regenerate config.h whenever config.json changes
+add_custom_command(
+    OUTPUT "${CMAKE_BINARY_DIR}/include/config.h"
+    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_BINARY_DIR}/update_config.cmake"
+    DEPENDS "${CMAKE_SOURCE_DIR}/src/config/config.json" "${CMAKE_SOURCE_DIR}/src/config/config.h.in"
+    COMMENT "Updating config.h from config.json"
+    VERBATIM
+)
 
-    FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
-    FetchContent_MakeAvailable(json)
+# Create a custom target that depends on the generated header
+add_custom_target(generate_config_header DEPENDS "${CMAKE_BINARY_DIR}/include/config.h")
 
-    
-    
-    
-    
-    # Read the JSON file content
-    file(READ "${CMAKE_SOURCE_DIR}/src/config/config.json" CONFIG_CONTENT)
-    
-    # Configure the header template
-    configure_file(
-        "${CMAKE_SOURCE_DIR}/src/config/config.h.in"
-        "${CMAKE_BINARY_DIR}/include/config.h"
-        @ONLY
-    )
-    
-    # Add include directory
-    include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
-
-
-    
-
+# Add include directory
+include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
 
 # add_subdirectory(${FREERTOS_KERNEL_PATH})
 # target_link_libraries(FreeRTOS-Kernel INTERFACE freertos_config)
 add_subdirectory(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040 FreeRTOS-Kernel)
 
-
 add_executable(PicoApp
 ${app_sources}
         )
 
+# Make PicoApp depend on the config header target
+add_dependencies(PicoApp generate_config_header)
 
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1

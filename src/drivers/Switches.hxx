@@ -42,8 +42,10 @@ namespace PowerFeed::Drivers
 		uint32_t myEncNewValue = 0;
 		uint32_t myEncOldValue = 0;
 		uint8_t myLastEncState = 0;
-		const PIO myEncPio = pio1;
-		const uint myEncSm = 0;
+		PIO myEncPio = pio1;
+		uint myEncSm = 0;
+
+		uint myEncOffset;
 		QueueHandle_t myGPIOEventQueue;
 
 		PinStateMapping PIN_STATES[3];

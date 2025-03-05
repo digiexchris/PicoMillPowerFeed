@@ -39,7 +39,7 @@ namespace PowerFeed::Drivers
 		Settings::Controls controls = mySettingsManager->Get()->controls;
 		if (controls.encoderBPin != controls.encoderAPin + 1)
 		{
-			panic("Switches: Encoder pins must be adjacent");
+			BreakPanic("Switches: Encoder pins must be adjacent");
 		}
 		// Configure GPIO pins as inputs with pull-ups
 		gpio_init(controls.leftPin);
@@ -62,7 +62,13 @@ namespace PowerFeed::Drivers
 		gpio_pull_up(controls.encoderButtonPin);
 		// we don't really need to keep the offset, as this program must be loaded
 		// at offset 0
-		pio_add_program(myEncPio, &quadrature_encoder_program);
+		// pio_add_program(myEncPio, &quadrature_encoder_program);
+
+		bool success = pio_claim_free_sm_and_add_program_for_gpio_range(
+			&quadrature_encoder_program, &myEncPio, &myEncSm, &myEncOffset, controls.encoderAPin, 2,
+			true);
+		assert(success);
+
 		quadrature_encoder_program_init(myEncPio, myEncSm, controls.encoderAPin, 13300);
 	}
 
@@ -102,7 +108,7 @@ namespace PowerFeed::Drivers
 					// Check debounce window
 					if (currentTime - instance->myLastPinTimes[i] < controls.debounceDelayUs)
 					{
-						return;
+						continue;
 					}
 					bool pinHigh = !gpio_get(gpio); // switches are active-low
 					StateChange stateChange(pinHigh ? instance->PIN_STATES[i].highState : instance->PIN_STATES[i].lowState);
@@ -115,7 +121,7 @@ namespace PowerFeed::Drivers
 			{
 				if (currentTime - instance->myEncoderButtonLastTime < controls.debounceDelayUs)
 				{
-					return;
+					continue;
 				}
 				bool pinHigh = !gpio_get(gpio);
 				if (!pinHigh && (currentTime - instance->myEncoderButtonLastTime > controls.unitsSwitchDelayMs * 1000))

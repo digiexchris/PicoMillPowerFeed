@@ -115,7 +115,7 @@ namespace PowerFeed
 				break;
 			case DeviceState::LEFT_LOW:
 				ClearState(MachineState::LEFT);
-				if (!IsStateSet(MachineState::RIGHT))
+				// if (!IsStateSet(MachineState::RIGHT))
 				{
 					Stop command;
 					myStepperState->ProcessCommand(command);
@@ -142,7 +142,7 @@ namespace PowerFeed
 				break;
 			case DeviceState::RIGHT_LOW:
 				ClearState(MachineState::RIGHT);
-				if (!IsStateSet(MachineState::LEFT))
+				// if (!IsStateSet(MachineState::LEFT))
 				{
 					Stop command;
 					myStepperState->ProcessCommand(command);

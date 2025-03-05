@@ -6,6 +6,7 @@
 #include "textRenderer/TextRenderer.h"
 #include <cstdint>
 
+#include "Common.hxx"
 #include "Helpers.hxx"
 #include "config.h"
 #include <hardware/gpio.h>
@@ -22,7 +23,7 @@ namespace PowerFeed::Drivers
 		auto settings = aSettings->Get();
 		if (settings == nullptr)
 		{
-			panic("SSD1306Display: Failed to load settings\n");
+			BreakPanic("SSD1306Display: Failed to load settings\n");
 			return;
 		}
 
@@ -39,7 +40,7 @@ namespace PowerFeed::Drivers
 		}
 		else
 		{
-			panic("SSD1306Display: Invalid i2c master number\n");
+			BreakPanic("SSD1306Display: Invalid i2c master number\n");
 			return;
 		}
 
@@ -48,7 +49,7 @@ namespace PowerFeed::Drivers
 
 		if (sda + 1 != scl)
 		{
-			panic("SSD1306Display: SDA and SCL pins must be adjacent\n");
+			BreakPanic("SSD1306Display: SDA and SCL pins must be adjacent\n");
 			return;
 		}
 
