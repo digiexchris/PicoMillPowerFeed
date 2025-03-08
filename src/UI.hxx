@@ -3,14 +3,14 @@
 #include "Display.hxx"
 #include "Event.hxx"
 #include "Settings.hxx"
-#include "StepperState.hxx"
+#include "Stepper.hxx"
 #include <cstdint>
 #include <memory>
 
 namespace PowerFeed
 {
 
-	enum class MachineState : uint8_t
+	enum class UIState : uint8_t
 	{
 		LEFT = 1,
 		RIGHT = 2,
@@ -63,15 +63,15 @@ namespace PowerFeed
 	};
 
 	template <typename DerivedStepper>
-	class Machine
+	class UI
 	{
 	public:
-		Machine(SettingsManager *aSettings,
-				Display *aDisplay,
-				StepperState<DerivedStepper> *aStepperState,
-				uint32_t aNormalSpeed = 1,
-				uint32_t aRapidSpeed = 2)
-			: mySettings(aSettings), myDisplay(aDisplay), myStepperState(aStepperState), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+		UI(SettingsManager *aSettings,
+		   Display *aDisplay,
+		   StepperBase<DerivedStepper> *aStepper,
+		   uint32_t aNormalSpeed = 1,
+		   uint32_t aRapidSpeed = 2)
+			: mySettings(aSettings), myDisplay(aDisplay), myStepper(aStepper), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
 
 		void OnValueChange(const StateChange &aStateChange)
 		{
@@ -79,14 +79,15 @@ namespace PowerFeed
 			Settings::Mechanical mechanical = settings->mechanical;
 			Settings::Controls controls = settings->controls;
 
-			// printf("Machine::OnValueChange: %u\n", (uint16_t)aStateChange.type);
+			// printf("UI::OnValueChange: %u\n", (uint16_t)aStateChange.type);
 			if (aStateChange.type == DeviceState::LEFT_HIGH || aStateChange.type == DeviceState::RIGHT_HIGH)
 			{
 				// Clear invalid states and ignore updates related to them
-				if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RIGHT))
+				if (IsStateSet(UIState::LEFT) && IsStateSet(UIState::RIGHT))
 				{
-					ClearState(MachineState::LEFT);
-					ClearState(MachineState::RIGHT);
+					ClearState(UIState::LEFT);
+					ClearState(UIState::RIGHT);
+					myStepper->Stop();
 					return;
 				}
 			}
@@ -94,86 +95,98 @@ namespace PowerFeed
 			switch (aStateChange.type)
 			{
 			case DeviceState::LEFT_HIGH:
-				SetState(MachineState::LEFT);
-				if (IsStateSet(MachineState::RAPID))
+			{
+				SetState(UIState::LEFT);
+				if (IsStateSet(UIState::RAPID))
 				{
-					if (myRapidSpeed > 0)
+					myStepper->SetSpeed(myRapidSpeed);
+				}
+				else
+				{
+					myStepper->SetSpeed(myNormalSpeed);
+				}
+
+				if (myStepper->IsRunning())
+				{
+					if (myStepper->IsStopping())
 					{
-						// Create command object on stack and pass by reference
-						Start command(mechanical.moveLeftDirection, myRapidSpeed);
-						myStepperState->ProcessCommand(command);
+						if (myStepper->GetDirection() == mySettings->Get()->mechanical.moveLeftDirection)
+						{
+							// it's stopping, but we want to resume in the same direction, it's safe to restart
+							myStepper->Start();
+						}
 					}
 				}
 				else
 				{
-					if (myNormalSpeed > 0)
-					{
-						Start command(mechanical.moveLeftDirection, myNormalSpeed);
-						myStepperState->ProcessCommand(command);
-					}
+					// it was stopped, we can start with any direction
+					myStepper->SetDirection(mySettings->Get()->mechanical.moveLeftDirection);
+					myStepper->Start();
 				}
-				break;
+			}
+
+			break;
 			case DeviceState::LEFT_LOW:
-				ClearState(MachineState::LEFT);
-				// if (!IsStateSet(MachineState::RIGHT))
+				ClearState(UIState::LEFT);
+				if (!IsStateSet(UIState::RIGHT))
 				{
-					Stop command;
-					myStepperState->ProcessCommand(command);
+					myStepper->Stop();
 				}
 				break;
 			case DeviceState::RIGHT_HIGH:
-				SetState(MachineState::RIGHT);
-				if (IsStateSet(MachineState::RAPID))
+				SetState(UIState::RIGHT);
+				if (IsStateSet(UIState::RAPID))
 				{
-					if (myRapidSpeed > 0)
+					myStepper->SetSpeed(myRapidSpeed);
+				}
+				else
+				{
+					myStepper->SetSpeed(myNormalSpeed);
+				}
+
+				if (myStepper->IsRunning())
+				{
+					if (myStepper->IsStopping())
 					{
-						Start command(mechanical.moveRightDirection, myRapidSpeed);
-						myStepperState->ProcessCommand(command);
+						if (myStepper->GetDirection() == mySettings->Get()->mechanical.moveRightDirection)
+						{
+							// it's stopping, but we want to resume in the same direction, it's safe to restart
+							myStepper->Start();
+						}
 					}
 				}
 				else
 				{
-					if (myNormalSpeed > 0)
-					{
-						Start command(mechanical.moveRightDirection, myNormalSpeed);
-						myStepperState->ProcessCommand(command);
-					}
+					// it was stopped, we can start with any direction
+					myStepper->SetDirection(mySettings->Get()->mechanical.moveRightDirection);
+					myStepper->Start();
 				}
 				break;
 			case DeviceState::RIGHT_LOW:
-				ClearState(MachineState::RIGHT);
-				// if (!IsStateSet(MachineState::LEFT))
+				ClearState(UIState::RIGHT);
+				if (!IsStateSet(UIState::LEFT))
 				{
-					Stop command;
-					myStepperState->ProcessCommand(command);
+					myStepper->Stop();
 				}
 				break;
 			case DeviceState::RAPID_HIGH:
-				SetState(MachineState::RAPID);
-				if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
+				SetState(UIState::RAPID);
+				if (IsStateSet(UIState::LEFT) || IsStateSet(UIState::RIGHT))
 				{
-					if (myRapidSpeed > 0)
-					{
-						ChangeSpeed command(myRapidSpeed);
-						myStepperState->ProcessCommand(command);
-					}
+					myStepper->SetSpeed(myRapidSpeed);
 				}
 				break;
 			case DeviceState::RAPID_LOW:
-				ClearState(MachineState::RAPID);
-				if (IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT))
+				ClearState(UIState::RAPID);
+				if (IsStateSet(UIState::LEFT) || IsStateSet(UIState::RIGHT))
 				{
-					if (myNormalSpeed > 0)
-					{
-						ChangeSpeed command(myNormalSpeed);
-						myStepperState->ProcessCommand(command);
-					}
+					myStepper->SetSpeed(myNormalSpeed);
 				}
 				break;
 			case DeviceState::ENCODER_CHANGED:
 			{
 				const ValueChange<int16_t> &state = static_cast<const ValueChange<int16_t> &>(aStateChange);
-				bool moving = IsStateSet(MachineState::LEFT) || IsStateSet(MachineState::RIGHT);
+				bool moving = IsStateSet(UIState::LEFT) || IsStateSet(UIState::RIGHT);
 				int16_t increment = state.value;
 
 				// Apply acceleration curve to encoder input
@@ -186,7 +199,7 @@ namespace PowerFeed
 					increment *= 50;
 				}
 
-				if (IsStateSet(MachineState::RAPID))
+				if (IsStateSet(UIState::RAPID))
 				{
 					int32_t speed = static_cast<int32_t>(myRapidSpeed) + (increment * controls.encoderCountsToStepsPerSecond);
 
@@ -205,15 +218,8 @@ namespace PowerFeed
 
 					if (moving)
 					{
-						ChangeSpeed command(myRapidSpeed);
-						myStepperState->ProcessCommand(command);
+						myStepper->SetSpeed(myRapidSpeed);
 					}
-				}
-				else if (IsStateSet(MachineState::ACCELERATION_HIGH))
-				{
-					myAcceleration += controls.encoderCountsToStepsPerSecond;
-					ChangeAcceleration command(myAcceleration, myAcceleration);
-					myStepperState->ProcessCommand(command);
 				}
 				else
 				{
@@ -234,8 +240,7 @@ namespace PowerFeed
 
 					if (moving)
 					{
-						ChangeSpeed command(myNormalSpeed);
-						myStepperState->ProcessCommand(command);
+						myStepper->SetSpeed(myNormalSpeed);
 					}
 				}
 			}
@@ -245,22 +250,12 @@ namespace PowerFeed
 			case DeviceState::UNITS_TOGGLE:
 				myDisplay->ToggleUnits();
 				break;
-
-			case DeviceState::ACCELERATION_HIGH:
-				SetState(MachineState::ACCELERATION_HIGH);
-				break;
-
-			case DeviceState::ACCELERATION_LOW:
-				ClearState(MachineState::ACCELERATION_HIGH);
-				break;
 			}
 
 			UpdateDisplay();
-
-			// printf("Machine::OnValueChange: Display Updated\n");
 		}
 
-		bool IsStateSet(MachineState state) const
+		bool IsStateSet(UIState state) const
 		{
 			return (myState & static_cast<uint8_t>(state)) != 0;
 		}
@@ -269,7 +264,7 @@ namespace PowerFeed
 
 	private:
 		Display *myDisplay;
-		StepperState<DerivedStepper> *myStepperState;
+		StepperBase<DerivedStepper> *myStepper;
 		uint32_t myNormalSpeed = 1;
 		uint32_t myRapidSpeed = 20000;
 		uint32_t myAcceleration;
@@ -282,22 +277,22 @@ namespace PowerFeed
 		{
 			myDisplay->ClearBuffer();
 
-			auto speed = IsStateSet(MachineState::RAPID) ? myRapidSpeed : myNormalSpeed;
+			auto speed = IsStateSet(UIState::RAPID) ? myRapidSpeed : myNormalSpeed;
 			myDisplay->DrawSpeed(speed);
 
-			if (IsStateSet(MachineState::LEFT) && IsStateSet(MachineState::RAPID))
+			if (IsStateSet(UIState::LEFT) && IsStateSet(UIState::RAPID))
 			{
 				myDisplay->DrawRapidLeft();
 			}
-			else if (IsStateSet(MachineState::RIGHT) && IsStateSet(MachineState::RAPID))
+			else if (IsStateSet(UIState::RIGHT) && IsStateSet(UIState::RAPID))
 			{
 				myDisplay->DrawRapidRight();
 			}
-			else if (IsStateSet(MachineState::LEFT))
+			else if (IsStateSet(UIState::LEFT))
 			{
 				myDisplay->DrawMovingLeft();
 			}
-			else if (IsStateSet(MachineState::RIGHT))
+			else if (IsStateSet(UIState::RIGHT))
 			{
 				myDisplay->DrawMovingRight();
 			}
@@ -309,12 +304,12 @@ namespace PowerFeed
 			myDisplay->Refresh();
 		}
 
-		void SetState(MachineState state)
+		void SetState(UIState state)
 		{
 			myState |= static_cast<uint8_t>(state);
 		}
 
-		void ClearState(MachineState state)
+		void ClearState(UIState state)
 		{
 			myState &= ~static_cast<uint8_t>(state);
 		}

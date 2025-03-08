@@ -12,10 +12,4 @@ namespace PowerFeed
 			.count();
 	}
 
-	void BreakPanic(const char *message)
-	{
-		__breakpoint();
-		panic(message);
-	}
-
 } // namespace

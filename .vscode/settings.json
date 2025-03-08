@@ -1,5 +1,10 @@
 {
-    "cmake.sourceDirectory": "/workspace/",
+    "cmake.sourceDirectory": "/home/chris/repos/PicoMillPowerFeed",
+    "cmake.useCMakePresets": "always",
+    "editor.defaultFormatter": "seaube.clangformat",
+    "[cpp]": {
+        "editor.defaultFormatter": "seaube.clangformat"
+    },
     // "testMate.cpp.test.advancedExecutables": [
     //     "${workspaceFolder}/build/tests/PicoApp_Tests"
     // ],

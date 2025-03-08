@@ -1,8 +1,9 @@
 #include "Switches.hxx"
+#include "Assert.hxx"
 #include "Helpers.hxx"
-#include "MachineState.hxx"
 #include "Settings.hxx"
 #include "StepperState.hxx"
+#include "UI.hxx"
 #include "config.h"
 #include "drivers/stepper/PicoStepper.hxx"
 #include "portmacro.h"
@@ -24,7 +25,7 @@ namespace PowerFeed::Drivers
 	Switches<DerivedStepper> *Switches<DerivedStepper>::myInstance;
 
 	template <typename DerivedStepper>
-	Switches<DerivedStepper>::Switches(SettingsManager *aSettings, Machine<DerivedStepper> *aMachineState) : mySettingsManager(aSettings), myMachine(aMachineState)
+	Switches<DerivedStepper>::Switches(SettingsManager *aSettings, UI<DerivedStepper> *aUi) : mySettingsManager(aSettings), myUi(aUi)
 	{
 		myInstance = this;
 
@@ -39,7 +40,7 @@ namespace PowerFeed::Drivers
 		Settings::Controls controls = mySettingsManager->Get()->controls;
 		if (controls.encoderBPin != controls.encoderAPin + 1)
 		{
-			BreakPanic("Switches: Encoder pins must be adjacent");
+			Panic("Switches: Encoder pins must be adjacent");
 		}
 		// Configure GPIO pins as inputs with pull-ups
 		gpio_init(controls.leftPin);
@@ -70,24 +71,11 @@ namespace PowerFeed::Drivers
 		assert(success);
 
 		quadrature_encoder_program_init(myEncPio, myEncSm, controls.encoderAPin, 13300);
-	}
-
-	template <typename DerivedStepper>
-	void Switches<DerivedStepper>::Start()
-	{
-		assert(mySettingsManager != nullptr);
-		Settings::Controls controls = mySettingsManager->Get()->controls;
 
 		// Start the encoder update task
 		xTaskCreate(EncoderUpdateTask, "Encoder Task", 2048, this, 10, NULL);
 		// Start the switch update task
 		xTaskCreate(SwitchUpdateTask, "Switch Task", 2048, this, 10, NULL);
-		// Set up GPIO interrupts
-		gpio_set_irq_enabled_with_callback(controls.leftPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(controls.rightPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(controls.rapidPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		gpio_set_irq_enabled_with_callback(controls.encoderButtonPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
-		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 	}
 
 	template <typename DerivedStepper>
@@ -95,6 +83,14 @@ namespace PowerFeed::Drivers
 	{
 		Switches<DerivedStepper> *instance = static_cast<Switches<DerivedStepper> *>(anInstance);
 		Settings::Controls controls = instance->mySettingsManager->Get()->controls;
+
+		// Set up GPIO interrupts
+		gpio_set_irq_enabled_with_callback(controls.leftPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.rightPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.rapidPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		gpio_set_irq_enabled_with_callback(controls.encoderButtonPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+		// gpio_set_irq_enabled_with_callback(ACCELERATION_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
+
 		while (true)
 		{
 			// blocks until it gets a gpio event
@@ -112,7 +108,7 @@ namespace PowerFeed::Drivers
 					}
 					bool pinHigh = !gpio_get(gpio); // switches are active-low
 					StateChange stateChange(pinHigh ? instance->PIN_STATES[i].highState : instance->PIN_STATES[i].lowState);
-					instance->myMachine->OnValueChange(stateChange);
+					instance->myUi->OnValueChange(stateChange);
 					instance->myLastPinTimes[i] = currentTime;
 					break;
 				}
@@ -128,7 +124,7 @@ namespace PowerFeed::Drivers
 				{
 					BaseType_t woken = false;
 					StateChange stateChange(DeviceState::UNITS_TOGGLE);
-					instance->myMachine->OnValueChange(stateChange);
+					instance->myUi->OnValueChange(stateChange);
 				}
 				instance->myEncoderButtonLastTime = currentTime;
 			}
@@ -142,7 +138,10 @@ namespace PowerFeed::Drivers
 		BaseType_t higherPriorityTaskWoken = pdFALSE;
 		auto instance = myInstance;
 		xQueueSendFromISR(instance->myGPIOEventQueue, &gpio, &higherPriorityTaskWoken);
-		portYIELD_FROM_ISR(higherPriorityTaskWoken);
+		if (higherPriorityTaskWoken)
+		{
+			portYIELD_FROM_ISR(higherPriorityTaskWoken);
+		}
 	}
 
 	template <typename DerivedStepper>
@@ -159,7 +158,7 @@ namespace PowerFeed::Drivers
 			if (delta != 0)
 			{
 				ValueChange<int16_t> stateChange(DeviceState::ENCODER_CHANGED, delta);
-				instance->myMachine->OnValueChange(stateChange);
+				instance->myUi->OnValueChange(stateChange);
 			}
 			vTaskDelay(MS_TO_TICKS(100));
 		}

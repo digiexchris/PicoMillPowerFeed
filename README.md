@@ -35,3 +35,10 @@ TODO: At some point I will post a schematic. Bug me if you need it.
 There is a vscode compatible dev container. It should recommend the extensions required to build this project.
 
 I will be providing a precompiled .uf2 file to flash to a pi pico so you do not need to install any software to use this. (soon!)
+
+# Debugging
+
+the provided launch.json should be most of what you need, assuming you have openocd and gdb-multiarch installed (use the dev container).
+
+I am experimenting with pyocd as a replacement to openocd:
+pyocd pack install rp2040

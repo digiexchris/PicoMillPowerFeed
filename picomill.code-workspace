@@ -26,7 +26,7 @@
 		]
 	},
 	"settings": {
-		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+		// "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
 		"C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
 		// "testMate.cpp.test.advancedExecutables": [
 		// 	"${workspaceFolder}/build/tests/PicoApp_Tests"
@@ -128,7 +128,7 @@
 			"thread": "cpp"
 		},
 		"[cpp]": {
-			"editor.defaultFormatter": "xaver.clang-format"
+			// "editor.defaultFormatter": "xaver.clang-format"
 		},
 		"cmake.configureOnEdit": true,
 		"cmake.automaticReconfigure": true,
@@ -146,7 +146,7 @@
 		"cmake.ignoreKitEnv": true,
 		"cmake.options.statusBarVisibility": "visible",
 		"cmake.showSystemKits": false,
-		"cmake.sourceDirectory": "${workspaceFolder}/src",
+		// "cmake.sourceDirectory": "${workspaceFolder}/src",
 		"cmake.useCMakePresets": "always",
 		"terminal.integrated.env.windows": {
 			"PICO_SDK_PATH": "${env:USERPROFILE}/.pico-sdk/sdk/2.1.0",
@@ -165,5 +165,6 @@
 		},
 		"C_Cpp.intelliSenseEngine": "default",
 		"editor.codeLens": false,
+		"editor.defaultFormatter": "seaube.clangformat",
 	}
 }

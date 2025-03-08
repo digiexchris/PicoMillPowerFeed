@@ -72,7 +72,7 @@ namespace PowerFeed::Drivers
 			(void)c;
 			uint32_t p = (block * FLASH_SECTOR_SIZE) + off;
 			uint32_t ints = save_and_disable_interrupts();
-			BreakPanic("Not implemented");
+			Panic("Not implemented");
 			// flash_range_program(fs_base(c) + p, buffer, size);
 			restore_interrupts(ints);
 			return 0;

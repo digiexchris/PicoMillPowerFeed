@@ -73,6 +73,20 @@
       }
     },
     {
+      "name": "host-rp2040-debug",
+      "generator": "Ninja",
+      "description": "Debug Linux",
+      "inherits": "default-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "/usr/bin/arm-none-eabi-gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/arm-none-eabi-g++",
+        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
+        "PICO_SDK_PATH": "/toolchain/pico-sdk",
+        "PICO_PLATFORM_VALUE": "rp2040"
+      }
+    },
+    {
       "name": "devcontainer-linux-native-debug-tests-only",
       "generator": "Ninja",
       "description": "Debug Linux",
@@ -141,7 +155,7 @@
       "description": "Build using the linux-debug configuration",
       "targets": [
         "PicoApp",
-        "copy_compile_commands_src",
+        "copy_compile_commands_src"
       ]
     },
     {
