@@ -1,6 +1,6 @@
 #include "Helpers.hxx"
-#include "MachineState.hxx"
 #include "Settings.hxx"
+#include "UI.hxx"
 // #include "bsp/board_api.h" //todo TINYUSB
 #include "drivers/Switches.hxx"
 #include <FreeRTOS.h>
@@ -19,7 +19,8 @@ extern "C"
 #include "Common.hxx"
 #include "Display.hxx"
 #include "Stepper.hxx"
-#include "StepperState.hxx"
+// #include "StepperState.hxx"
+#include "Assert.hxx"
 #include "config.h"
 #include "drivers/display/ConsoleDisplay.hxx"
 #include "drivers/display/SSD1306Display.hxx"
@@ -29,33 +30,11 @@ using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
 SettingsManager *settingsManager;
-DefaultStepperType *stepper;
+PicoStepper *stepper;
 PowerFeed::Time *iTime;
-StepperState<DefaultStepperType> *stepperState;
-Machine<DefaultStepperType> *machineState;
-Drivers::Switches<DefaultStepperType> *switches;
+UI<PicoStepper> *uiState;
+Drivers::Switches<PicoStepper> *switches;
 Display *display;
-
-void stepperUpdateTask(void *pvParameters)
-{
-	while (true)
-	{
-		stepperState->Run();
-		vTaskDelay(MS_TO_TICKS(20));
-		taskYIELD();
-	}
-}
-
-void createStepperTask()
-{
-
-	auto result = xTaskCreate(stepperUpdateTask, "Stepper Task", 2048, NULL, 13, NULL);
-
-	if (result != pdPASS)
-	{
-		BreakPanic("Main: Failed to create stepper task\n");
-	}
-}
 
 // Forward declaration of the HardFault_Handler
 extern "C" void isr_hardfault(void);
@@ -64,6 +43,7 @@ extern "C" void PrintStackTrace(uint32_t *stackPointer);
 
 void PrintStackTrace(uint32_t *stackPointer)
 {
+	BREAKPOINT();
 	printf("Hard Fault detected!\n");
 	printf("R0  = %08x\n", stackPointer[0]);
 	printf("R1  = %08x\n", stackPointer[1]);
@@ -82,9 +62,9 @@ void PrintStackTrace(uint32_t *stackPointer)
 	}
 }
 
-extern "C" void isr_hardfault(void)
+extern "C" void __attribute__((naked)) isr_hardfault(void)
 {
-	__breakpoint();
+	BREAKPOINT();
 	__asm volatile(
 		"MOVS R0, #4 \n"
 		"MOV R1, LR \n"
@@ -97,6 +77,22 @@ extern "C" void isr_hardfault(void)
 		"B PrintStackTrace \n");
 }
 
+// __asm volatile(
+// 	"movs r0, #4 \n"
+// 	"mov r1, lr \n"
+// 	"tst r0, r1 \n"
+// 	"beq _MSP \n"
+// 	"mrs r0, psp \n"
+// 	"b _HALT \n"
+// 	"_MSP: \n"
+// 	"mrs r0, msp \n"
+// 	"_HALT: \n"
+// 	"ldr r1, [r0, #20] \n"  // Get PC value from stack
+// 	"ldr r2, =PrintStackTrace \n"
+// 	"bx r2 \n"
+// 	".align 4"
+// );
+
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
@@ -104,10 +100,10 @@ int main()
 {
 	// board_init(); //todo TINYUSB
 
-	set_sys_clock_hz(133000000, true);
+	set_sys_clock_hz(125000000, true);
 	stdio_init_all();
 
-	sleep_ms(500);
+	// sleep_ms(500);
 	printf("Starting PowerFeed\n");
 	iTime = new Time();
 	settingsManager = new SettingsManager();
@@ -115,7 +111,7 @@ int main()
 
 	if (settings == nullptr)
 	{
-		BreakPanic("Main: Failed to load settings\n");
+		Panic("Main: Failed to load settings\n");
 		return 1;
 	}
 
@@ -130,30 +126,26 @@ int main()
 
 	display->DrawStart();
 	display->WriteBuffer();
-	sleep_ms(500);
+	// sleep_ms(500);
 
-	stepper = new DefaultStepperType(settingsManager, iTime, pio0, 0);
+	stepper = new PicoStepper(settingsManager, iTime, pio0, 0);
 
-	stepperState = new StepperState<DefaultStepperType>(
-		settingsManager,
-		stepper);
+	// stepperState = new StepperState<DefaultStepperType>(
+	// 	settingsManager,
+	// 	stepper);
 
-	machineState = new Machine<DefaultStepperType>(
+	uiState = new UI<PicoStepper>(
 		settingsManager,
 		display,
-		stepperState,
+		stepper,
 		10,
 		settingsManager->Get()->mechanical.maxDriverStepsPerSecond);
 
 	// todo: load saved units and speed from eeprom
 
-	switches = new Switches<DefaultStepperType>(settingsManager, machineState);
-
-	switches->Start();
+	switches = new Switches<PicoStepper>(settingsManager, uiState);
 
 	printf("Started Subsystems\n");
-
-	createStepperTask();
 
 	printf("Stepper Task Started\n");
 

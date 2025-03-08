@@ -56,6 +56,48 @@
             "windows": {
                 "command": "${env:USERPROFILE}/.pico-sdk/openocd/0.12.0+dev/openocd.exe",
             }
+        },
+        {
+            "label": "Flash with PyOCD",
+            "type": "shell",
+            "command": "pyocd",
+            "args": [
+                "flash",
+                "--target",
+                "rp2040",
+                "--frequency",
+                "5000000",
+                "--format",
+                "elf",
+                "${command:cmake.launchTargetPath}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Smart Flash",
+            "type": "shell",
+            "command": "${workspaceFolder}/tools/linux/flash-if-new.sh",
+            "args": [
+                "${command:cmake.launchTargetPath}",
+                "5000000"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }

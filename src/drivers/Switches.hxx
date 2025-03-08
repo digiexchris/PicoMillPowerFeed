@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../MachineState.hxx"
+#include "../UI.hxx"
 #include "../drivers/stepper/PicoStepper.hxx"
 #include "Settings.hxx"
 #include "config.h"
@@ -27,13 +27,12 @@ namespace PowerFeed::Drivers
 	class Switches
 	{
 	public:
-		Switches(SettingsManager *aSettings, Machine<DerivedStepper> *aMachineState);
-		void Start();
+		Switches(SettingsManager *aSettings, UI<DerivedStepper> *aUi);
 
 	private:
 		// required by the ISR handler callback unfortunately
 		static Switches<DerivedStepper> *myInstance;
-		Machine<DerivedStepper> *myMachine;
+		UI<DerivedStepper> *myUi;
 		SettingsManager *mySettingsManager;
 
 		static void SwitchInterruptHandler(uint gpio, uint32_t events);

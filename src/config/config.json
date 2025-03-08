@@ -20,7 +20,7 @@
     "ENCODER_INVERT": true
   },
   "DISPLAY": {
-    "USE_SSD1306": true,
+    "USE_SSD1306": false,
     "SSD1306_ADDRESS": 60,
     "SSD1306_ROTATE_180": false,
     "I2C_MASTER_SDA_IO": 16,

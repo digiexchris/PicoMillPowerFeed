@@ -7,130 +7,103 @@
 namespace PowerFeed
 {
 
-	template <typename Derived>
-	class Stepper;
-
-	template <typename Derived>
-	concept StepperImpl = requires(Derived stepper, uint32_t aFrequency, bool aDirection)
-	{
-		{stepper.Stop()};
-		{stepper.Start()};
-		{stepper.SetSpeed(aFrequency)};
-		{stepper.Init()};
-		{
-			stepper.GetCurrentSpeed()
-			} -> std::convertible_to<uint32_t>;
-		{
-			stepper.GetTargetSpeed()
-			} -> std::convertible_to<uint32_t>;
-		{
-			stepper.GetDirection()
-			} -> std::convertible_to<bool>;
-		{
-			stepper.GetTargetDirection()
-			} -> std::convertible_to<bool>;
-		{stepper.SetDirection(aDirection)};
-		{
-			stepper.IsRunning()
-			} -> std::convertible_to<bool>;
-	}
-	&&std::derived_from<Derived, Stepper<Derived>>;
-
-	template <typename Derived>
-	using StepperType = Stepper<Derived>;
-
-	template <typename Derived>
-	class Stepper
-	{
-	public:
-		bool GetDirection();
-		bool GetTargetDirection();
-		void SetDirection(bool aDirection);
-		uint32_t GetTargetSpeed();
-		void Stop();
-		virtual void Start();
-		void SetSpeed(uint32_t speed);
-		void Init();
-		uint32_t GetCurrentSpeed();
-		bool IsRunning();
-		bool Update();
-		virtual ~Stepper() = default;
-		Stepper() = default;
+	// First, define the concept that all stepper implementations must satisfy
+	template <typename T>
+	concept StepperImpl = requires(T &stepper) {
+		{ stepper.SetDirection(bool{}) };
+		{ stepper.GetDirection() } -> std::convertible_to<bool>;
+		{ stepper.GetTargetDirection() } -> std::convertible_to<bool>;
+		{ stepper.GetTargetSpeed() } -> std::convertible_to<uint32_t>;
+		{ stepper.GetCurrentSpeed() } -> std::convertible_to<uint32_t>;
+		{ stepper.SetSpeed(uint32_t{}) };
+		{ stepper.Start() };
+		{ stepper.Stop() };
+		{ stepper.IsRunning() } -> std::convertible_to<bool>;
+		{ stepper.IsStopping() } -> std::convertible_to<bool>;
 	};
 
+	// Forward declaration with concept constraint
 	template <typename Derived>
-	void Stepper<Derived>::Stop()
-	{
-		static_cast<Derived *>(this)->Stop();
-	}
+		requires StepperImpl<Derived>
+	class Stepper;
 
+	// Base class without concept constraint - used for implementation
 	template <typename Derived>
-	void Stepper<Derived>::Start()
+	class StepperBase
 	{
-		static_cast<Derived *>(this)->Start();
-	}
-
-	template <typename Derived>
-	void Stepper<Derived>::SetSpeed(uint32_t speed)
-	{
-		static_cast<Derived *>(this)->SetSpeed(speed);
-	}
-
-	template <typename Derived>
-	void Stepper<Derived>::Init()
-	{
-		static_cast<Derived *>(this)->Init();
-	}
-
-	template <typename Derived>
-	uint32_t Stepper<Derived>::GetCurrentSpeed()
-	{
-		float aSpeed = static_cast<Derived *>(this)->GetCurrentSpeed();
-		return static_cast<uint32_t>(aSpeed);
-	}
-
-	template <typename Derived>
-	uint32_t Stepper<Derived>::GetTargetSpeed()
-	{
-		float aSpeed = static_cast<Derived *>(this)->GetTargetSpeed();
-		return static_cast<uint32_t>(aSpeed);
-	}
-
-	template <typename Derived>
-	bool Stepper<Derived>::GetDirection()
-	{
-		return static_cast<Derived *>(this)->GetDirection();
-	}
-
-	template <typename Derived>
-	bool Stepper<Derived>::GetTargetDirection()
-	{
-		return static_cast<Derived *>(this)->GetTargetDirection();
-	}
-
-	template <typename Derived>
-	void Stepper<Derived>::SetDirection(bool aDirection)
-	{
-		if (IsRunning())
+	public:
+		bool GetDirection()
 		{
-			// this is a panic because StepperState should prevent this situation
-			assert("Stepper: Cannot change direction while running\n");
+			return static_cast<Derived *>(this)->GetDirection();
 		}
 
-		static_cast<Derived *>(this)->SetDirection(aDirection);
-	}
+		bool GetTargetDirection()
+		{
+			return static_cast<Derived *>(this)->GetTargetDirection();
+		}
 
-	template <typename Derived>
-	bool Stepper<Derived>::IsRunning()
-	{
-		// TODO Stepper::GetState needs to be atomic/thread safe
-		return static_cast<Derived *>(this)->IsRunning();
-	}
+		void SetDirection(bool aDirection)
+		{
+			if (IsRunning())
+			{
+				assert(!IsRunning() && "StepperBase: Cannot change direction while running");
+			}
+			static_cast<Derived *>(this)->SetDirection(aDirection);
+		}
 
+		uint32_t GetTargetSpeed()
+		{
+			return static_cast<Derived *>(this)->GetTargetSpeed();
+		}
+
+		void Stop()
+		{
+			static_cast<Derived *>(this)->Stop();
+		}
+
+		void Start()
+		{
+			static_cast<Derived *>(this)->Start();
+		}
+
+		void SetSpeed(uint32_t speed)
+		{
+			static_cast<Derived *>(this)->SetSpeed(speed);
+		}
+
+		uint32_t GetCurrentSpeed()
+		{
+			return static_cast<Derived *>(this)->GetCurrentSpeed();
+		}
+
+		bool IsRunning()
+		{
+			return static_cast<Derived *>(this)->IsRunning();
+		}
+
+		bool IsStopping()
+		{
+			return static_cast<Derived *>(this)->IsStopping();
+		}
+
+		virtual ~StepperBase() = default;
+	};
+
+	// Concept-constrained class that inherits from the base
 	template <typename Derived>
-	bool Stepper<Derived>::Update()
+		requires StepperImpl<Derived>
+	class Stepper : public StepperBase<Derived>
 	{
-		return static_cast<Derived *>(this)->Update();
+	public:
+		// This class exists only to enforce the concept constraint
+	};
+
+	// Helper function template to validate a type against the concept
+	template <typename T>
+	constexpr bool ValidateStepper()
+	{
+		static_assert(StepperImpl<T>, "Type must implement StepperImpl requirements");
+		return true;
 	}
 
 } // namespace PowerFeed

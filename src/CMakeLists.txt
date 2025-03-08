@@ -3,6 +3,28 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
+
+set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS-Kernel)
+
+# Enable exception handling
+set(PICO_CXX_ENABLE_EXCEPTIONS 1)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(PICO_CXX_ENABLE_RTTI 1)
+
+
+# Check for PICO_SDK_PATH in CMake cache first, then environment variable
+if(DEFINED PICO_SDK_PATH)
+  include(${PICO_SDK_PATH}/pico_sdk_init.cmake)
+elseif(DEFINED ENV{PICO_SDK_PATH})
+  include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
+else()
+  message(FATAL_ERROR "PICO_SDK_PATH not found. Set it as a CMake variable or environment variable to the path of your Pico SDK installation.")
+endif()
+
+project(PicoProject C CXX ASM)
+
+
 # Check for ccache
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -20,16 +42,8 @@ if(CCACHE_PROGRAM)
     message(WARNING "ccache does not fully support -Werror, disabling it for ccache.")
   endif()
 endif()
-set(FREERTOS_KERNEL_PATH ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS-Kernel)
 
-# Enable exception handling
-set(PICO_CXX_ENABLE_EXCEPTIONS 1)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# set(PICO_CXX_ENABLE_RTTI 1)
 
-include(${CMAKE_HOME_DIRECTORY}/pico-sdk/pico_sdk_init.cmake)
-project(PicoProject C CXX ASM)
 pico_sdk_init()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mcpu=cortex-m0plus -mthumb")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-m0plus -mthumb")
@@ -69,10 +83,15 @@ set(app_sources
     ${CMAKE_HOME_DIRECTORY}/src/drivers/display/SSD1306Display.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/stepper/PicoStepper.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/Switches.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS_Helpers.c
     )
 
 include(FetchContent)
-
+# # Ensure timestamp preservation during extraction
+# set(FETCHCONTENT_FULLY_DISCONNECTED OFF)
+# set(FETCHCONTENT_UPDATES_DISCONNECTED OFF)
+# set(FETCHCONTENT_QUIET OFF)
+set(DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
 
@@ -116,6 +135,7 @@ target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
   PICO_PLATFORM=${PICO_PLATFORM_VALUE}
   mainRUN_FREE_RTOS_ON_CORE=0
+  USE_FREERTOS=1
   # PICO_STACK_SIZE=0x1000
 )
 
@@ -192,6 +212,14 @@ add_custom_command(
   COMMENT "Copying compile_commands.json to src root"
 )
 
+if(TARGET PicoApp)  # Replace with your actual target name if different
+    add_custom_target(flash_timestamp
+      COMMAND ${CMAKE_COMMAND} -E touch "${CMAKE_BINARY_DIR}/flash_timestamp"
+      DEPENDS PicoApp
+      COMMENT "Updating flash timestamp"
+    )
+  endif()
+
 # Create a custom target that always runs the above command
 add_custom_target(copy_compile_commands_src ALL
   DEPENDS ${CMAKE_SOURCE_DIR}/compile_commands.json
@@ -200,7 +228,7 @@ add_custom_target(copy_compile_commands_src ALL
 add_dependencies(PicoApp copy_compile_commands_src)
 
 # Use USB uart
-pico_enable_stdio_usb(PicoApp 1)
+pico_enable_stdio_usb(PicoApp 0)
 pico_enable_stdio_uart(PicoApp 1)
 
 find_program(OPENOCD openocd)

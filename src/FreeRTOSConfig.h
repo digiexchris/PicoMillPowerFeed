@@ -74,6 +74,7 @@
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
 #define configTOTAL_HEAP_SIZE (128 * 1024)
 #define configAPPLICATION_ALLOCATED_HEAP 0
+#define configENABLE_HEAP_PROTECTOR 1
 
 /* Hook function related definitions. */
 #define configCHECK_FOR_STACK_OVERFLOW 2
@@ -112,9 +113,13 @@
 #define configSUPPORT_PICO_SYNC_INTEROP 1
 #define configSUPPORT_PICO_TIME_INTEROP 1
 
-#include <assert.h>
+#include <Assert.hxx>
 /* Define to trap errors during development. */
-#define configASSERT(x) assert(x)
+#define configASSERT(x) \
+	if (!(x)) { \
+		BREAKPOINT(); \
+		panic("ASSERT FAILED: %s:%u: %s", __FILE__, __LINE__, #x); \
+	} 
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */

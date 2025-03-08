@@ -24,6 +24,4 @@ namespace PowerFeed
 		virtual uint64_t GetCurrentTimeInMilliseconds() const override;
 	};
 
-	extern "C" void BreakPanic(const char *message);
-
 }

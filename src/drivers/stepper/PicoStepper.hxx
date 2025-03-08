@@ -6,15 +6,17 @@
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
 #include "task.h"
+#include <Mutex.hxx>
 #include <PIOStepperSpeedController/PIOStepper.hxx>
 #include <PIOStepperSpeedController/Stepper.hxx>
+#include <semphr.h>
+#include <stdint.h>
+#include <time.h>
 
 namespace PowerFeed::Drivers
 {
-	class PicoStepper;
-	using DefaultStepperType = PicoStepper;
 
-	class PicoStepper : public Stepper<PicoStepper>
+	class PicoStepper : public StepperBase<PicoStepper>
 	{
 	public:
 		PicoStepper(SettingsManager *aSettings, Time *aTime, PIO pio, uint sm);
@@ -29,6 +31,7 @@ namespace PowerFeed::Drivers
 		void Start();
 		void Stop();
 		bool IsRunning();
+		bool IsStopping();
 
 	private:
 		void PrivUpdate();
@@ -42,5 +45,11 @@ namespace PowerFeed::Drivers
 		bool myTargetDirection;
 		bool myIsEnabled;
 		TaskHandle_t myTaskHandle;
+		Mutex myMutex;
 	};
+
+	static_assert(PowerFeed::StepperImpl<PicoStepper>,
+				  "PicoStepper must implement all required methods");
+
+	using DefaultStepperType = PowerFeed::Stepper<PicoStepper>;
 }

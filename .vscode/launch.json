@@ -10,14 +10,41 @@
             "servertype": "openocd",
             "serverpath": "openocd",
             "gdbPath": "gdb-multiarch",
+            // "numberOfProcessors": 2,
+            "objdumpPath": "arm-none-eabi-objdump",
+            // "rttConfig": {
+            //     "enabled": true,
+            //     "address": "auto",
+            //     "decoders": [
+            //         {
+            //             "label": "",
+            //             "port": 0,
+            //             "type": "console"
+            //         }
+            //     ]
+            // },
+            //"showDevDebugOutput": "raw",
+            // "swoConfig": {
+            //     "enabled": true,
+            //     "cpuFrequency": 133000000,
+            //     "swoFrequency": 1000000,
+            //     "source": "probe",
+            //     "decoders": [
+            //         {
+            //             "label": "",
+            //             "port": 0,
+            //             "type": "console"
+            //         }
+            //     ]
+            // },
             "device": "RP2040",
             // "rtos": "FreeRTOS",
             "configFiles": [
                 "interface/cmsis-dap.cfg",
                 "target/rp2040.cfg"
             ],
-            "svdFile": "/workspace/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
-            //"runToEntryPoint": "main",
+            "svdFile": "/toolchain/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
+            "runToEntryPoint": "main",
             // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
             // Also works fine for flash binaries
             "overrideLaunchCommands": [
@@ -67,5 +94,69 @@
             "preLaunchTask": "Flash",
             "svdPath": "${userHome}/.pico-sdk/sdk/2.1.0/src/${command:raspberry-pi-pico.getChip}/hardware_regs/${command:raspberry-pi-pico.getChipUppercase}.svd"
         },
+        {
+            "name": "Pico Debug (PyOCD Core 0)",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "pyocd",
+            "gdbPath": "gdb-multiarch",
+            "device": "RP2040",
+            "targetId": "rp2040",
+            "svdFile": "/toolchain/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
+            "runToEntryPoint": "main",
+            // "loadFiles": "",
+            "serverArgs": [
+                "--target=rp2040",
+                "--core=0",
+                "--frequency=5000000"
+            ]
+        },
+        {
+            "name": "Pico Debug (PyOCD Core 1)",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "pyocd",
+            "gdbPath": "gdb-multiarch",
+            "device": "RP2040",
+            "targetId": "rp2040",
+            "svdFile": "/toolchain/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
+            "runToEntryPoint": "main",
+            "loadFiles": [],
+            "serverArgs": [
+                "--target=rp2040",
+                "--core=1",
+                "--frequency=5000000"
+            ],
+            "gdbTarget": "localhost:3334"
+        },
+        {
+            "name": "Pico Debug (PyOCD with Smart Flash)",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "pyocd",
+            "gdbPath": "gdb-multiarch",
+            "device": "RP2040",
+            "targetId": "rp2040",
+            "svdFile": "/toolchain/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
+            "runToEntryPoint": "main",
+            // "loadFiles": [],
+            // "preLaunchTask": "Smart Flash",
+            "serverArgs": [
+                "--target=rp2040",
+                "--frequency=10000000"
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Pico Debug (All Cores)",
+            "configurations": [
+                "Pico Debug (PyOCD Core 0)",
+                "Pico Debug (PyOCD Core 1)"
+            ]
+        }
     ]
 }
