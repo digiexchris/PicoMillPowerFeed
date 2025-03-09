@@ -137,7 +137,11 @@ namespace PowerFeed::Drivers
 	{
 		BaseType_t higherPriorityTaskWoken = pdFALSE;
 		auto instance = myInstance;
-		xQueueSendFromISR(instance->myGPIOEventQueue, &gpio, &higherPriorityTaskWoken);
+		BaseType_t result = xQueueSendFromISR(instance->myGPIOEventQueue, &gpio, &higherPriorityTaskWoken);
+		if (result == errQUEUE_FULL)
+		{
+			Panic("GPIO event queue full - cannot insert new event");
+		}
 		if (higherPriorityTaskWoken)
 		{
 			portYIELD_FROM_ISR(higherPriorityTaskWoken);

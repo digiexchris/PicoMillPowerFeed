@@ -20,7 +20,6 @@ namespace PowerFeed::Drivers
 		void Refresh() override;
 
 	private:
-		void WaitForInit();
 		pico_ssd1306::SSD1306 *mySSD1306;
 		uint64_t myInitTime = 0;
 		bool myIsReady = false;

@@ -36,6 +36,8 @@ namespace PowerFeed::Drivers
 	private:
 		void PrivUpdate();
 		static void PrivUpdateTask(void *pvParameters);
+		void PrivEnable();
+		void PrivDisable();
 
 		SettingsManager *mySettingsManager;
 		PIOStepperSpeedController::PIOStepper *myPIOStepper;

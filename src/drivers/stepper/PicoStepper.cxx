@@ -3,6 +3,7 @@
 #include <FreeRTOS.h>
 #include <PIOStepper.hxx>
 #include <task.h>
+#include <hardware/gpio.h>
 
 namespace PowerFeed::Drivers
 {
@@ -13,6 +14,12 @@ namespace PowerFeed::Drivers
 		uint sysclk = clock_get_hz(clk_sys);
 		Settings::Driver driver = mySettingsManager->Get()->driver;
 		Settings::Mechanical mech = mySettingsManager->Get()->mechanical;
+
+		gpio_init(driver.driverDirPin);
+		gpio_set_dir(driver.driverDirPin, GPIO_OUT);
+		
+		gpio_init(driver.driverEnPin);
+		gpio_set_dir(driver.driverEnPin, GPIO_OUT);
 
 		myPIOStepper = new PIOStepperSpeedController::PIOStepper(
 			driver.driverStepPin,
@@ -27,9 +34,11 @@ namespace PowerFeed::Drivers
 			nullptr,
 			nullptr);
 
-		xTaskCreate(PrivUpdateTask, "Stepper", 2 * 2048, this, 15, &myTaskHandle);
+		xTaskCreate(PrivUpdateTask, "Stepper", 4 * 2048, this, 15, &myTaskHandle);
 
-		vTaskCoreAffinitySet(myTaskHandle, (1 << 1));
+		vTaskCoreAffinitySet(myTaskHandle, (1 << 0));
+
+		PrivDisable();
 	}
 
 	PicoStepper::~PicoStepper()
@@ -68,10 +77,8 @@ namespace PowerFeed::Drivers
 					const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
 					if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
 					{
-						gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-								 mySettingsManager->Get()->driver.driverDisableValue);
+						PrivDisable();
 						myStoppedAt = 0;
-						myIsEnabled = false;
 					}
 					else
 					{
@@ -97,9 +104,7 @@ namespace PowerFeed::Drivers
 	{
 		if (!myIsEnabled)
 		{
-			gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-					 mySettingsManager->Get()->driver.driverEnableValue);
-			myIsEnabled = true;
+			PrivEnable();
 
 			// TODO figure out a better way to handle this, maybe enabling/disabling should be the layer above? should not be in a section protected by a mutex.
 			// vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
@@ -179,5 +184,19 @@ namespace PowerFeed::Drivers
 		LockGuard<Mutex> lock(myMutex);
 		stopping = myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPING;
 		return stopping;
+	}
+
+	void PicoStepper::PrivEnable()
+	{
+		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
+				 mySettingsManager->Get()->driver.driverEnableValue);
+		myIsEnabled = true;
+	}
+
+	void PicoStepper::PrivDisable()
+	{
+		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
+				 !mySettingsManager->Get()->driver.driverDisableValue);
+		myIsEnabled = false;
 	}
 }
