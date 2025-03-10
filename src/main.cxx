@@ -16,11 +16,10 @@ extern "C"
 #include <timers.h>
 }
 
+#include "Assert.hxx"
 #include "Common.hxx"
 #include "Display.hxx"
 #include "Stepper.hxx"
-// #include "StepperState.hxx"
-#include "Assert.hxx"
 #include "UI.hxx"
 #include "config.h"
 #include "drivers/display/ConsoleDisplay.hxx"
@@ -78,22 +77,6 @@ extern "C" void __attribute__((naked)) isr_hardfault(void)
 		"B PrintStackTrace \n");
 }
 
-// __asm volatile(
-// 	"movs r0, #4 \n"
-// 	"mov r1, lr \n"
-// 	"tst r0, r1 \n"
-// 	"beq _MSP \n"
-// 	"mrs r0, psp \n"
-// 	"b _HALT \n"
-// 	"_MSP: \n"
-// 	"mrs r0, msp \n"
-// 	"_HALT: \n"
-// 	"ldr r1, [r0, #20] \n"  // Get PC value from stack
-// 	"ldr r2, =PrintStackTrace \n"
-// 	"bx r2 \n"
-// 	".align 4"
-// );
-
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
@@ -127,13 +110,9 @@ int main()
 
 	display->DrawStart();
 	display->WriteBuffer();
-	// sleep_ms(500);
+	sleep_ms(500);
 
 	stepper = new PicoStepper(settingsManager, iTime, pio0, 0);
-
-	// stepperState = new StepperState<DefaultStepperType>(
-	// 	settingsManager,
-	// 	stepper);
 
 	uiState = new UI<PicoStepper>(
 		settingsManager,

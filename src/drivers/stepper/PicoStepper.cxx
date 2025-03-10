@@ -93,6 +93,14 @@ namespace PowerFeed::Drivers
 				}
 			}
 		}
+		else
+		{
+			if (myStoppedAt != 0)
+			{
+				// it was previously counting down to a disable, but we're no longer stopped, so reset that.
+				myStoppedAt = 0;
+			}
+		}
 		taskEXIT_CRITICAL();
 	}
 

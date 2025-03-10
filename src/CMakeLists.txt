@@ -203,6 +203,15 @@ target_include_directories(PicoApp PRIVATE
 
 pico_add_extra_outputs(PicoApp)
 
+# Custom command to copy the UF2 file to the root of the project
+add_custom_command(
+  TARGET PicoApp POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${CMAKE_BINARY_DIR}/src/PicoApp.uf2
+  ${CMAKE_SOURCE_DIR}/PicoApp.uf2
+  COMMENT "Copying UF2 file to project root"
+)
+
 add_custom_command(
   OUTPUT ${CMAKE_SOURCE_DIR}/compile_commands.json
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
