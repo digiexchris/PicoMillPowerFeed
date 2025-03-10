@@ -2,8 +2,8 @@
 #include "Assert.hxx"
 #include <FreeRTOS.h>
 #include <PIOStepper.hxx>
-#include <task.h>
 #include <hardware/gpio.h>
+#include <task.h>
 
 namespace PowerFeed::Drivers
 {
@@ -17,7 +17,7 @@ namespace PowerFeed::Drivers
 
 		gpio_init(driver.driverDirPin);
 		gpio_set_dir(driver.driverDirPin, GPIO_OUT);
-		
+
 		gpio_init(driver.driverEnPin);
 		gpio_set_dir(driver.driverEnPin, GPIO_OUT);
 
@@ -33,6 +33,11 @@ namespace PowerFeed::Drivers
 			nullptr,
 			nullptr,
 			nullptr);
+
+		myEnableValue = driver.driverEnableValue;
+		myEnablePin = driver.driverEnPin;
+		myDirPin = driver.driverDirPin;
+		myDisableTimeout = driver.driverDisableTimeout;
 
 		xTaskCreate(PrivUpdateTask, "Stepper", 4 * 2048, this, 15, &myTaskHandle);
 
@@ -68,21 +73,22 @@ namespace PowerFeed::Drivers
 		// Check if the stepper is stopped and disable the driver if it is
 		if (myPIOStepper->GetState() == PIOStepperSpeedController::StepperState::STOPPED)
 		{
-			auto driverDisableTimeout = mySettingsManager->Get()->driver.driverDisableTimeout;
-
-			if (driverDisableTimeout >= 0)
+			if (myDisableTimeout >= 0)
 			{
 				if (myIsEnabled)
 				{
 					const uint64_t currentTime = myTime->GetCurrentTimeInMilliseconds();
-					if (driverDisableTimeout > 0 && myStoppedAt + driverDisableTimeout < currentTime)
+					if (myStoppedAt == 0)
 					{
-						PrivDisable();
-						myStoppedAt = 0;
+						myStoppedAt = currentTime;
 					}
 					else
 					{
-						myStoppedAt = currentTime;
+						if (myDisableTimeout > 0 && myStoppedAt + myDisableTimeout < currentTime && myStoppedAt != 0)
+						{
+							PrivDisable();
+							myStoppedAt = 0;
+						}
 					}
 				}
 			}
@@ -164,7 +170,7 @@ namespace PowerFeed::Drivers
 		}
 
 		myTargetDirection = direction;
-		gpio_put(mySettingsManager->Get()->driver.driverDirPin, direction);
+		gpio_put(myDirPin, direction);
 		myDirection = direction;
 		// TODO implement this at the layer above just before Start occurs
 		//  vTaskDelay(pdMS_TO_TICKS(mySettingsManager->Get()->driver.driverDirectionChangeDelayMs));
@@ -188,15 +194,15 @@ namespace PowerFeed::Drivers
 
 	void PicoStepper::PrivEnable()
 	{
-		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-				 mySettingsManager->Get()->driver.driverEnableValue);
+		gpio_put(myEnablePin,
+				 myEnableValue);
 		myIsEnabled = true;
 	}
 
 	void PicoStepper::PrivDisable()
 	{
-		gpio_put(mySettingsManager->Get()->driver.driverEnPin,
-				 !mySettingsManager->Get()->driver.driverDisableValue);
+		gpio_put(myEnablePin,
+				 !myEnableValue);
 		myIsEnabled = false;
 	}
 }

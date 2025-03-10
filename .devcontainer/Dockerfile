@@ -4,7 +4,7 @@
 ARG VARIANT="ubuntu-22.04"
 
 FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-$VARIANT
-# https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz
+# https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz
 # ENV TOOLCHAINURL="https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel"
 # ENV TOOLCHAINARCHIVE="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz"
 # ENV TOOLCHAINDIR="arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi"

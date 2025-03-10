@@ -38,7 +38,7 @@
             //     ]
             // },
             "device": "RP2040",
-            // "rtos": "FreeRTOS",
+            "rtos": "auto",
             "configFiles": [
                 "interface/cmsis-dap.cfg",
                 "target/rp2040.cfg"
@@ -47,11 +47,11 @@
             "runToEntryPoint": "main",
             // Fix for no_flash binaries, where monitor reset halt doesn't do what is expected
             // Also works fine for flash binaries
-            "overrideLaunchCommands": [
-                "monitor reset init",
-                "load \"${command:cmake.launchTargetPath}\"",
-                "monitor reset"
-            ],
+            // "overrideLaunchCommands": [
+            //     "monitor reset init",
+            //     "load \"${command:cmake.launchTargetPath}\"",
+            //     "monitor reset"
+            // ],
             "openOCDLaunchCommands": [
                 "adapter speed 10000"
             ]

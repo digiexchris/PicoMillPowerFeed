@@ -3,7 +3,7 @@
     "cmake.useCMakePresets": "always",
     "editor.defaultFormatter": "seaube.clangformat",
     "[cpp]": {
-        "editor.defaultFormatter": "seaube.clangformat"
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
     // "testMate.cpp.test.advancedExecutables": [
     //     "${workspaceFolder}/build/tests/PicoApp_Tests"

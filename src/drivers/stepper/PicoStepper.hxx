@@ -46,6 +46,10 @@ namespace PowerFeed::Drivers
 		bool myDirection;
 		bool myTargetDirection;
 		bool myIsEnabled;
+		bool myEnableValue;
+		uint myEnablePin;
+		uint myDirPin;
+		uint16_t myDisableTimeout;
 		TaskHandle_t myTaskHandle;
 		Mutex myMutex;
 	};

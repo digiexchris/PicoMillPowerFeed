@@ -87,6 +87,22 @@
       }
     },
     {
+      "name": "host-rp2040-debug-armgcc14",
+      "generator": "Ninja",
+      "description": "Debug Linux",
+      "inherits": "default-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+        "CMAKE_CXX_COMPILER": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-g++",
+        "CMAKE_ASM_COMPILER": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gcc",
+        "CMAKE_MAKE_PROGRAM": "/usr/bin/ninja",
+        "PICO_SDK_PATH": "/toolchain/pico-sdk",
+        "PICO_PLATFORM_VALUE": "rp2040",
+        "PICO_TOOLCHAIN_PATH": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin"
+      }
+    },
+    {
       "name": "devcontainer-linux-native-debug-tests-only",
       "generator": "Ninja",
       "description": "Debug Linux",

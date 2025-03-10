@@ -4,7 +4,7 @@
     "DRIVER_DIR_PIN": 4,
     "DRIVER_EN_PIN": 5,
     "DRIVER_STEP_PIN": 6,
-    "DRIVER_ENABLE_VALUE": true,
+    "DRIVER_ENABLE_VALUE": false,
     "DRIVER_DISABLE_TIMEOUT": 1000
   },
   "CONTROLS": {
