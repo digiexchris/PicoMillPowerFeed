@@ -9,9 +9,9 @@
             "type": "cortex-debug",
             "servertype": "openocd",
             "serverpath": "openocd",
-            "gdbPath": "gdb-multiarch",
+            "gdbPath": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb",
             // "numberOfProcessors": 2,
-            "objdumpPath": "arm-none-eabi-objdump",
+            "objdumpPath": "/toolchain/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-objdump",
             // "rttConfig": {
             //     "enabled": true,
             //     "address": "auto",
@@ -49,10 +49,11 @@
             // Also works fine for flash binaries
             "overrideLaunchCommands": [
                 "monitor reset init",
-                "load \"${command:cmake.launchTargetPath}\""
+                "load \"${command:cmake.launchTargetPath}\"",
+                "monitor reset"
             ],
             "openOCDLaunchCommands": [
-                "adapter speed 5000"
+                "adapter speed 10000"
             ]
         },
         {
@@ -141,7 +142,7 @@
             "device": "RP2040",
             "targetId": "rp2040",
             "svdFile": "/toolchain/pico-sdk/src/rp2040/hardware_regs/RP2040.svd",
-            "runToEntryPoint": "main",
+            // "runToEntryPoint": "main",
             // "loadFiles": [],
             // "preLaunchTask": "Smart Flash",
             "serverArgs": [
