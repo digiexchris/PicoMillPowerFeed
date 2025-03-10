@@ -1,9 +1,8 @@
-#include "Helpers.hxx"
-#include "Settings.hxx"
-#include "UI.hxx"
-// #include "bsp/board_api.h" //todo TINYUSB
-#include "drivers/Switches.hxx"
+
+#include "bsp/board_api.h" // TinyUSB
+
 #include <FreeRTOS.h>
+#include <hardware/watchdog.h>
 #include <iostream>
 #include <memory>
 #include <pico/stdio.h>
@@ -19,9 +18,14 @@ extern "C"
 #include "Assert.hxx"
 #include "Common.hxx"
 #include "Display.hxx"
+#include "Helpers.hxx"
+#include "Settings.hxx"
 #include "Stepper.hxx"
 #include "UI.hxx"
 #include "config.h"
+#include "drivers/Switches.hxx"
+#include "drivers/USBMassStorage/LittleFSSettings.hxx"
+#include "drivers/USBMassStorage/TinyUSBMSC.hxx"
 #include "drivers/display/ConsoleDisplay.hxx"
 #include "drivers/display/SSD1306Display.hxx"
 #include "drivers/stepper/PicoStepper.hxx"
@@ -29,7 +33,10 @@ extern "C"
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
-SettingsManager *settingsManager;
+// Use LittleFSSettings instead of SettingsManager
+std::shared_ptr<LittleFSSettings> settingsManager;
+TinyUSBMSC *usbMsc;
+
 PicoStepper *stepper;
 PowerFeed::Time *iTime;
 UI<PicoStepper> *uiState;
@@ -77,20 +84,56 @@ extern "C" void __attribute__((naked)) isr_hardfault(void)
 		"B PrintStackTrace \n");
 }
 
+// USB Task for TinyUSB processing
+static void UsbTask(void *pvParameters)
+{
+	while (1)
+	{
+		// Service USB events
+		if (usbMsc != nullptr)
+		{
+			usbMsc->Task();
+		}
+		vTaskDelay(pdMS_TO_TICKS(10));
+	}
+}
+
+// Config update callback - called when config.json is updated via USB
+void ConfigUpdatedCallback()
+{
+	printf("Config updated via USB\n");
+}
+
+// USB drive ejected callback - called when the USB drive is ejected
+void EjectedCallback()
+{
+	printf("USB Drive Ejected, restarting to load final config\n");
+
+	// Wait a moment to ensure any pending writes are completed
+	sleep_ms(100);
+
+	// Enable the watchdog with a short timeout to trigger a reset
+	watchdog_enable(1, false);
+	while (1)
+	{
+		// Wait for watchdog reset
+		tight_loop_contents();
+	}
+}
+
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
 int main()
 {
-	// board_init(); //todo TINYUSB
-
 	set_sys_clock_hz(125000000, true);
 	stdio_init_all();
 
-	// sleep_ms(500);
 	printf("Starting PowerFeed\n");
 	iTime = new Time();
-	settingsManager = new SettingsManager();
+
+	// Create LittleFSSettings instead of standard SettingsManager
+	settingsManager = std::make_shared<LittleFSSettings>();
 	auto settings = settingsManager->Get();
 
 	if (settings == nullptr)
@@ -99,31 +142,36 @@ int main()
 		return 1;
 	}
 
+	// Initialize TinyUSB with LittleFS integration
+	usbMsc = new TinyUSBMSC(settingsManager);
+	usbMsc->SetConfigUpdateCallback(ConfigUpdatedCallback);
+	usbMsc->SetEjectedCallback(EjectedCallback);
+	// Create USB task
+	xTaskCreate(UsbTask, "USB_Task", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 2, NULL);
+
 	if (settings->display.useSsd1306)
 	{
-		display = new SSD1306Display(settingsManager);
+		display = new SSD1306Display(settingsManager.get());
 	}
 	else
 	{
-		display = new ConsoleDisplay(settingsManager);
+		display = new ConsoleDisplay(settingsManager.get());
 	}
 
 	display->DrawStart();
 	display->WriteBuffer();
 	sleep_ms(500);
 
-	stepper = new PicoStepper(settingsManager, iTime, pio0, 0);
+	stepper = new PicoStepper(settingsManager.get(), iTime, pio0, 0);
 
 	uiState = new UI<PicoStepper>(
-		settingsManager,
+		settingsManager.get(),
 		display,
 		stepper,
 		10,
 		settingsManager->Get()->mechanical.maxDriverStepsPerSecond);
 
-	// todo: load saved units and speed from eeprom
-
-	switches = new Switches<PicoStepper>(settingsManager, uiState);
+	switches = new Switches<PicoStepper>(settingsManager.get(), uiState);
 
 	printf("Started Subsystems\n");
 

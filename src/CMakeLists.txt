@@ -84,6 +84,10 @@ set(app_sources
     ${CMAKE_HOME_DIRECTORY}/src/drivers/stepper/PicoStepper.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/Switches.cxx
     ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS_Helpers.c
+    # USB Mass Storage driver files
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/USBMassStorage/LittleFSSettings.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/USBMassStorage/TinyUSBMSC.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/USBMassStorage/usb_descriptors.c
     )
 
 include(FetchContent)
@@ -185,15 +189,14 @@ hardware_i2c
 hardware_flash
 hardware_pio
 hardware_sync
+pico_bootrom
 PIOStepperSpeedController
 littlefs
 nlohmann_json::nlohmann_json
-# tinyusb_additions
-# tinyusb_board
-# tinyusb_device
+tinyusb_device
+tinyusb_board
 FreeRTOS-Kernel
 FreeRTOS-Kernel-Heap4
-pico_stdio_usb 
 pico_stdlib)
 
 target_include_directories(PicoApp PRIVATE

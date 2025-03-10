@@ -17,7 +17,7 @@ CompileFlags:
     - "-Wno-deprecated-declarations"
 
 Index:
-  Background: true
+  Background: Build
 Diagnostics:
   Suppress: '*'  # Suppresses ALL diagnostics
   ClangTidy:

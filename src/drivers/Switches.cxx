@@ -2,7 +2,6 @@
 #include "Assert.hxx"
 #include "Helpers.hxx"
 #include "Settings.hxx"
-#include "StepperState.hxx"
 #include "UI.hxx"
 #include "config.h"
 #include "drivers/stepper/PicoStepper.hxx"
