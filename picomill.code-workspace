@@ -1,7 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "."
+			"path": ".",
+			"name": "PicoMill"
+		},
+		{
+			"path": "/toolchain/pico-sdk",
+			"name": "pico-sdk"
 		}
 	],
 	"cmake.generator": "Ninja",

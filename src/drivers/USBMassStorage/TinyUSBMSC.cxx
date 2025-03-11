@@ -1,6 +1,8 @@
 #include "TinyUSBMSC.hxx"
 #include "hardware/watchdog.h"
+#include <bsp/board_api.h>
 #include <cstring>
+#include <device/usbd.h>
 #include <pico/stdlib.h>
 #include <stdio.h>
 #include <tusb.h>
@@ -9,7 +11,7 @@
 extern "C"
 {
 	extern const char __flash_binary_end;
-	void tud_task(void);
+	// void tud_task(void);
 }
 
 // Define a FAT filesystem that exposes the LittleFS contents
@@ -46,12 +48,17 @@ namespace PowerFeed::Drivers
 	void TinyUSBMSC::Task()
 	{
 		// Handle TinyUSB events
-		tud_task();
+		// tud_task();
 	}
 
 	void TinyUSBMSC::SetConfigUpdateCallback(std::function<void()> aCallback)
 	{
 		myConfigUpdateCallback = aCallback;
+	}
+
+	void TinyUSBMSC::SetEjectedCallback(std::function<void()> aCallback)
+	{
+		myEjectedCallback = aCallback;
 	}
 
 	void TinyUSBMSC::UpdateConfigFromFS()

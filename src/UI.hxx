@@ -2,8 +2,10 @@
 
 #include "Display.hxx"
 #include "Event.hxx"
+#include "Helpers.hxx"
 #include "Settings.hxx"
 #include "Stepper.hxx"
+#include "projdefs.h"
 #include <cstdint>
 #include <memory>
 
@@ -71,7 +73,62 @@ namespace PowerFeed
 		   StepperBase<DerivedStepper> *aStepper,
 		   uint32_t aNormalSpeed = 1,
 		   uint32_t aRapidSpeed = 2)
-			: mySettings(aSettings), myDisplay(aDisplay), myStepper(aStepper), myNormalSpeed(aNormalSpeed), myRapidSpeed(aRapidSpeed){};
+			: mySettings(aSettings), myDisplay(aDisplay), myStepper(aStepper)
+		{
+			// Initialize speeds from saved settings if available
+			auto settings = mySettings->Get();
+			if (settings)
+			{
+				myNormalSpeed = settings->savedSettings.normalSpeed;
+				myRapidSpeed = settings->savedSettings.rapidSpeed;
+
+				// Set display units based on saved setting
+				if (settings->savedSettings.inchUnits && myDisplay->GetUnits() != Units::Inch)
+				{
+					myDisplay->SetUnits(Units::Inch);
+				}
+				else if (!settings->savedSettings.inchUnits && myDisplay->GetUnits() != Units::Millimeter)
+				{
+					myDisplay->SetUnits(Units::Millimeter);
+				}
+			}
+			else
+			{
+				// Use provided defaults if settings aren't available
+				myNormalSpeed = aNormalSpeed;
+				myRapidSpeed = aRapidSpeed;
+			}
+
+			// Initialize the UI
+			xTaskCreate(InitTask, "UI_Init", configMINIMAL_STACK_SIZE * 4, this, tskIDLE_PRIORITY + 1, nullptr);
+		}
+
+		static void InitTask(void *pvParameters)
+		{
+			UI *instance = static_cast<UI *>(pvParameters);
+
+			while (instance->myDisplay->IsReady() == false)
+			{
+				vTaskDelay(pdMS_TO_TICKS(100));
+			}
+
+			instance->myDisplay->DrawStart();
+			instance->myDisplay->WriteBuffer();
+			instance->myDisplay->Refresh();
+
+			vTaskDelay(pdMS_TO_TICKS(250));
+
+			instance->UpdateDisplay();
+
+			instance->myIsReady = true;
+
+			ExitTask();
+		}
+
+		bool IsReady() const
+		{
+			return myIsReady;
+		}
 
 		void OnValueChange(const StateChange &aStateChange)
 		{
@@ -220,6 +277,9 @@ namespace PowerFeed
 					{
 						myStepper->SetSpeed(myRapidSpeed);
 					}
+
+					// Save rapid speed to settings when changed
+					mySettings->Set("RAPID_SPEED", myRapidSpeed);
 				}
 				else
 				{
@@ -242,6 +302,9 @@ namespace PowerFeed
 					{
 						myStepper->SetSpeed(myNormalSpeed);
 					}
+
+					// Save normal speed to settings when changed
+					mySettings->Set("NORMAL_SPEED", myNormalSpeed);
 				}
 			}
 
@@ -249,6 +312,8 @@ namespace PowerFeed
 
 			case DeviceState::UNITS_TOGGLE:
 				myDisplay->ToggleUnits();
+				// Save units setting when changed
+				mySettings->Set("INCH_UNITS", myDisplay->GetUnits() == Units::Inch);
 				break;
 			}
 
@@ -272,6 +337,8 @@ namespace PowerFeed
 		Units myUnits = Units::Millimeter;
 
 		SettingsManager *mySettings;
+
+		bool myIsReady = false;
 
 		void UpdateDisplay()
 		{

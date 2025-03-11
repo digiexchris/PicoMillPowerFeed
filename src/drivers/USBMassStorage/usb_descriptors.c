@@ -1,5 +1,6 @@
 #include "tusb.h"
 #include "device/usbd.h"
+#include "class/msc/msc.h"  // Add this for MSC_SUBCLASS_SCSI definition
 
 // Device descriptor
 tusb_desc_device_t const desc_device =
@@ -38,7 +39,7 @@ uint8_t const desc_configuration[] =
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
     
     // Interface descriptor + MSC descriptor
-    TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, 4, BOARD_TUD_RHPORT, 0x40, 0x01),
+    TUD_MSC_DESCRIPTOR(ITF_NUM_MSC, 4, BOARD_TUD_RHPORT, 0x40, 1),
 };
 
 // String Descriptors

@@ -7,30 +7,33 @@
 
 namespace PowerFeed::Drivers
 {
-    class PicoSSD1306Display : public Display
-    {
-    public:
-        PicoSSD1306Display(SettingsManager *settings);
-        ~PicoSSD1306Display();
-        
-        void DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y) override;
-        void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
-        void ClearBuffer() override;
-        void WriteBuffer() override;
-        void Refresh() override;
+	class PicoSSD1306Display : public Display
+	{
+	public:
+		PicoSSD1306Display(SettingsManager *settings);
+		~PicoSSD1306Display();
 
-    private:
-        bool InitDisplay();
-        bool CheckDeviceResponsive();
-        
-        SettingsManager *mySettings;
-        i2c_inst_t *myI2CMaster;
-        uint8_t myDisplayAddress;
-        bool myIsReady = false;
-        uint8_t *myFrameBuffer = nullptr;
-        int myHeight;
-        int myWidth;
-        int myBufferLen;
-    };
+		void DrawText(const char *text, const unsigned char *font, uint16_t x, uint16_t y) override;
+		void DrawImage(const unsigned char *image, uint16_t x, uint16_t y, uint16_t width, uint16_t height) override;
+		void ClearBuffer() override;
+		void WriteBuffer() override;
+		void Refresh() override;
+
+	private:
+		bool InitDisplay();
+
+		// one-shot task to init the display after the scheduler starts
+		static void InitTask(void *pvParameters);
+
+		bool CheckDeviceResponsive();
+
+		SettingsManager *mySettings;
+		i2c_inst_t *myI2CMaster;
+		uint8_t myDisplayAddress;
+		uint8_t *myFrameBuffer = nullptr;
+		int myHeight;
+		int myWidth;
+		int myBufferLen;
+	};
 
 }

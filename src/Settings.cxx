@@ -3,8 +3,27 @@
 #include <memory>
 #include <stdexcept>
 
+extern "C"
+{
+#include "FreeRTOS.h"
+#include "timers.h"
+}
+
 namespace PowerFeed
 {
+	nlohmann::json Settings::System::to_json() const
+	{
+		return {
+			{"SETTINGS_AUTO_SAVE_DELAY_MS", settingsAutoSaveDelayMs}};
+	}
+
+	Settings::System Settings::System::from_json(const nlohmann::json &j)
+	{
+		System s;
+		// Default to 30 seconds if not specified
+		s.settingsAutoSaveDelayMs = j.contains("SETTINGS_AUTO_SAVE_DELAY_MS") ? j["SETTINGS_AUTO_SAVE_DELAY_MS"].get<uint32_t>() : 30000;
+		return s;
+	}
 	nlohmann::json Settings::Driver::to_json() const
 	{
 		return {
@@ -140,6 +159,7 @@ namespace PowerFeed
 	nlohmann::json Settings::to_json() const
 	{
 		return {
+			{"SYSTEM", system.to_json()},
 			{"DRIVER", driver.to_json()},
 			{"DISPLAY", display.to_json()},
 			{"CONTROLS", controls.to_json()},
@@ -150,6 +170,8 @@ namespace PowerFeed
 	Settings Settings::from_json(const nlohmann::json &j)
 	{
 		Settings s;
+		// Handle system settings with a default if not present in older configs
+		s.system = j.contains("SYSTEM") ? System::from_json(j["SYSTEM"]) : System::from_json({{"SETTINGS_AUTO_SAVE_DELAY_MS", 30000}});
 		s.driver = Driver::from_json(j["DRIVER"]);
 		s.display = Display::from_json(j["DISPLAY"]);
 		s.controls = Controls::from_json(j["CONTROLS"]);
@@ -158,9 +180,28 @@ namespace PowerFeed
 		return s;
 	}
 
-	SettingsManager::SettingsManager()
+	SettingsManager::SettingsManager() : myAutoSaveTimer(nullptr)
 	{
 		Load();
+
+		// Create the auto-save timer (but don't start it yet)
+		myAutoSaveTimer = xTimerCreate(
+			"SettingsAutoSave",	  // Timer name
+			pdMS_TO_TICKS(30000), // Default period (will be updated with settings)
+			pdFALSE,			  // One-shot timer
+			(void *)this,		  // Timer ID is the SettingsManager instance
+			AutoSaveTimerCallback // Callback function
+		);
+	}
+
+	SettingsManager::~SettingsManager()
+	{
+		// Delete the timer if it exists
+		if (myAutoSaveTimer != nullptr)
+		{
+			xTimerDelete(myAutoSaveTimer, portMAX_DELAY);
+			myAutoSaveTimer = nullptr;
+		}
 	}
 
 	std::shared_ptr<Settings> SettingsManager::GetDefaultSettings()
@@ -193,5 +234,125 @@ namespace PowerFeed
 	std::shared_ptr<Settings> SettingsManager::Get()
 	{
 		return myDefaultSettings;
+	}
+
+	void SettingsManager::SaveNow()
+	{
+		// Cancel any pending auto-save timer
+		if (myAutoSaveTimer != nullptr && xTimerIsTimerActive(myAutoSaveTimer))
+		{
+			xTimerStop(myAutoSaveTimer, 0);
+		}
+
+		// Save current settings
+		Save(Get());
+	}
+
+	// Template specializations for the Set method
+	template <>
+	bool SettingsManager::Set<uint32_t>(const std::string &key, uint32_t value)
+	{
+		auto settings = Get();
+		bool updated = false;
+
+		if (key == "NORMAL_SPEED")
+		{
+			settings->savedSettings.normalSpeed = value;
+			updated = true;
+		}
+		else if (key == "RAPID_SPEED")
+		{
+			settings->savedSettings.rapidSpeed = value;
+			updated = true;
+		}
+		else if (key == "SETTINGS_AUTO_SAVE_DELAY_MS")
+		{
+			settings->system.settingsAutoSaveDelayMs = value;
+			updated = true;
+		}
+
+		if (updated)
+		{
+			ScheduleAutoSave();
+			return true;
+		}
+		return false;
+	}
+
+	template <>
+	bool SettingsManager::Set<bool>(const std::string &key, bool value)
+	{
+		auto settings = Get();
+		bool updated = false;
+
+		if (key == "INCH_UNITS")
+		{
+			settings->savedSettings.inchUnits = value;
+			updated = true;
+		}
+
+		if (updated)
+		{
+			ScheduleAutoSave();
+			return true;
+		}
+		return false;
+	}
+
+	void SettingsManager::SetSavedSettings(uint32_t normalSpeed, uint32_t rapidSpeed, bool inchUnits)
+	{
+		auto settings = Get();
+		settings->savedSettings.normalSpeed = normalSpeed;
+		settings->savedSettings.rapidSpeed = rapidSpeed;
+		settings->savedSettings.inchUnits = inchUnits;
+
+		ScheduleAutoSave();
+	}
+
+	void SettingsManager::ScheduleAutoSave()
+	{
+		if (myAutoSaveTimer == nullptr)
+		{
+			printf("Auto-save timer not created\n");
+			return;
+		}
+
+		// Get the current settings
+		auto settings = Get();
+		if (settings == nullptr)
+		{
+			printf("Failed to get settings for auto-save\n");
+			return;
+		}
+
+		// Update timer period from settings
+		uint32_t delayMs = settings->system.settingsAutoSaveDelayMs;
+
+		// Stop the timer if it's already running
+		if (xTimerIsTimerActive(myAutoSaveTimer))
+		{
+			xTimerStop(myAutoSaveTimer, 0);
+		}
+
+		// Start the timer with the current period
+		xTimerStart(myAutoSaveTimer, 0);
+
+		printf("Scheduled settings auto-save in %lu ms\n", delayMs);
+	}
+
+	void SettingsManager::AutoSaveTimerCallback(TimerHandle_t xTimer)
+	{
+		// Get the SettingsManager instance from the timer ID
+		SettingsManager *instance = static_cast<SettingsManager *>(pvTimerGetTimerID(xTimer));
+		if (instance == nullptr)
+		{
+			printf("Auto-save timer callback: Invalid instance\n");
+			return;
+		}
+
+		// Save the current settings
+		printf("Auto-save timer expired, saving settings\n");
+		instance->SaveNow();
+		printf("Saved.");
 	}
 }

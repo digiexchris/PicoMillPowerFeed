@@ -84,7 +84,7 @@
 /* Run time and task stats gathering related definitions. */
 #define configGENERATE_RUN_TIME_STATS 0
 #define configUSE_TRACE_FACILITY 1
-#define configUSE_STATS_FORMATTING_FUNCTIONS 0
+#define configUSE_STATS_FORMATTING_FUNCTIONS 1
 
 /* Co-routine related definitions. */
 #define configUSE_CO_ROUTINES 0
@@ -115,11 +115,12 @@
 
 #include <Assert.hxx>
 /* Define to trap errors during development. */
-#define configASSERT(x) \
-	if (!(x)) { \
-		BREAKPOINT(); \
+#define configASSERT(x)                                            \
+	if (!(x))                                                      \
+	{                                                              \
+		BREAKPOINT();                                              \
 		panic("ASSERT FAILED: %s:%u: %s", __FILE__, __LINE__, #x); \
-	} 
+	}
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */

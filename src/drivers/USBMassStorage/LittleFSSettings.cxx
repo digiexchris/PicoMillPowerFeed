@@ -1,5 +1,6 @@
 #include "LittleFSSettings.hxx"
 #include "Settings.hxx"
+#include "drivers/stepper/PicoStepper.hxx"
 #include <hardware/flash.h>
 #include <hardware/sync.h>
 #include <lfs.h>
@@ -9,15 +10,16 @@
 #include <string>
 
 // Flash storage is located at the end of flash, before the bootloader
-// #define FLASH_SECTOR_SIZE FLASH_SECTOR_SIZE
-// #define FLASH_BLOCK_SIZE FLASH_PAGE_SIZE
-#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - FS_SIZE)
+#define FLASH_SECTOR_SIZE 4096			 // 65536
+#define FLASH_BLOCK_SIZE FLASH_PAGE_SIZE // 256
+// Use our safe offset defined in the header
+// No longer using FLASH_TARGET_OFFSET = (PICO_FLASH_SIZE_BYTES - FS_SIZE)
 
 namespace PowerFeed::Drivers
 {
-	LittleFSSettings::LittleFSSettings() : myFsMounted(false)
+	LittleFSSettings::LittleFSSettings() : SettingsManager(), myFsMounted(false)
 	{
-		// Initialize default settings
+		// Initialize default settings from the base class
 		myDefaultSettings = GetDefaultSettings();
 
 		// Configure LittleFS
@@ -36,10 +38,15 @@ namespace PowerFeed::Drivers
 
 		// Initialize the filesystem
 		InitializeFS();
+		
+		// Note: Auto-save timer is created by the base class constructor
 	}
 
 	LittleFSSettings::~LittleFSSettings()
 	{
+		// Note: Timer is deleted by base class destructor
+		
+		// Unmount the filesystem
 		if (myFsMounted)
 		{
 			lfs_unmount(&myFs);
@@ -49,6 +56,7 @@ namespace PowerFeed::Drivers
 
 	std::shared_ptr<Settings> LittleFSSettings::Load()
 	{
+		taskENTER_CRITICAL();
 		if (!myFsMounted)
 		{
 			if (!InitializeFS())
@@ -86,6 +94,8 @@ namespace PowerFeed::Drivers
 			return myDefaultSettings;
 		}
 
+		taskEXIT_CRITICAL();
+
 		try
 		{
 			// Parse JSON
@@ -103,6 +113,20 @@ namespace PowerFeed::Drivers
 
 	void LittleFSSettings::Save(std::shared_ptr<Settings> aSettings)
 	{
+		// Just call SaveNow with the provided settings
+		SaveNow(aSettings);
+	}
+
+	void LittleFSSettings::SaveNow()
+	{
+		// Implementation of base class method - saves current settings
+		SaveNow(Get());
+	}
+
+	void LittleFSSettings::SaveNow(std::shared_ptr<Settings> aSettings)
+	{
+		// We don't need to schedule an auto-save here since we're saving immediately
+		
 		if (!myFsMounted && !InitializeFS())
 		{
 			printf("Failed to initialize filesystem for saving\n");
@@ -133,7 +157,11 @@ namespace PowerFeed::Drivers
 
 		// Update cached settings
 		mySettings = aSettings;
+		printf("Settings saved to flash\n");
 	}
+
+	// ScheduleAutoSave method removed - using base class implementation
+	// Timer callback functionality moved to SettingsManager base class
 
 	std::shared_ptr<Settings> LittleFSSettings::Get()
 	{
@@ -151,12 +179,22 @@ namespace PowerFeed::Drivers
 			return true;
 		}
 
+		// Try mounting the filesystem from our partition
+		printf("Attempting to mount filesystem from offset 0x%x (XIP addr 0x%x)\n", FILESYSTEM_OFFSET, FILESYSTEM_ADDR);
 		int err = lfs_mount(&myFs, &myFlashConfig);
+
+		// If mounting fails, initialize the filesystem area
 		if (err != LFS_ERR_OK)
 		{
-			printf("Failed to mount filesystem (error %d), formatting...\n", err);
+			printf("Failed to mount filesystem (error %d), initializing...\n", err);
 
-			// Erase filesystem
+			// Erase the filesystem area first
+			uint32_t ints = save_and_disable_interrupts();
+			printf("Erasing flash area at offset 0x%x, size %d bytes\n", FILESYSTEM_OFFSET, FS_SIZE);
+			flash_range_erase(FILESYSTEM_OFFSET, FS_SIZE);
+			restore_interrupts(ints);
+
+			// Format the filesystem
 			err = lfs_format(&myFs, &myFlashConfig);
 			if (err != LFS_ERR_OK)
 			{
@@ -164,13 +202,27 @@ namespace PowerFeed::Drivers
 				return false;
 			}
 
-			// Try mounting again after format
+			// Try mounting the newly formatted filesystem
 			err = lfs_mount(&myFs, &myFlashConfig);
 			if (err != LFS_ERR_OK)
 			{
 				printf("Failed to mount filesystem after format: %d\n", err);
 				return false;
 			}
+
+			// Create the default config file
+			printf("Creating default config file\n");
+			auto defaultConfig = myDefaultSettings->to_json();
+			std::string configStr = defaultConfig.dump(2);
+
+			if (!CreateFile(CONFIG_FILENAME, configStr.c_str()))
+			{
+				printf("Failed to create default config file\n");
+			}
+		}
+		else
+		{
+			printf("Successfully mounted existing filesystem\n");
 		}
 
 		myFsMounted = true;
@@ -244,16 +296,22 @@ namespace PowerFeed::Drivers
 	// LittleFS Flash IO functions
 	int LittleFSSettings::BlockDeviceRead(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size)
 	{
+		// Calculate flash address: base offset + block offset + byte offset
 		uint32_t addr = GetFsBaseAddress(c) + (block * c->block_size) + off;
+		// Access using XIP for reading
 		memcpy(buffer, (void *)(XIP_BASE + addr), size);
 		return LFS_ERR_OK;
 	}
 
 	int LittleFSSettings::BlockDeviceWrite(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size)
 	{
+		// Calculate flash address: base offset + block offset + byte offset
 		uint32_t addr = GetFsBaseAddress(c) + (block * c->block_size) + off;
+
+		// Disable interrupts during flash write
 		uint32_t ints = save_and_disable_interrupts();
 
+		// Use the SDK's flash program function
 		flash_range_program(addr, (const uint8_t *)buffer, size);
 
 		restore_interrupts(ints);
@@ -262,9 +320,13 @@ namespace PowerFeed::Drivers
 
 	int LittleFSSettings::BlockDeviceErase(const struct lfs_config *c, lfs_block_t block)
 	{
+		// Calculate flash address for this block
 		uint32_t addr = GetFsBaseAddress(c) + (block * c->block_size);
+
+		// Disable interrupts during flash erase
 		uint32_t ints = save_and_disable_interrupts();
 
+		// Use the SDK's flash erase function
 		flash_range_erase(addr, c->block_size);
 
 		restore_interrupts(ints);
@@ -279,6 +341,7 @@ namespace PowerFeed::Drivers
 
 	uint32_t LittleFSSettings::GetFsBaseAddress(const struct lfs_config *c)
 	{
-		return FLASH_TARGET_OFFSET;
+		// Return the offset from the beginning of flash
+		return FILESYSTEM_OFFSET;
 	}
 }

@@ -28,6 +28,11 @@ extern "C"
 #define CFG_TUSB_OS OPT_OS_FREERTOS
 #endif
 
+// Stack size for TinyUSB device task - required for FreeRTOS
+#ifndef CFG_TUD_TASK_STACK_SZ
+#define CFG_TUD_TASK_STACK_SZ 256
+#endif
+
 // CFG_TUSB_DEBUG is defined by compiler in DEBUG build
 // #define CFG_TUSB_DEBUG 0
 

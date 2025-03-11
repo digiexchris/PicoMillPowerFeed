@@ -12,7 +12,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-$VARIANT
 # [Optional] Uncomment this section to install additional packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends cmake clangd usbutils ninja-build build-essential wget ca-certificates python3-pip \
-    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev libftdi1 libftdi1-2 cmake python3 build-essential gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+    gdb-multiarch automake autoconf libtool libftdi-dev libusb-1.0-0-dev pkg-config clang-format libhidapi-dev libftdi1 libftdi1-2 cmake python3 build-essential gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib jimsh libjim-dev libjim0*
 RUN mkdir /toolchain
 WORKDIR /toolchain
 
@@ -49,6 +49,9 @@ RUN git clone https://github.com/raspberrypi/picotool.git --depth=1 \
 # RUN git clone https://github.com/wtarreau/bootterm.git --depth=1 \
 #     && cd bootterm && make -j 8 install 
 
+
+RUN git clone https://github.com/openocd-org/openocd.git --depth=1 --recurse-submodules \
+    && cd openocd && ./bootstrap && ./configure --enable-ftdi --enable-sysfsgpio --enable-picoprobe --enable-cmsis-dap && make -j 8 install
 
 # Install Node.js and npm for the webserial ui
 # RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \

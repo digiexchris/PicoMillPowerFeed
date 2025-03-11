@@ -71,6 +71,7 @@ ${CMAKE_HOME_DIRECTORY}/src/lib/littlefs
 )
 target_compile_options(littlefs INTERFACE -Wno-unused-function -Wno-null-dereference)
 target_link_libraries(littlefs INTERFACE hardware_flash)
+add_compile_options(-g)
 
 set(app_sources 
     #main app
@@ -80,7 +81,7 @@ set(app_sources
     ${CMAKE_HOME_DIRECTORY}/src/main.cxx
     ${CMAKE_HOME_DIRECTORY}/src/Settings.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/display/ConsoleDisplay.cxx
-    ${CMAKE_HOME_DIRECTORY}/src/drivers/display/SSD1306Display.cxx
+    ${CMAKE_HOME_DIRECTORY}/src/drivers/display/PicoSSD1306Display.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/stepper/PicoStepper.cxx
     ${CMAKE_HOME_DIRECTORY}/src/drivers/Switches.cxx
     ${CMAKE_HOME_DIRECTORY}/src/FreeRTOS_Helpers.c
@@ -121,8 +122,70 @@ add_custom_command(
 # Create a custom target that depends on the generated header
 add_custom_target(generate_config_header DEPENDS "${CMAKE_BINARY_DIR}/include/config.h")
 
+# Generate the LittleFS filesystem image with default config
+set(LITTLEFS_IMAGE_SIZE 262144) # 256KB
+set(FS_BUILD_DIR "${CMAKE_BINARY_DIR}/fs_image")
+file(MAKE_DIRECTORY ${FS_BUILD_DIR})
+
+# Copy the default config file to the image directory
+configure_file(
+    "${CMAKE_SOURCE_DIR}/src/config/config.json"
+    "${FS_BUILD_DIR}/config.json"
+    COPYONLY
+)
+
+# Find or build mklittlefs tool
+find_program(MKLITTLEFS_EXECUTABLE mklittlefs)
+if(NOT MKLITTLEFS_EXECUTABLE)
+    message(STATUS "mklittlefs not found, downloading and building it...")
+    
+    # Define mklittlefs source location and build directory
+    set(MKLITTLEFS_SRC_DIR "${CMAKE_BINARY_DIR}/mklittlefs-src")
+    set(MKLITTLEFS_BUILD_DIR "${CMAKE_BINARY_DIR}/mklittlefs-build")
+    
+    # Download mklittlefs source
+    include(ExternalProject)
+    ExternalProject_Add(mklittlefs_project
+        GIT_REPOSITORY https://github.com/earlephilhower/mklittlefs.git
+        GIT_TAG master
+        PREFIX ${CMAKE_BINARY_DIR}/mklittlefs
+        SOURCE_DIR ${MKLITTLEFS_SRC_DIR}
+        BINARY_DIR ${MKLITTLEFS_BUILD_DIR}
+        UPDATE_COMMAND git -C ${MKLITTLEFS_SRC_DIR} submodule update --init --recursive
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND make -C ${MKLITTLEFS_SRC_DIR}
+        INSTALL_COMMAND ""
+        BUILD_BYPRODUCTS ${MKLITTLEFS_SRC_DIR}/mklittlefs
+    )
+    
+    # Set the path to the built executable
+    set(MKLITTLEFS_EXECUTABLE ${MKLITTLEFS_SRC_DIR}/mklittlefs)
+    
+    # Set a flag to add the dependency after the target is created
+    set(NEED_MKLITTLEFS_DEPENDENCY TRUE)
+endif()
+
+# Create the filesystem image
+add_custom_command(
+    OUTPUT "${CMAKE_BINARY_DIR}/fs_image.bin"
+    COMMAND ${MKLITTLEFS_EXECUTABLE} -c ${FS_BUILD_DIR} -s ${LITTLEFS_IMAGE_SIZE} -b 4096 -p 256 "${CMAKE_BINARY_DIR}/fs_image.bin"
+    DEPENDS "${FS_BUILD_DIR}/config.json"
+    COMMENT "Creating LittleFS image"
+    VERBATIM
+)
+
+# We're still generating the filesystem image for development/testing purposes
+# but not embedding it in the binary. LittleFSSettings will initialize this area
+# at runtime only if needed.
+add_custom_target(generate_littlefs_image DEPENDS "${CMAKE_BINARY_DIR}/fs_image.bin")
+
+# Add dependency on mklittlefs if we built it
+if(DEFINED NEED_MKLITTLEFS_DEPENDENCY)
+    add_dependencies(generate_littlefs_image mklittlefs_project)
+endif()
+
 # Add include directory
-include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include")
+include_directories(PUBLIC "${CMAKE_BINARY_DIR}/include" "${CMAKE_BINARY_DIR}")
 
 # add_subdirectory(${FREERTOS_KERNEL_PATH})
 # target_link_libraries(FreeRTOS-Kernel INTERFACE freertos_config)
@@ -130,17 +193,22 @@ add_subdirectory(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040 FreeRTOS
 
 add_executable(PicoApp
 ${app_sources}
-        )
+)
 
-# Make PicoApp depend on the config header target
-add_dependencies(PicoApp generate_config_header)
+# We're no longer embedding the filesystem image in the binary or using a custom linker script
+# Instead, we're using a separate flash area defined in LittleFSSettings.hxx
+
+# Make PicoApp depend on the config header target and the filesystem image
+add_dependencies(PicoApp generate_config_header generate_littlefs_image)
 
 target_compile_definitions (PicoApp PRIVATE
 	PICO_RP2040_USB_DEVICE_ENUMERATION_FIX=1
   PICO_PLATFORM=${PICO_PLATFORM_VALUE}
   mainRUN_FREE_RTOS_ON_CORE=0
   USE_FREERTOS=1
-  # PICO_STACK_SIZE=0x1000
+  CFG_TUSB_MCU=OPT_MCU_RP2040
+  CFG_TUSB_OS=OPT_OS_FREERTOS
+  PARAM_ASSERTIONS_ENABLED_HARDWARE_TIMER=1
 )
 
 # target_compile_definitions(PicoApp PUBLIC CFG_TUSB_CONFIG_FILE="tusb_config.h")
@@ -149,6 +217,9 @@ add_compile_options(
     ### Common Options
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fdiagnostics-color=always>
+
+    ### Note options
+    $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-parameter-passing>
     
     ### Warning Options
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wall>
@@ -182,10 +253,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(PIOStepperSpeedController)
 
-target_link_libraries(PicoApp
+target_link_libraries(PicoApp PRIVATE
 pico_ssd1306
 pico_multicore
 hardware_i2c
+hardware_adc
 hardware_flash
 hardware_pio
 hardware_sync
@@ -195,9 +267,11 @@ littlefs
 nlohmann_json::nlohmann_json
 tinyusb_device
 tinyusb_board
+tinyusb_common
+pico_stdlib
 FreeRTOS-Kernel
 FreeRTOS-Kernel-Heap4
-pico_stdlib)
+)
 
 target_include_directories(PicoApp PRIVATE
         ${CMAKE_HOME_DIRECTORY}

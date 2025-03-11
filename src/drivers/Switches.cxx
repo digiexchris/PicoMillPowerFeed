@@ -83,6 +83,11 @@ namespace PowerFeed::Drivers
 		Switches<DerivedStepper> *instance = static_cast<Switches<DerivedStepper> *>(anInstance);
 		Settings::Controls controls = instance->mySettingsManager->Get()->controls;
 
+		while (instance->myUi->IsReady() == false)
+		{
+			vTaskDelay(pdMS_TO_TICKS(100));
+		}
+
 		// Set up GPIO interrupts
 		gpio_set_irq_enabled_with_callback(controls.leftPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);
 		gpio_set_irq_enabled_with_callback(controls.rightPin, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &SwitchInterruptHandler);

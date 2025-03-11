@@ -2,6 +2,7 @@
 #include "bsp/board_api.h" // TinyUSB
 
 #include <FreeRTOS.h>
+#include <hardware/adc.h>
 #include <hardware/watchdog.h>
 #include <iostream>
 #include <memory>
@@ -13,6 +14,7 @@ extern "C"
 #include "FreeRTOS.h"
 #include "task.h"
 #include <timers.h>
+#include <tusb.h>
 }
 
 #include "Assert.hxx"
@@ -27,21 +29,8 @@ extern "C"
 #include "drivers/USBMassStorage/LittleFSSettings.hxx"
 #include "drivers/USBMassStorage/TinyUSBMSC.hxx"
 #include "drivers/display/ConsoleDisplay.hxx"
-#include "drivers/display/SSD1306Display.hxx"
+#include "drivers/display/PicoSSD1306Display.hxx"
 #include "drivers/stepper/PicoStepper.hxx"
-
-using namespace PowerFeed;
-using namespace PowerFeed::Drivers;
-
-// Use LittleFSSettings instead of SettingsManager
-std::shared_ptr<LittleFSSettings> settingsManager;
-TinyUSBMSC *usbMsc;
-
-PicoStepper *stepper;
-PowerFeed::Time *iTime;
-UI<PicoStepper> *uiState;
-Drivers::Switches<PicoStepper> *switches;
-Display *display;
 
 // Forward declaration of the HardFault_Handler
 extern "C" void isr_hardfault(void);
@@ -50,7 +39,7 @@ extern "C" void PrintStackTrace(uint32_t *stackPointer);
 
 void PrintStackTrace(uint32_t *stackPointer)
 {
-	BREAKPOINT();
+	// BREAKPOINT();
 	printf("Hard Fault detected!\n");
 	printf("R0  = %08x\n", stackPointer[0]);
 	printf("R1  = %08x\n", stackPointer[1]);
@@ -71,18 +60,19 @@ void PrintStackTrace(uint32_t *stackPointer)
 
 extern "C" void __attribute__((naked)) isr_hardfault(void)
 {
-	BREAKPOINT();
+	// BREAKPOINT();
 	__asm volatile(
 		"MOVS R0, #4 \n"
 		"MOV R1, LR \n"
 		"TST R0, R1 \n"
 		"BEQ _MSP \n"
 		"MRS R0, PSP \n"
-		"B PrintStackTrace \n"
 		"_MSP: \n"
 		"MRS R0, MSP \n"
 		"B PrintStackTrace \n");
 }
+
+PowerFeed::Drivers::TinyUSBMSC *usbMsc;
 
 // USB Task for TinyUSB processing
 static void UsbTask(void *pvParameters)
@@ -124,13 +114,43 @@ void EjectedCallback()
 using namespace PowerFeed;
 using namespace PowerFeed::Drivers;
 
+// Use LittleFSSettings instead of SettingsManager
+std::shared_ptr<LittleFSSettings> settingsManager;
+
+PicoStepper *stepper;
+PowerFeed::Time *iTime;
+UI<PicoStepper> *uiState;
+Drivers::Switches<PicoStepper> *switches;
+Display *display;
+
 int main()
 {
 	set_sys_clock_hz(125000000, true);
 	stdio_init_all();
 
+	printf("\033[2J\033[H"); // Clear screen and move cursor to home
+	adc_init();
+	adc_gpio_init(26); // Initialize GP26 (ADC0) for ADC use
+	adc_select_input(0);
+	uint16_t random_seed = adc_read(); // Read ADC value
+	printf("Random seed from ADC: %u\n", random_seed);
 	printf("Starting PowerFeed\n");
 	iTime = new Time();
+
+	// timer_hw->dbgpause = 0;
+	// // Check if both cores are running
+	// if (!multicore_launched())
+	// {
+	// 	multicore_launch_core1(nullptr);
+	// }
+
+	// // Check if default timer is running
+	// bool timer_initialized = hardware_alarm_is_running(0);
+	// if (!timer_initialized)
+	// {
+	// 	hardware_alarm_init();
+	// }
+	sleep_ms(1); // debug test in order to check that the default timer is still running
 
 	// Create LittleFSSettings instead of standard SettingsManager
 	settingsManager = std::make_shared<LittleFSSettings>();
@@ -147,35 +167,29 @@ int main()
 	usbMsc->SetConfigUpdateCallback(ConfigUpdatedCallback);
 	usbMsc->SetEjectedCallback(EjectedCallback);
 	// Create USB task
-	xTaskCreate(UsbTask, "USB_Task", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 2, NULL);
+	// xTaskCreate(UsbTask, "USB_Task", configMINIMAL_STACK_SIZE * 4, NULL, tskIDLE_PRIORITY + 2, NULL);
 
 	if (settings->display.useSsd1306)
 	{
-		display = new SSD1306Display(settingsManager.get());
+		display = new PicoSSD1306Display(settingsManager.get());
 	}
 	else
 	{
 		display = new ConsoleDisplay(settingsManager.get());
 	}
 
-	display->DrawStart();
-	display->WriteBuffer();
-	sleep_ms(500);
-
 	stepper = new PicoStepper(settingsManager.get(), iTime, pio0, 0);
 
+	// Initialize UI with settings - it will read saved values from settings
 	uiState = new UI<PicoStepper>(
 		settingsManager.get(),
 		display,
 		stepper,
-		10,
+		// These defaults are only used if settings aren't available
+		settingsManager->Get()->mechanical.accelerationJerk,
 		settingsManager->Get()->mechanical.maxDriverStepsPerSecond);
 
 	switches = new Switches<PicoStepper>(settingsManager.get(), uiState);
-
-	printf("Started Subsystems\n");
-
-	printf("Stepper Task Started\n");
 
 	printf("Starting FreeRTOS\n");
 	vTaskStartScheduler();

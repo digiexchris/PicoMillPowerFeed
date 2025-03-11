@@ -2,8 +2,17 @@
 
 #ifdef UNIT_TEST
 #define configTICK_RATE_HZ 1000
+static inline void ExitTask()
+{
+	// vTaskDelete(nullptr);
+}
 #else
 #include <FreeRTOS.h>
+
+static inline void ExitTask()
+{
+	vTaskDelete(nullptr);
+}
 #endif
 
 inline double ScaleValue(double value, double minOld, double maxOld, double minNew, double maxNew)

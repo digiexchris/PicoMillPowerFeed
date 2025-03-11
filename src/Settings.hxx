@@ -4,10 +4,24 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
+extern "C"
+{
+#include "FreeRTOS.h"
+#include "timers.h"
+}
+
 namespace PowerFeed
 {
 	struct Settings
 	{
+		struct System
+		{
+			uint32_t settingsAutoSaveDelayMs;
+
+			nlohmann::json to_json() const;
+			static System from_json(const nlohmann::json &j);
+		};
+
 		struct Driver
 		{
 			uint32_t driverDirectionChangeDelayMs;
@@ -84,6 +98,7 @@ namespace PowerFeed
 			static SavedSettings from_json(const nlohmann::json &j);
 		};
 
+		System system;
 		Driver driver;
 		Display display;
 		Controls controls;
@@ -98,16 +113,57 @@ namespace PowerFeed
 	{
 	public:
 		SettingsManager();
+		virtual ~SettingsManager();
+
 		/**
 		@brief Read from non volatile storage and return */
 		virtual std::shared_ptr<Settings> Load();
+
+		/**
+		@brief Save settings to storage */
 		virtual void Save(std::shared_ptr<Settings> settings);
+
+		/**
+		@brief Immediately save current settings without waiting for timer */
+		virtual void SaveNow();
+
+		/**
+		@brief Get default settings */
 		std::shared_ptr<Settings> GetDefaultSettings();
+
 		/**
 		@brief Return previously retrieved settings */
 		virtual std::shared_ptr<Settings> Get();
 
+		/**
+		@brief Update a specific setting and schedule auto-save
+		@param key The setting key to update (e.g. "NORMAL_SPEED", "RAPID_SPEED", "INCH_UNITS")
+		@param value The new value for the setting
+		@return true if the setting was updated, false otherwise
+		*/
+		template <typename T>
+		bool Set(const std::string &key, T value);
+
+		/**
+		@brief Set multiple saved settings at once and schedule auto-save
+		@param normalSpeed The normal speed value
+		@param rapidSpeed The rapid speed value
+		@param inchUnits The units setting (true = inch, false = mm)
+		*/
+		void SetSavedSettings(uint32_t normalSpeed, uint32_t rapidSpeed, bool inchUnits);
+
+		/**
+		@brief Schedule auto-save with current timer period
+		*/
+		void ScheduleAutoSave();
+
 	protected:
 		std::shared_ptr<Settings> myDefaultSettings;
+		TimerHandle_t myAutoSaveTimer;
+
+		/**
+		@brief Timer callback for auto-save
+		*/
+		static void AutoSaveTimerCallback(TimerHandle_t xTimer);
 	};
 } // namespace PowerFeed

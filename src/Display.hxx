@@ -27,8 +27,12 @@ namespace PowerFeed
 		virtual void DrawSpeed(uint32_t aSpeed);
 		virtual void ClearBuffer() = 0;
 		virtual void ToggleUnits();
+		virtual Units GetUnits() const { return myUnits; }
 		virtual void WriteBuffer() = 0;
 		virtual void Refresh() = 0;
+		virtual void SetUnits(Units units) { myUnits = units; }
+
+		bool IsReady() const { return myIsReady; }
 
 	protected:
 		virtual void DrawCenteredText(const char *text, const unsigned char *font, uint16_t y);
@@ -37,10 +41,13 @@ namespace PowerFeed
 
 		uint16_t GetTextWidth(const char *text, const unsigned char *font);
 
+	protected:
+		Units myUnits = Units::Millimeter;
+		bool myIsReady = false;
+
 	private:
 		const uint16_t myWidth = 128;
 		const uint16_t myHeight = 32;
-		Units myUnits = Units::Millimeter;
 		uint32_t mySpeed = 0;
 
 		const float mmPerInch = 25.4;
