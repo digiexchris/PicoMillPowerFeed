@@ -1,4 +1,5 @@
 #include "LittleFSSettings.hxx"
+#include "Assert.hxx"
 #include "Settings.hxx"
 #include "drivers/stepper/PicoStepper.hxx"
 #include <hardware/flash.h>
@@ -10,10 +11,8 @@
 #include <string>
 
 // Flash storage is located at the end of flash, before the bootloader
-#define FLASH_SECTOR_SIZE 4096			 // 65536
-#define FLASH_BLOCK_SIZE FLASH_PAGE_SIZE // 256
-// Use our safe offset defined in the header
-// No longer using FLASH_TARGET_OFFSET = (PICO_FLASH_SIZE_BYTES - FS_SIZE)
+// #define FLASH_SECTOR_SIZE 4096			 // 65536
+// #define FLASH_BLOCK_SIZE FLASH_PAGE_SIZE // 256
 
 namespace PowerFeed::Drivers
 {
@@ -32,26 +31,45 @@ namespace PowerFeed::Drivers
 		myFlashConfig.prog_size = 16;
 		myFlashConfig.block_size = FLASH_SECTOR_SIZE;
 		myFlashConfig.block_count = FS_SIZE / FLASH_SECTOR_SIZE;
-		myFlashConfig.cache_size = FLASH_BLOCK_SIZE;
+		myFlashConfig.cache_size = 256;
 		myFlashConfig.lookahead_size = 16;
 		myFlashConfig.block_cycles = 500;
 
 		// Initialize the filesystem
 		InitializeFS();
-		
+
 		// Note: Auto-save timer is created by the base class constructor
 	}
 
 	LittleFSSettings::~LittleFSSettings()
 	{
 		// Note: Timer is deleted by base class destructor
-		
+
 		// Unmount the filesystem
 		if (myFsMounted)
 		{
 			lfs_unmount(&myFs);
 			myFsMounted = false;
 		}
+	}
+
+	bool LittleFSSettings::CreateDefaultConfig()
+	{
+		// Get the default config from the JSON file
+		char buffer[4096];
+		auto defaultConfig = myDefaultSettings->to_json();
+		std::string configStr = defaultConfig.dump(2);
+
+		auto cfg = configStr.c_str();
+
+		// Create the config file
+		if (!CreateFile(CONFIG_FILENAME, configStr.c_str()))
+		{
+			printf("Failed to create config file\n");
+			return false;
+		}
+
+		return true;
 	}
 
 	std::shared_ptr<Settings> LittleFSSettings::Load()
@@ -70,18 +88,17 @@ namespace PowerFeed::Drivers
 		{
 			printf("Config file not found, creating default\n");
 
-			// Get the default config from the JSON file
-			char buffer[4096];
-			auto defaultConfig = myDefaultSettings->to_json();
-			std::string configStr = defaultConfig.dump(2);
-
-			// Create the config file
-			if (!CreateFile(CONFIG_FILENAME, configStr.c_str()))
+			if (!CreateDefaultConfig())
 			{
-				printf("Failed to create config file\n");
-				return myDefaultSettings;
-			}
+				printf("Failed to create default config file, formatting and trying again\n");
 
+				ASSERT(Format());
+
+				if (!CreateDefaultConfig())
+				{
+					Panic("Failed to create default config file after format\n");
+				}
+			}
 			mySettings = myDefaultSettings;
 			return mySettings;
 		}
@@ -101,11 +118,22 @@ namespace PowerFeed::Drivers
 			// Parse JSON
 			nlohmann::json jsonConfig = nlohmann::json::parse(buffer);
 			mySettings = std::make_shared<Settings>(Settings::from_json(jsonConfig));
+
+			if (mySettings->system.version != myDefaultSettings->system.version)
+			{
+				printf("Settings version mismatch, resetting to default\n");
+				mySettings = myDefaultSettings;
+				SaveNow();
+				return mySettings;
+			}
 		}
-		catch (const std::exception &e)
+		catch (const nlohmann::json::exception &e)
 		{
 			printf("Failed to parse config: %s\n", e.what());
-			return myDefaultSettings;
+			printf("Resetting to defaults\n");
+			mySettings = myDefaultSettings;
+			SaveNow();
+			return mySettings;
 		}
 
 		return mySettings;
@@ -126,34 +154,46 @@ namespace PowerFeed::Drivers
 	void LittleFSSettings::SaveNow(std::shared_ptr<Settings> aSettings)
 	{
 		// We don't need to schedule an auto-save here since we're saving immediately
-		
+
 		if (!myFsMounted && !InitializeFS())
 		{
-			printf("Failed to initialize filesystem for saving\n");
+			Panic("Failed to initialize filesystem for saving\n");
 			return;
 		}
 
-		// Convert settings to JSON
-		nlohmann::json jsonConfig = aSettings->to_json();
-		std::string configStr = jsonConfig.dump(2);
-
-		// Create file (overwrite if exists)
-		lfs_file_t file;
-		int err = lfs_file_open(&myFs, &file, CONFIG_FILENAME, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
-		if (err < 0)
+		try
 		{
-			printf("Failed to open file for saving: %d\n", err);
+			// Convert settings to JSON
+			nlohmann::json jsonConfig = aSettings->to_json();
+			std::string configStr = jsonConfig.dump(2);
+
+			// Create file (overwrite if exists)
+			lfs_file_t file;
+			int err = lfs_file_open(&myFs, &file, CONFIG_FILENAME, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC);
+			if (err < 0)
+			{
+				Panic("Failed to open file for saving: %d\n", err);
+				return;
+			}
+
+			// Write configuration
+			lfs_size_t written = lfs_file_write(&myFs, &file, configStr.c_str(), configStr.size());
+			if (written != configStr.size())
+			{
+				Panic("Failed to write complete file: %u/%u\n", written, configStr.size());
+			}
+
+			err = lfs_file_close(&myFs, &file);
+			if (err < 0)
+			{
+				Panic("Failed to close file: %d\n", err);
+			}
+		}
+		catch (const nlohmann::json::exception &e)
+		{
+			Panic("Failed to convert settings to JSON: %s\n", e.what());
 			return;
 		}
-
-		// Write configuration
-		lfs_size_t written = lfs_file_write(&myFs, &file, configStr.c_str(), configStr.size());
-		if (written != configStr.size())
-		{
-			printf("Failed to write complete file: %u/%u\n", written, configStr.size());
-		}
-
-		lfs_file_close(&myFs, &file);
 
 		// Update cached settings
 		mySettings = aSettings;
@@ -172,6 +212,44 @@ namespace PowerFeed::Drivers
 		return mySettings;
 	}
 
+	bool LittleFSSettings::Format()
+	{
+		// Erase the filesystem area first
+		uint32_t ints = save_and_disable_interrupts();
+		printf("Erasing flash area at offset 0x%x, size %d bytes\n", FILESYSTEM_OFFSET, FS_SIZE);
+		flash_range_erase(FILESYSTEM_OFFSET, FS_SIZE);
+		restore_interrupts(ints);
+
+		// Format the filesystem
+		auto err = lfs_format(&myFs, &myFlashConfig);
+		if (err != LFS_ERR_OK)
+		{
+			printf("Failed to format filesystem: %d\n", err);
+			return false;
+		}
+
+		// Try mounting the newly formatted filesystem
+		err = lfs_mount(&myFs, &myFlashConfig);
+		if (err != LFS_ERR_OK)
+		{
+			printf("Failed to mount filesystem after format: %d\n", err);
+			return false;
+		}
+
+		// Create the default config file
+		printf("Creating default config file\n");
+		auto defaultConfig = myDefaultSettings->to_json();
+		std::string configStr = defaultConfig.dump(2);
+
+		if (!CreateFile(CONFIG_FILENAME, configStr.c_str()))
+		{
+			printf("Failed to create default config file\n");
+			return false;
+		}
+
+		return true;
+	}
+
 	bool LittleFSSettings::InitializeFS()
 	{
 		if (myFsMounted)
@@ -187,38 +265,7 @@ namespace PowerFeed::Drivers
 		if (err != LFS_ERR_OK)
 		{
 			printf("Failed to mount filesystem (error %d), initializing...\n", err);
-
-			// Erase the filesystem area first
-			uint32_t ints = save_and_disable_interrupts();
-			printf("Erasing flash area at offset 0x%x, size %d bytes\n", FILESYSTEM_OFFSET, FS_SIZE);
-			flash_range_erase(FILESYSTEM_OFFSET, FS_SIZE);
-			restore_interrupts(ints);
-
-			// Format the filesystem
-			err = lfs_format(&myFs, &myFlashConfig);
-			if (err != LFS_ERR_OK)
-			{
-				printf("Failed to format filesystem: %d\n", err);
-				return false;
-			}
-
-			// Try mounting the newly formatted filesystem
-			err = lfs_mount(&myFs, &myFlashConfig);
-			if (err != LFS_ERR_OK)
-			{
-				printf("Failed to mount filesystem after format: %d\n", err);
-				return false;
-			}
-
-			// Create the default config file
-			printf("Creating default config file\n");
-			auto defaultConfig = myDefaultSettings->to_json();
-			std::string configStr = defaultConfig.dump(2);
-
-			if (!CreateFile(CONFIG_FILENAME, configStr.c_str()))
-			{
-				printf("Failed to create default config file\n");
-			}
+			ASSERT(Format());
 		}
 		else
 		{

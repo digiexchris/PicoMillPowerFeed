@@ -17,6 +17,7 @@ namespace PowerFeed
 		struct System
 		{
 			uint32_t settingsAutoSaveDelayMs;
+			std::string version;
 
 			nlohmann::json to_json() const;
 			static System from_json(const nlohmann::json &j);

@@ -12,6 +12,7 @@ namespace PowerFeed
 
 	Display::Display(SettingsManager *settings, const unsigned char *font) : mySettings(settings), myFont(font)
 	{
+		myUnits = mySettings->Get()->savedSettings.inchUnits ? Units::Inch : Units::Millimeter;
 	}
 
 	void Display::DrawStart()

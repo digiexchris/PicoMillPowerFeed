@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Settings.hxx"
+#include "config.h"
 #include <cstdint>
 #include <hardware/flash.h>
 #include <hardware/regs/addressmap.h>
@@ -14,6 +15,8 @@
 #define FS_SIZE (256 * 1024) // 256KB filesystem size
 #define CONFIG_FILENAME "/config.json"
 
+static_assert(FS_SIZE > sizeof(PowerFeed::CONFIG_JSON));
+
 // Define our filesystem partition at a safe location
 // Use PICO_FLASH_SIZE_BYTES from the SDK, and place filesystem at the top of flash
 // with a safety margin to avoid any potential overlap with the program or bootloader
@@ -21,7 +24,8 @@
 #define FILESYSTEM_ADDR (XIP_BASE + FILESYSTEM_OFFSET)
 
 // Forward declaration for FreeRTOS timer
-extern "C" {
+extern "C"
+{
 #include "FreeRTOS.h"
 #include "timers.h"
 }
@@ -33,14 +37,14 @@ namespace PowerFeed::Drivers
 	public:
 		LittleFSSettings();
 		~LittleFSSettings();
-		
+
 		// Using ScheduleAutoSave from base class SettingsManager
-		
+
 		/**
 		 * @brief Save settings immediately with explicit settings object
 		 */
 		void SaveNow(std::shared_ptr<Settings> aSettings);
-		
+
 		/**
 		 * @brief Save current settings immediately without waiting for the timer
 		 * Implementation of the base class method
@@ -95,8 +99,10 @@ namespace PowerFeed::Drivers
 		/**
 		 * @brief Check FS and format if necessary
 		 */
-		void CheckFS();
-		
+		bool Format();
+
+		bool CreateDefaultConfig();
+
 		// LittleFS flash functions
 		static int BlockDeviceRead(const struct lfs_config *c,
 								   lfs_block_t block,

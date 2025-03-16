@@ -49,6 +49,7 @@ void PrintStackTrace(uint32_t *stackPointer)
 	printf("LR  = %08x\n", stackPointer[5]);
 	printf("PC  = %08x\n", stackPointer[6]);
 	printf("PSR = %08x\n", stackPointer[7]);
+	BREAKPOINT();
 
 	fflush(stdout);
 

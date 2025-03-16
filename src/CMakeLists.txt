@@ -236,6 +236,11 @@ add_compile_options(
     $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-Wno-deprecated-declarations>
 )
 
+# Enable JSON diagnostics in debug builds
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  target_compile_definitions(PicoApp PRIVATE JSON_DIAGNOSTICS=1)
+endif()
+
 add_custom_command(TARGET PicoApp POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E echo "Build succeeded!"
 # COMMAND /bin/bash ${CMAKE_HOME_DIRECTORY}/tools/linux/flash.sh $<TARGET_FILE:PicoApp>
